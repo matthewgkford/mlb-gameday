@@ -21,11 +21,13 @@ export function useGameData(gamePk, isLive) {
       const live = feed.liveData || {};
       const gd = feed.gameData || {};
       const innings = live.linescore?.innings || [];
+      const isFinal = gd.status?.abstractGameState === 'Final';
 
       setData({
         gamePk,
         status: gd.status?.abstractGameState,
         detailedStatus: gd.status?.detailedState,
+        isFinal,
         inning: live.linescore?.currentInning,
         inningHalf: live.linescore?.inningHalf,
         outs: live.linescore?.outs,
@@ -34,8 +36,6 @@ export function useGameData(gamePk, isLive) {
         onFirst: !!live.linescore?.offense?.first,
         onSecond: !!live.linescore?.offense?.second,
         onThird: !!live.linescore?.offense?.third,
-        currentBatter: live.linescore?.offense?.batter?.fullName,
-        currentPitcher: live.linescore?.defense?.pitcher?.fullName,
 
         awayTeam: {
           id: gd.teams?.away?.id,
@@ -59,7 +59,6 @@ export function useGameData(gamePk, isLive) {
 
         innings,
         winProb: buildWinProbability(innings),
-
         decisions: live.decisions || {},
 
         awayBatters: parseBatterStats(boxscore, 'away'),
@@ -73,28 +72,20 @@ export function useGameData(gamePk, isLive) {
         homeTeamPitching: boxscore?.teams?.home?.teamStats?.pitching || {},
 
         keyPlays: parseKeyPlays(pbp),
-
         weather: gd.weather || null,
         venue: gd.venue?.name || '',
-        dateTime: gd.datetime?.dateTime || '',
       });
 
       setLastUpdated(new Date());
       setError(null);
     } catch (e) {
       setError('Unable to load game data. Check your connection and try again.');
-      console.error(e);
     } finally {
       setLoading(false);
     }
   }, [gamePk]);
 
-  useEffect(() => {
-    setLoading(true);
-    setData(null);
-    fetchData();
-  }, [fetchData]);
-
+  useEffect(() => { setLoading(true); setData(null); fetchData(); }, [fetchData]);
   useEffect(() => {
     if (!isLive) return;
     const id = setInterval(fetchData, REFRESH_MS);
