@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGamesForDate } from '../hooks/useTodaysGames';
-import { espnLogoUrl, todayString, formatDateLabel, getStandings, getLeagueLeaders, mapGame, getGamesForDate } from '../utils/mlbApi';
+import { todayString, formatDateLabel, getStandings, getLeagueLeaders } from '../utils/mlbApi';
 import { TeamLogo } from './SharedUI';
 
 const FAV_TEAM_ID = 121; // Mets
@@ -26,6 +26,7 @@ function GameCard({ game, onClick }) {
       background: isFav?'rgba(0,45,114,0.25)':isLive?'rgba(220,38,38,0.08)':'rgba(255,255,255,0.04)',
       borderRadius:16, padding:'14px 16px', marginBottom:10,
       outline: isFav?'1px solid rgba(0,45,114,0.5)':isLive?'0.5px solid rgba(220,38,38,0.3)':'0.5px solid rgba(255,255,255,0.08)',
+      transition:'background 0.15s',
     }}>
       {isFav && <div style={{ fontSize:10, color:'#60a5fa', fontWeight:600, letterSpacing:0.5, marginBottom:6, textTransform:'uppercase' }}>⭐ Your team</div>}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -81,15 +82,15 @@ function DayView({ dateStr, onSelectGame }) {
   const upcoming = games.filter(g => !['Live','Final'].includes(g.status) && g!==favGame);
   const final = games.filter(g => g.status==='Final' && g!==favGame);
 
-  const Section = ({ title, games: gs }) => gs.length ? (
+  const Section = ({ title, games: gs }) => !gs.length ? null : (
     <>
       <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', letterSpacing:1, textTransform:'uppercase', marginBottom:8, marginTop:14 }}>{title}</div>
       {gs.map(g => <GameCard key={g.gamePk} game={g} onClick={onSelectGame} />)}
     </>
-  ) : null;
+  );
 
   return (
-    <div>
+    <div className="fade-in">
       {favGame && (
         <>
           <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>Your team</div>
@@ -114,14 +115,14 @@ function StandingsView() {
 
   if (loading) return <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>Loading standings...</div>;
 
-  const leagues = { AL: [], NL: [] };
+  const leagues = { AL:[], NL:[] };
   records.forEach(div => {
     const lg = div.league?.name?.includes('American') ? 'AL' : 'NL';
     leagues[lg].push(div);
   });
 
   return (
-    <div>
+    <div className="fade-in">
       <div style={{ display:'flex', gap:6, marginBottom:14 }}>
         {['AL','NL'].map(lg => (
           <button key={lg} onClick={()=>setActiveLeague(lg)} style={{ padding:'6px 16px', fontSize:13, borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', background:activeLeague===lg?'#fff':'rgba(255,255,255,0.07)', color:activeLeague===lg?'#0f1117':'rgba(255,255,255,0.5)', fontWeight:activeLeague===lg?600:400 }}>{lg}</button>
@@ -140,19 +141,20 @@ function StandingsView() {
             <tbody>
               {(div.teamRecords||[]).map((tr,i) => {
                 const isFav = tr.team?.id === FAV_TEAM_ID;
+                const l10 = tr.records?.splitRecords?.find(s=>s.type==='lastTen');
                 return (
                   <tr key={tr.team?.id} style={{ background:isFav?'rgba(0,45,114,0.2)':'transparent' }}>
                     <td style={{ padding:'7px 6px', borderBottom:'0.5px solid rgba(255,255,255,0.05)' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                         <TeamLogo abbr={tr.team?.abbreviation} size={20} />
-                        <span style={{ fontWeight: i===0||isFav?600:400, color:isFav?'#60a5fa':'#fff', fontSize:13 }}>{tr.team?.name}</span>
+                        <span style={{ fontWeight:isFav?600:400, color:isFav?'#60a5fa':'#fff', fontSize:13 }}>{tr.team?.name}</span>
                       </div>
                     </td>
                     <td style={{ padding:'7px 6px', textAlign:'right', borderBottom:'0.5px solid rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.8)' }}>{tr.wins}</td>
                     <td style={{ padding:'7px 6px', textAlign:'right', borderBottom:'0.5px solid rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.8)' }}>{tr.losses}</td>
                     <td style={{ padding:'7px 6px', textAlign:'right', borderBottom:'0.5px solid rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.6)' }}>{tr.winningPercentage}</td>
-                    <td style={{ padding:'7px 6px', textAlign:'right', borderBottom:'0.5px solid rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.5)' }}>{tr.gamesBack === '0' ? '–' : tr.gamesBack}</td>
-                    <td style={{ padding:'7px 6px', textAlign:'right', borderBottom:'0.5px solid rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.5)', fontSize:11 }}>{tr.records?.splitRecords?.find(s=>s.type==='lastTen')?.wins||0}-{tr.records?.splitRecords?.find(s=>s.type==='lastTen')?.losses||0}</td>
+                    <td style={{ padding:'7px 6px', textAlign:'right', borderBottom:'0.5px solid rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.5)' }}>{tr.gamesBack==='0'?'–':tr.gamesBack}</td>
+                    <td style={{ padding:'7px 6px', textAlign:'right', borderBottom:'0.5px solid rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.5)', fontSize:11 }}>{l10?.wins||0}-{l10?.losses||0}</td>
                   </tr>
                 );
               })}
@@ -174,15 +176,15 @@ function LeadersView() {
 
   if (loading) return <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>Loading leaders...</div>;
 
-  const catLabels = { homeRuns:'Home runs', battingAverage:'Batting avg', earnedRunAverage:'ERA', strikeouts:'Strikeouts (P)' };
+  const catLabels = { homeRuns:'Home runs', battingAverage:'Batting avg', earnedRunAverage:'ERA leaders', strikeouts:'Strikeouts' };
 
   return (
-    <div>
+    <div className="fade-in">
       {leaders.map(({ cat, leaders: ls }) => (
         <div key={cat} style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:14, padding:14, marginBottom:10 }}>
           <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:10 }}>{catLabels[cat]||cat}</div>
           {ls.slice(0,5).map((l,i) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom: i<4?'0.5px solid rgba(255,255,255,0.06)':'none' }}>
+            <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom:i<4?'0.5px solid rgba(255,255,255,0.06)':'none' }}>
               <span style={{ fontSize:12, color:'rgba(255,255,255,0.3)', minWidth:16, textAlign:'center' }}>{l.rank}</span>
               <TeamLogo abbr={l.team?.abbreviation} size={22} />
               <span style={{ flex:1, fontSize:13, fontWeight:500, color:'#fff' }}>{l.person?.fullName}</span>
@@ -202,15 +204,27 @@ export default function GamePicker({ onSelectGame }) {
 
   return (
     <div style={{ minHeight:'100vh', background:'#0f1117', paddingBottom:40 }}>
+      {/* Header */}
       <div style={{ padding:'20px 20px 0' }}>
-        <div style={{ fontSize:22, fontWeight:700, color:'#fff', letterSpacing:-0.5 }}>MLB Gameday</div>
-        <div style={{ fontSize:13, color:'rgba(255,255,255,0.3)', marginTop:3 }}>New York Mets fan</div>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <img
+            src="https://mlb-gameday.vercel.app/icon.png"
+            alt="Between Innings"
+            width={36}
+            height={36}
+            style={{ borderRadius:8, objectFit:'cover' }}
+          />
+          <div>
+            <div style={{ fontSize:22, fontWeight:700, color:'#fff', letterSpacing:-0.5 }}>Between Innings</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', marginTop:1 }}>Mets fan · MLB gameday</div>
+          </div>
+        </div>
       </div>
 
-      {/* Main nav tabs */}
-      <div style={{ display:'flex', gap:4, padding:'14px 16px 0', marginBottom:0 }}>
+      {/* Main nav */}
+      <div style={{ display:'flex', gap:4, padding:'14px 16px 0' }}>
         {[['games','Games'],['standings','Standings'],['leaders','Leaders']].map(([id,label])=>(
-          <button key={id} onClick={()=>setMainTab(id)} style={{ padding:'7px 16px', fontSize:13, borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', background:mainTab===id?'#fff':'rgba(255,255,255,0.07)', color:mainTab===id?'#0f1117':'rgba(255,255,255,0.5)', fontWeight:mainTab===id?600:400 }}>{label}</button>
+          <button key={id} onClick={()=>setMainTab(id)} style={{ padding:'7px 16px', fontSize:13, borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', background:mainTab===id?'#fff':'rgba(255,255,255,0.07)', color:mainTab===id?'#0f1117':'rgba(255,255,255,0.5)', fontWeight:mainTab===id?600:400, transition:'all 0.15s' }}>{label}</button>
         ))}
       </div>
 
@@ -219,7 +233,7 @@ export default function GamePicker({ onSelectGame }) {
           <div style={{ overflowX:'auto', padding:'14px 0', borderBottom:'0.5px solid rgba(255,255,255,0.08)' }}>
             <div style={{ display:'flex', gap:6, padding:'0 16px', width:'max-content' }}>
               {days.map(d=>(
-                <button key={d} onClick={()=>setSelectedDate(d)} style={{ padding:'7px 14px', fontSize:13, borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', background:selectedDate===d?'#fff':'rgba(255,255,255,0.07)', color:selectedDate===d?'#0f1117':'rgba(255,255,255,0.5)', fontWeight:selectedDate===d?600:400 }}>
+                <button key={d} onClick={()=>setSelectedDate(d)} style={{ padding:'7px 14px', fontSize:13, borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', background:selectedDate===d?'#fff':'rgba(255,255,255,0.07)', color:selectedDate===d?'#0f1117':'rgba(255,255,255,0.5)', fontWeight:selectedDate===d?600:400, transition:'all 0.15s' }}>
                   {formatDateLabel(d)}
                 </button>
               ))}
@@ -230,7 +244,6 @@ export default function GamePicker({ onSelectGame }) {
           </div>
         </>
       )}
-
       {mainTab === 'standings' && <div style={{ padding:'16px 16px 0' }}><StandingsView /></div>}
       {mainTab === 'leaders' && <div style={{ padding:'16px 16px 0' }}><LeadersView /></div>}
     </div>

@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { TeamLogo, TrendArrow, rateBAT, rateOBP, rateSLG, rateOPS } from './SharedUI';
+import { TeamLogo, PlayerPhoto, TrendArrow, rateBAT, rateOBP, rateSLG, rateOPS } from './SharedUI';
 
 function SeasonStatsModal({ batter, onClose }) {
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:20 }} onClick={onClose}>
-      <div style={{ background:'#1a1f2e', border:'0.5px solid rgba(255,255,255,0.15)', borderRadius:20, padding:20, width:'100%', maxWidth:340 }} onClick={e=>e.stopPropagation()}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-          <div>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:20 }} onClick={onClose}>
+      <div className="scale-in" style={{ background:'#1a1f2e', border:'0.5px solid rgba(255,255,255,0.15)', borderRadius:20, padding:20, width:'100%', maxWidth:340 }} onClick={e=>e.stopPropagation()}>
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+          <PlayerPhoto playerId={batter.id} name={batter.name} size={48} />
+          <div style={{ flex:1 }}>
             <div style={{ fontSize:16, fontWeight:600, color:'#fff' }}>{batter.name}</div>
-            <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{batter.position} · 2025 season stats</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{batter.position} · 2025 season</div>
           </div>
           <button onClick={onClose} style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:8, padding:'4px 10px', color:'rgba(255,255,255,0.6)', cursor:'pointer', fontSize:13, fontFamily:'inherit' }}>✕</button>
         </div>
@@ -18,9 +19,9 @@ function SeasonStatsModal({ batter, onClose }) {
             { label:'Season AVG', val:batter.seasonAvg||'–' },
             { label:'This game OPS', val:batter.ops },
             { label:'Season OPS', val:batter.seasonOps||'–' },
-            { label:'HR this game', val:batter.hr },
+            { label:'HR today', val:batter.hr },
             { label:'Season HR', val:batter.seasonHr??'–' },
-            { label:'RBI this game', val:batter.rbi },
+            { label:'RBI today', val:batter.rbi },
             { label:'Season RBI', val:batter.seasonRbi??'–' },
           ].map(({ label, val }) => (
             <div key={label} style={{ background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'10px 12px' }}>
@@ -29,7 +30,35 @@ function SeasonStatsModal({ batter, onClose }) {
             </div>
           ))}
         </div>
-        <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginTop:12, textAlign:'center' }}>Season stats from MLB Stats API · 2025 season to date</div>
+        <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginTop:12, textAlign:'center' }}>MLB Stats API · 2025 season to date</div>
+      </div>
+    </div>
+  );
+}
+
+function TopPerformers({ batters, teamAbbr }) {
+  const performers = batters
+    .filter(b => b.h > 0 || b.hr > 0 || b.rbi > 1)
+    .sort((a, b) => (b.hr * 3 + b.rbi * 2 + b.h) - (a.hr * 3 + a.rbi * 2 + a.h))
+    .slice(0, 3);
+
+  if (!performers.length) return null;
+
+  return (
+    <div style={{ marginBottom:14 }}>
+      <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:8 }}>Top performers</div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {performers.map(b => (
+          <div key={b.id} style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'8px 12px', flex:'1 1 auto', minWidth:130 }}>
+            <PlayerPhoto playerId={b.id} name={b.name} size={32} />
+            <div>
+              <div style={{ fontSize:12, fontWeight:600, color:'#fff' }}>{b.name.split(' ').pop()}</div>
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:1 }}>
+                {b.h}H{b.hr > 0 ? ` · ${b.hr}HR` : ''}{b.rbi > 0 ? ` · ${b.rbi}RBI` : ''}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -55,12 +84,17 @@ function SlashLine({ stats }) {
   );
 }
 
-function BatterRow({ b, onClick }) {
+function BatterRow({ b, onClick, delay }) {
   return (
-    <tr onClick={() => onClick(b)} style={{ cursor:'pointer' }}>
+    <tr onClick={() => onClick(b)} style={{ cursor:'pointer', animation:`fadeIn 0.3s ease forwards`, animationDelay:`${delay}ms`, opacity:0 }}>
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'left' }}>
-        <span style={{ fontWeight:500, color:'#60a5fa', textDecoration:'underline', textDecorationStyle:'dotted', textDecorationColor:'rgba(96,165,250,0.4)' }}>{b.name}</span>
-        <span style={{ color:'rgba(255,255,255,0.3)', fontSize:11, marginLeft:5 }}>{b.position}</span>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <PlayerPhoto playerId={b.id} name={b.name} size={26} />
+          <div>
+            <span style={{ fontWeight:500, color:'#60a5fa', fontSize:13 }}>{b.name}</span>
+            <span style={{ color:'rgba(255,255,255,0.3)', fontSize:11, marginLeft:5 }}>{b.position}</span>
+          </div>
+        </div>
       </td>
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right', color:'rgba(255,255,255,0.8)' }}>{b.ab}</td>
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right', color:b.h>0?'#60a5fa':'rgba(255,255,255,0.4)', fontWeight:b.h>0?600:400 }}>{b.h}</td>
@@ -75,49 +109,53 @@ function BatterRow({ b, onClick }) {
   );
 }
 
-function TeamTable({ batters, teamStats, color }) {
+function TeamSection({ side, team, batters, stats }) {
   const [modal, setModal] = useState(null);
   return (
-    <>
-      {modal && <SeasonStatsModal batter={modal} onClose={()=>setModal(null)} />}
-      <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginBottom:8 }}>Tap a batter's name to see season stats</div>
+    <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
+      {modal && <SeasonStatsModal batter={modal} onClose={() => setModal(null)} />}
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, paddingBottom:10, borderBottom:'0.5px solid rgba(255,255,255,0.08)' }}>
+        <TeamLogo abbr={team.abbr} size={24} />
+        <span style={{ fontSize:14, fontWeight:600, color:'#fff' }}>{team.city} {team.name}</span>
+      </div>
+      <TopPerformers batters={batters} teamAbbr={team.abbr} />
+      <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginBottom:8 }}>Tap a player for season stats</div>
       <div style={{ overflowX:'auto' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
           <thead>
             <tr>
               <th style={{ textAlign:'left', padding:'4px 8px', color:'rgba(255,255,255,0.3)', fontWeight:400, fontSize:11, borderBottom:'0.5px solid rgba(255,255,255,0.1)' }}>Batter</th>
-              {['AB','H','HR','RBI','BB','R','K'].map(h=><th key={h} style={{ textAlign:'right', padding:'4px 8px', color:'rgba(255,255,255,0.3)', fontWeight:400, fontSize:11, borderBottom:'0.5px solid rgba(255,255,255,0.1)' }}>{h}</th>)}
+              {['AB','H','HR','RBI','BB','R','K'].map(h=>(
+                <th key={h} style={{ textAlign:'right', padding:'4px 8px', color:'rgba(255,255,255,0.3)', fontWeight:400, fontSize:11, borderBottom:'0.5px solid rgba(255,255,255,0.1)' }}>{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {batters.map(b=><BatterRow key={b.id} b={b} onClick={setModal} />)}
-            {batters.length>0 && (
+            {batters.map((b, i) => <BatterRow key={b.id} b={b} onClick={setModal} delay={i * 30} />)}
+            {batters.length > 0 && (
               <tr style={{ background:'rgba(255,255,255,0.03)' }}>
                 <td style={{ padding:'7px 8px', fontWeight:600, color:'rgba(255,255,255,0.4)', fontSize:11 }}>Totals</td>
-                {['ab','h','hr','rbi','bb','r','k'].map(f=><td key={f} style={{ padding:'7px 8px', textAlign:'right', color:'rgba(255,255,255,0.6)', fontWeight:500 }}>{batters.reduce((a,b)=>a+(b[f]||0),0)}</td>)}
+                {['ab','h','hr','rbi','bb','r','k'].map(f=>(
+                  <td key={f} style={{ padding:'7px 8px', textAlign:'right', color:'rgba(255,255,255,0.6)', fontWeight:500 }}>
+                    {batters.reduce((a,b)=>a+(b[f]||0),0)}
+                  </td>
+                ))}
               </tr>
             )}
           </tbody>
         </table>
       </div>
-      <SlashLine stats={teamStats} />
-    </>
+      <SlashLine stats={stats} />
+    </div>
   );
 }
 
 export default function BattingTab({ data }) {
   const { awayTeam, homeTeam, awayBatters, homeBatters, awayTeamStats, homeTeamStats } = data;
   return (
-    <>
-      {[['away',awayTeam,awayBatters,awayTeamStats],['home',homeTeam,homeBatters,homeTeamStats]].map(([side,team,batters,stats])=>(
-        <div key={side} style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, paddingBottom:10, borderBottom:'0.5px solid rgba(255,255,255,0.08)' }}>
-            <TeamLogo abbr={team.abbr} size={24} />
-            <span style={{ fontSize:14, fontWeight:600, color:'#fff' }}>{team.city} {team.name}</span>
-          </div>
-          <TeamTable batters={batters} teamStats={stats} />
-        </div>
-      ))}
-    </>
+    <div className="tab-panel">
+      <TeamSection side="away" team={awayTeam} batters={awayBatters} stats={awayTeamStats} />
+      <TeamSection side="home" team={homeTeam} batters={homeBatters} stats={homeTeamStats} />
+    </div>
   );
 }

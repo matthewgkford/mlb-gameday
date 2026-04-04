@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Gameday" />
+    <meta name="apple-mobile-web-app-title" content="Between Innings" />
     <meta name="theme-color" content="#0f1117" />
-    <title>MLB Gameday</title>
-    <link rel="apple-touch-icon" href="https://a.espncdn.com/i/teamlogos/mlb/500/mlb.png" />
+    <link rel="icon" type="image/png" href="https://mlb-gameday-u8mr-mc2joacc4-matthewgkfords-projects.vercel.app/icon.png" />
+    <link rel="apple-touch-icon" href="https://mlb-gameday.vercel.app/icon.png" />
+    <title>Between Innings</title>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body, #root { height: 100%; }
@@ -21,6 +22,22 @@
       ::-webkit-scrollbar { width: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+      @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+      @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+      @keyframes scaleIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+
+      .fade-in { animation: fadeIn 0.3s ease forwards; }
+      .scale-in { animation: scaleIn 0.2s ease forwards; }
+      .tab-panel { animation: fadeIn 0.2s ease forwards; }
+
+      .skeleton {
+        background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 6px;
+      }
     </style>
   </head>
   <body>
