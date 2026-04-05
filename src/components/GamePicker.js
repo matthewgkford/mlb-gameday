@@ -117,7 +117,8 @@ function StandingsView() {
 
   const leagues = { AL:[], NL:[] };
   records.forEach(div => {
-    const lg = div.league?.name?.includes('American') ? 'AL' : 'NL';
+    // leagueId 103 = AL, 104 = NL — more reliable than parsing the name string
+    const lg = div.league?.id === 103 || div.league?.name?.includes('American') ? 'AL' : 'NL';
     leagues[lg].push(div);
   });
 

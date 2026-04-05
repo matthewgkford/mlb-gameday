@@ -13,49 +13,28 @@ export function fixCity(id, fallback) {
   return CITY_OVERRIDES[id] || fallback || '';
 }
 
-// Some teams have dark cap logos on ESPN CDN that are invisible in dark mode
-// Override to use MLB's official color logo endpoint for those teams
-const LOGO_OVERRIDES = {
-  'sd':  'https://www.mlb.com/images/logos/team-cap-logos/sd.svg',   // Padres - gold
-  'pit': 'https://www.mlb.com/images/logos/team-cap-logos/pit.svg',  // Pirates
-  'nym': 'https://a.espncdn.com/i/teamlogos/mlb/500/nym.png',
-};
+// Use MLB's official scoreboard logos — full colour, reliable on dark backgrounds
+// Cap logos work for most teams; some need the primary logo for visibility
+const DARK_CAP_TEAMS = ['nyy','min','col','sd','ari','pit','cws','oak','mia'];
 
 export function teamLogoUrl(abbr) {
   const lower = abbr?.toLowerCase();
-  return LOGO_OVERRIDES[lower] || `https://a.espncdn.com/i/teamlogos/mlb/500/${lower}.png`;
+  if (!lower) return '';
+  // ESPN CDN is more reliable for loading; use it as base
+  // but fall back to MLB official for teams with dark/invisible cap logos
+  if (DARK_CAP_TEAMS.includes(lower)) {
+    return `https://www.mlb.com/images/logos/teams/${abbr?.toUpperCase()}.svg`;
+  }
+  return `https://a.espncdn.com/i/teamlogos/mlb/500/${lower}.png`;
 }
 
-// MLB player ID -> ESPN player ID mapping for headshots
-// ESPN headshots: https://a.espncdn.com/i/headshots/mlb/players/full/{espnId}.png
-const MLB_TO_ESPN = {
-  592450: 39832,  // Gerrit Cole
-  594798: 33912,  // Clayton Kershaw
-  605141: 41933,  // Mookie Betts
-  660271: 44477,  // Juan Soto
-  665742: 41636,  // Pete Alonso
-  624413: 38875,  // Francisco Lindor
-  663538: 44836,  // Jazz Chisholm
-  621566: 38049,  // Marcus Stroman
-  669456: 44234,  // Spencer Strider
-  670770: 42397,  // Zack Wheeler
-  656756: 40984,  // Shane Bieber
-  641154: 40430,  // Brandon Woodruff
-  592518: 30836,  // David Wright (retired example)
-  543135: 31084,  // Bryce Harper
-  605483: 33793,  // Freddie Freeman
-  514888: 28163,  // Miguel Cabrera
-  621345: 36958,  // Aaron Judge
-  660162: 44359,  // Bobby Witt Jr.
-  682998: 4917798, // Gunnar Henderson
-};
-
+// Use MLB's own headshot endpoint — uses MLB player ID directly, no mapping needed
+// Always returns the correct current player photo
 export function playerHeadshotUrl(mlbId) {
-  const espnId = MLB_TO_ESPN[mlbId];
-  if (espnId) return `https://a.espncdn.com/i/headshots/mlb/players/full/${espnId}.png`;
-  // Fallback: try MLB's own photo endpoint
   return `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${mlbId}/headshot/67/current`;
 }
+
+
 
 export async function getGamesForDate(dateStr) {
   const url = `${BASE}/schedule?sportId=1&date=${dateStr}&hydrate=team,linescore,probablePitcher(note),weather`;

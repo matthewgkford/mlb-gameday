@@ -2,35 +2,57 @@ import React, { useState } from 'react';
 import { TeamLogo, PlayerPhoto, TrendArrow, rateBAT, rateOBP, rateSLG, rateOPS } from './SharedUI';
 
 function SeasonStatsModal({ batter, onClose }) {
+  // Calculate this-game stats from raw numbers we already have
+  const gameAvg = batter.ab > 0 ? '.' + String(Math.round(batter.h / batter.ab * 1000)).padStart(3,'0') : '.---';
+  const gameOBP = batter.ab > 0
+    ? '.' + String(Math.round((batter.h + batter.bb) / (batter.ab + batter.bb) * 1000)).padStart(3,'0')
+    : '.---';
+  const gameTB = (batter.h - batter.hr - (batter.doubles||0)) + (batter.doubles||0)*2 + (batter.triples||0)*3 + batter.hr*4;
+  const gameSLG = batter.ab > 0 ? '.' + String(Math.round(gameTB / batter.ab * 1000)).padStart(3,'0') : '.---';
+  const gameOBPn = parseFloat(gameOBP) || 0;
+  const gameSLGn = parseFloat(gameSLG) || 0;
+  const gameOPS = batter.ab > 0 ? (gameOBPn + gameSLGn).toFixed(3) : '.---';
+
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:20 }} onClick={onClose}>
-      <div className="scale-in" style={{ background:'#1a1f2e', border:'0.5px solid rgba(255,255,255,0.15)', borderRadius:20, padding:20, width:'100%', maxWidth:340 }} onClick={e=>e.stopPropagation()}>
+    <div
+      onClick={onClose}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:20, overflowY:'auto' }}
+    >
+      <div
+        className="scale-in"
+        onClick={e => e.stopPropagation()}
+        style={{ background:'#1a1f2e', border:'0.5px solid rgba(255,255,255,0.15)', borderRadius:20, padding:20, width:'100%', maxWidth:340, margin:'auto' }}
+      >
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
           <PlayerPhoto playerId={batter.id} name={batter.name} size={48} />
           <div style={{ flex:1 }}>
             <div style={{ fontSize:16, fontWeight:600, color:'#fff' }}>{batter.name}</div>
-            <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{batter.position} · 2025 season</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{batter.position}</div>
           </div>
           <button onClick={onClose} style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:8, padding:'4px 10px', color:'rgba(255,255,255,0.6)', cursor:'pointer', fontSize:13, fontFamily:'inherit' }}>✕</button>
         </div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-          {[
-            { label:'This game AVG', val:batter.avg },
-            { label:'Season AVG', val:batter.seasonAvg||'–' },
-            { label:'This game OPS', val:batter.ops },
-            { label:'Season OPS', val:batter.seasonOps||'–' },
-            { label:'HR today', val:batter.hr },
-            { label:'Season HR', val:batter.seasonHr??'–' },
-            { label:'RBI today', val:batter.rbi },
-            { label:'Season RBI', val:batter.seasonRbi??'–' },
-          ].map(({ label, val }) => (
-            <div key={label} style={{ background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'10px 12px' }}>
+
+        <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:8 }}>This game</div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:6, marginBottom:14 }}>
+          {[['AVG',gameAvg],['OBP',gameOBP],['SLG',gameSLG],['OPS',gameOPS]].map(([label,val])=>(
+            <div key={label} style={{ background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'10px 8px', textAlign:'center' }}>
               <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginBottom:4 }}>{label}</div>
-              <div style={{ fontSize:18, fontWeight:600, color:'#fff' }}>{val}</div>
+              <div style={{ fontSize:16, fontWeight:600, color:'#fff' }}>{val}</div>
             </div>
           ))}
         </div>
-        <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginTop:12, textAlign:'center' }}>MLB Stats API · 2025 season to date</div>
+
+        <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:8 }}>2025 season</div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:6 }}>
+          {[['AVG',batter.seasonAvg||'–'],['OPS',batter.seasonOps||'–'],['HR',batter.seasonHr??'–'],['RBI',batter.seasonRbi??'–']].map(([label,val])=>(
+            <div key={label} style={{ background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'10px 8px', textAlign:'center' }}>
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginBottom:4 }}>{label}</div>
+              <div style={{ fontSize:16, fontWeight:600, color:'#fff' }}>{val}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginTop:12, textAlign:'center' }}>MLB Stats API · tap outside to close</div>
       </div>
     </div>
   );
