@@ -1,7 +1,196 @@
 import React, { useState, useEffect } from 'react';
 import { TeamLogo, PlayerPhoto, TrendArrow, rateERA, rateWHIP } from './SharedUI';
 
+// Real 2025 pitch usage data from Baseball Savant
+// Source: baseballsavant.mlb.com pitch arsenal stats export
+// Note: Only pitches above the usage threshold are included per pitcher
+// Percentages show actual usage rate for that pitch type
+const PITCH_ARSENALS = {
+  'Aaron Ashby': [{name:'Sinker',pct:51.3,type:'SI'}],
+  'Aaron Civale': [{name:'Cutter',pct:35.0,type:'FC'}],
+  'Aaron Nola': [{name:'4-Seam Fastball',pct:30.3,type:'FF'},{name:'Curveball',pct:29.1,type:'CU'}],
+  'Abner Uribe': [{name:'Sinker',pct:51.8,type:'SI'},{name:'Slider',pct:46.0,type:'SL'}],
+  'Adrian Houser': [{name:'Sinker',pct:45.9,type:'SI'}],
+  'Adrian Morejon': [{name:'Sinker',pct:61.8,type:'SI'}],
+  'Alex Vesia': [{name:'4-Seam Fastball',pct:57.5,type:'FF'}],
+  'Andre Pallante': [{name:'4-Seam Fastball',pct:44.1,type:'FF'},{name:'Slider',pct:28.5,type:'SL'}],
+  'Andrew Abbott': [{name:'4-Seam Fastball',pct:47.2,type:'FF'},{name:'Changeup',pct:19.6,type:'CH'}],
+  'Andrew Heaney': [{name:'4-Seam Fastball',pct:43.7,type:'FF'}],
+  'Andrew Kittredge': [{name:'Slider',pct:52.9,type:'SL'}],
+  'Andrés Muñoz': [{name:'Slider',pct:50.4,type:'SL'}],
+  'Angel Zerpa': [{name:'Sinker',pct:43.9,type:'SI'}],
+  'Anthony Banda': [{name:'Slider',pct:49.2,type:'SL'}],
+  'Antonio Senzatela': [{name:'4-Seam Fastball',pct:56.9,type:'FF'},{name:'Slider',pct:18.0,type:'SL'}],
+  'Bailey Falter': [{name:'4-Seam Fastball',pct:50.8,type:'FF'}],
+  'Bailey Ober': [{name:'4-Seam Fastball',pct:35.9,type:'FF'},{name:'Changeup',pct:28.9,type:'CH'},{name:'Slider',pct:17.7,type:'SL'}],
+  'Ben Brown': [{name:'4-Seam Fastball',pct:55.6,type:'FF'},{name:'Curveball',pct:39.9,type:'CU'}],
+  'Blake Snell': [{name:'4-Seam Fastball',pct:43.6,type:'FF'}],
+  'Brady Singer': [{name:'Sinker',pct:40.6,type:'SI'},{name:'Slider',pct:28.4,type:'SL'}],
+  'Brandon Pfaadt': [{name:'Sinker',pct:23.5,type:'SI'},{name:'4-Seam Fastball',pct:23.4,type:'FF'},{name:'Sweeper',pct:18.6,type:'ST'},{name:'Changeup',pct:15.7,type:'CH'}],
+  'Brayan Bello': [{name:'Sinker',pct:35.0,type:'SI'},{name:'Sweeper',pct:19.0,type:'ST'},{name:'Cutter',pct:15.7,type:'FC'},{name:'Changeup',pct:15.2,type:'CH'},{name:'4-Seam Fastball',pct:15.1,type:'FF'}],
+  'Bryce Elder': [{name:'Sinker',pct:42.1,type:'SI'},{name:'Slider',pct:35.1,type:'SL'}],
+  'Bryce Miller': [{name:'4-Seam Fastball',pct:40.9,type:'FF'}],
+  'Bryan Abreu': [{name:'4-Seam Fastball',pct:50.0,type:'FF'},{name:'Slider',pct:48.4,type:'SL'}],
+  'Bryan Woo': [{name:'4-Seam Fastball',pct:47.3,type:'FF'},{name:'Sinker',pct:25.5,type:'SI'}],
+  'Cal Quantrill': [{name:'Sinker',pct:22.1,type:'SI'},{name:'Cutter',pct:21.7,type:'FC'},{name:'Split-Finger',pct:21.1,type:'FS'}],
+  'Camilo Doval': [{name:'Slider',pct:48.0,type:'SL'},{name:'Cutter',pct:39.8,type:'FC'}],
+  'Carlos Rodón': [{name:'4-Seam Fastball',pct:41.8,type:'FF'},{name:'Slider',pct:28.4,type:'SL'},{name:'Changeup',pct:16.2,type:'CH'}],
+  'Casey Mize': [{name:'4-Seam Fastball',pct:33.6,type:'FF'},{name:'Split-Finger',pct:24.2,type:'FS'}],
+  'Chad Patrick': [{name:'Cutter',pct:41.2,type:'FC'},{name:'Sinker',pct:23.0,type:'SI'},{name:'4-Seam Fastball',pct:22.2,type:'FF'}],
+  'Charlie Morton': [{name:'Curveball',pct:38.3,type:'CU'},{name:'4-Seam Fastball',pct:27.6,type:'FF'}],
+  'Chase Burns': [{name:'4-Seam Fastball',pct:57.9,type:'FF'}],
+  'Chris Bassitt': [{name:'Sinker',pct:41.7,type:'SI'},{name:'Cutter',pct:16.8,type:'FC'},{name:'Curveball',pct:16.2,type:'CU'}],
+  'Chris Paddack': [{name:'4-Seam Fastball',pct:43.2,type:'FF'},{name:'Changeup',pct:23.5,type:'CH'}],
+  'Chris Sale': [{name:'Slider',pct:47.3,type:'SL'},{name:'4-Seam Fastball',pct:41.7,type:'FF'}],
+  'Clarke Schmidt': [{name:'Cutter',pct:40.9,type:'FC'}],
+  'Clay Holmes': [{name:'Sinker',pct:40.8,type:'SI'},{name:'Sweeper',pct:19.0,type:'ST'},{name:'Changeup',pct:15.7,type:'CH'}],
+  'Clayton Kershaw': [{name:'Slider',pct:41.4,type:'SL'},{name:'4-Seam Fastball',pct:34.6,type:'FF'}],
+  'Cole Ragans': [{name:'4-Seam Fastball',pct:49.5,type:'FF'}],
+  'Colin Rea': [{name:'4-Seam Fastball',pct:41.5,type:'FF'}],
+  'Colton Gordon': [{name:'4-Seam Fastball',pct:41.0,type:'FF'},{name:'Sweeper',pct:28.0,type:'ST'}],
+  'Corbin Burnes': [{name:'Cutter',pct:55.0,type:'FC'}],
+  'Cristopher Sánchez': [{name:'Sinker',pct:46.0,type:'SI'},{name:'Changeup',pct:37.4,type:'CH'},{name:'Slider',pct:16.6,type:'SL'}],
+  'David Peterson': [{name:'Sinker',pct:29.6,type:'SI'},{name:'4-Seam Fastball',pct:22.3,type:'FF'},{name:'Slider',pct:19.1,type:'SL'},{name:'Changeup',pct:15.3,type:'CH'}],
+  'Davis Martin': [{name:'4-Seam Fastball',pct:32.7,type:'FF'},{name:'Changeup',pct:24.4,type:'CH'},{name:'Slider',pct:21.5,type:'SL'}],
+  'Dean Kremer': [{name:'4-Seam Fastball',pct:26.6,type:'FF'},{name:'Split-Finger',pct:21.1,type:'FS'},{name:'Cutter',pct:20.2,type:'FC'},{name:'Sinker',pct:19.3,type:'SI'}],
+  'Devin Williams': [{name:'Changeup',pct:52.4,type:'CH'},{name:'4-Seam Fastball',pct:47.4,type:'FF'}],
+  'Drew Rasmussen': [{name:'4-Seam Fastball',pct:35.2,type:'FF'},{name:'Cutter',pct:31.4,type:'FC'},{name:'Sinker',pct:22.9,type:'SI'}],
+  'Dustin May': [{name:'Sweeper',pct:39.3,type:'ST'},{name:'Sinker',pct:33.6,type:'SI'}],
+  'Dylan Cease': [{name:'4-Seam Fastball',pct:42.1,type:'FF'},{name:'Slider',pct:40.8,type:'SL'}],
+  'Eduardo Rodriguez': [{name:'4-Seam Fastball',pct:46.6,type:'FF'},{name:'Changeup',pct:20.5,type:'CH'}],
+  'Edward Cabrera': [{name:'Changeup',pct:25.8,type:'CH'},{name:'Curveball',pct:23.6,type:'CU'},{name:'Sinker',pct:20.4,type:'SI'}],
+  'Edwin Díaz': [{name:'4-Seam Fastball',pct:52.6,type:'FF'},{name:'Slider',pct:47.3,type:'SL'}],
+  'Emmanuel Clase': [{name:'Cutter',pct:68.9,type:'FC'}],
+  'Erick Fedde': [{name:'Sinker',pct:33.3,type:'SI'},{name:'Cutter',pct:28.0,type:'FC'},{name:'Sweeper',pct:26.0,type:'ST'}],
+  'Framber Valdez': [{name:'Sinker',pct:45.7,type:'SI'},{name:'Curveball',pct:33.1,type:'CU'},{name:'Changeup',pct:17.9,type:'CH'}],
+  'Freddy Peralta': [{name:'4-Seam Fastball',pct:53.5,type:'FF'},{name:'Changeup',pct:21.2,type:'CH'},{name:'Curveball',pct:15.1,type:'CU'}],
+  'Garrett Crochet': [{name:'4-Seam Fastball',pct:35.9,type:'FF'},{name:'Cutter',pct:27.7,type:'FC'},{name:'Sweeper',pct:16.0,type:'ST'},{name:'Sinker',pct:16.0,type:'SI'}],
+  'Gavin Williams': [{name:'4-Seam Fastball',pct:37.4,type:'FF'},{name:'Curveball',pct:22.0,type:'CU'},{name:'Sweeper',pct:19.9,type:'ST'},{name:'Cutter',pct:14.0,type:'FC'}],
+  'George Kirby': [{name:'4-Seam Fastball',pct:28.8,type:'FF'},{name:'Slider',pct:28.2,type:'SL'},{name:'Sinker',pct:26.8,type:'SI'}],
+  'Graham Ashcraft': [{name:'Cutter',pct:54.1,type:'FC'},{name:'Slider',pct:45.9,type:'SL'}],
+  'Griffin Canning': [{name:'4-Seam Fastball',pct:35.1,type:'FF'},{name:'Slider',pct:30.6,type:'SL'}],
+  'Hunter Brown': [{name:'4-Seam Fastball',pct:37.5,type:'FF'},{name:'Sinker',pct:22.7,type:'SI'},{name:'Curveball',pct:17.9,type:'CU'}],
+  'Hunter Greene': [{name:'4-Seam Fastball',pct:54.2,type:'FF'},{name:'Slider',pct:35.0,type:'SL'}],
+  'J.T. Ginn': [{name:'Sinker',pct:51.4,type:'SI'},{name:'Slider',pct:25.8,type:'SL'}],
+  'JP Sears': [{name:'4-Seam Fastball',pct:40.1,type:'FF'},{name:'Sweeper',pct:27.0,type:'ST'}],
+  'Jack Flaherty': [{name:'4-Seam Fastball',pct:46.9,type:'FF'},{name:'Curveball',pct:25.4,type:'CU'},{name:'Slider',pct:23.6,type:'SL'}],
+  'Jack Leiter': [{name:'4-Seam Fastball',pct:38.8,type:'FF'},{name:'Slider',pct:23.3,type:'SL'},{name:'Changeup',pct:16.5,type:'CH'}],
+  'Jacob deGrom': [{name:'4-Seam Fastball',pct:46.0,type:'FF'},{name:'Slider',pct:37.6,type:'SL'}],
+  'Jake Irvin': [{name:'4-Seam Fastball',pct:32.0,type:'FF'},{name:'Curveball',pct:29.6,type:'CU'},{name:'Sinker',pct:22.2,type:'SI'}],
+  'Jameson Taillon': [{name:'4-Seam Fastball',pct:37.9,type:'FF'}],
+  'Jason Alexander': [{name:'Sinker',pct:39.9,type:'SI'},{name:'Changeup',pct:32.7,type:'CH'}],
+  'Jeffrey Springs': [{name:'4-Seam Fastball',pct:42.5,type:'FF'},{name:'Changeup',pct:25.3,type:'CH'},{name:'Slider',pct:20.2,type:'SL'}],
+  'Jesús Luzardo': [{name:'4-Seam Fastball',pct:33.3,type:'FF'},{name:'Sweeper',pct:31.0,type:'ST'},{name:'Changeup',pct:17.3,type:'CH'}],
+  'Joe Ryan': [{name:'4-Seam Fastball',pct:50.3,type:'FF'}],
+  'Joey Cantillo': [{name:'4-Seam Fastball',pct:42.0,type:'FF'},{name:'Changeup',pct:30.5,type:'CH'}],
+  'Jose Quintana': [{name:'Sinker',pct:43.8,type:'SI'},{name:'Changeup',pct:22.2,type:'CH'}],
+  'José Berríos': [{name:'Sinker',pct:33.6,type:'SI'},{name:'Slurve',pct:25.9,type:'SV'},{name:'4-Seam Fastball',pct:17.9,type:'FF'},{name:'Changeup',pct:16.8,type:'CH'}],
+  'José Soriano': [{name:'Sinker',pct:49.1,type:'SI'},{name:'Curveball',pct:26.7,type:'CU'}],
+  'Justin Verlander': [{name:'4-Seam Fastball',pct:45.3,type:'FF'},{name:'Slider',pct:23.3,type:'SL'}],
+  'Kevin Gausman': [{name:'4-Seam Fastball',pct:53.7,type:'FF'},{name:'Split-Finger',pct:37.4,type:'FS'}],
+  'Kodai Senga': [{name:'4-Seam Fastball',pct:31.4,type:'FF'},{name:'Split-Finger',pct:28.5,type:'FS'}],
+  'Kyle Freeland': [{name:'4-Seam Fastball',pct:33.4,type:'FF'},{name:'Curveball',pct:26.1,type:'CU'}],
+  'Kyle Hendricks': [{name:'Changeup',pct:38.4,type:'CH'},{name:'Sinker',pct:38.4,type:'SI'}],
+  'Landen Roupp': [{name:'Sinker',pct:39.9,type:'SI'},{name:'Curveball',pct:35.7,type:'CU'}],
+  'Logan Allen': [{name:'4-Seam Fastball',pct:33.2,type:'FF'},{name:'Sweeper',pct:23.5,type:'ST'},{name:'Changeup',pct:18.3,type:'CH'}],
+  'Logan Gilbert': [{name:'4-Seam Fastball',pct:36.7,type:'FF'},{name:'Slider',pct:35.3,type:'SL'},{name:'Split-Finger',pct:19.6,type:'FS'}],
+  'Logan Webb': [{name:'Sinker',pct:33.6,type:'SI'},{name:'Sweeper',pct:26.6,type:'ST'},{name:'Changeup',pct:24.1,type:'CH'}],
+  'Lucas Giolito': [{name:'4-Seam Fastball',pct:48.4,type:'FF'},{name:'Slider',pct:25.6,type:'SL'},{name:'Changeup',pct:22.6,type:'CH'}],
+  'Luis Castillo': [{name:'4-Seam Fastball',pct:46.3,type:'FF'},{name:'Sinker',pct:22.0,type:'SI'},{name:'Slider',pct:20.4,type:'SL'}],
+  'Luis Gil': [{name:'4-Seam Fastball',pct:50.6,type:'FF'}],
+  'Luis Severino': [{name:'4-Seam Fastball',pct:28.0,type:'FF'},{name:'Sweeper',pct:24.8,type:'ST'},{name:'Sinker',pct:20.2,type:'SI'},{name:'Cutter',pct:17.6,type:'FC'}],
+  'MacKenzie Gore': [{name:'4-Seam Fastball',pct:49.3,type:'FF'},{name:'Curveball',pct:24.0,type:'CU'}],
+  'Marcus Stroman': [{name:'Sinker',pct:45.5,type:'SI'}],
+  'Mason Miller': [{name:'4-Seam Fastball',pct:52.2,type:'FF'},{name:'Slider',pct:45.6,type:'SL'}],
+  'Matthew Boyd': [{name:'4-Seam Fastball',pct:47.1,type:'FF'},{name:'Changeup',pct:23.7,type:'CH'},{name:'Slider',pct:14.9,type:'SL'}],
+  'Max Fried': [{name:'Cutter',pct:28.6,type:'FC'},{name:'Sinker',pct:17.7,type:'SI'},{name:'Curveball',pct:17.3,type:'CU'}],
+  'Merrill Kelly': [{name:'Changeup',pct:27.1,type:'CH'},{name:'4-Seam Fastball',pct:23.2,type:'FF'},{name:'Cutter',pct:20.2,type:'FC'}],
+  'Michael Lorenzen': [{name:'4-Seam Fastball',pct:22.0,type:'FF'},{name:'Sinker',pct:18.0,type:'SI'}],
+  'Michael Wacha': [{name:'4-Seam Fastball',pct:27.0,type:'FF'},{name:'Changeup',pct:25.4,type:'CH'}],
+  'Miles Mikolas': [{name:'4-Seam Fastball',pct:27.7,type:'FF'},{name:'Slider',pct:23.4,type:'SL'},{name:'Curveball',pct:17.6,type:'CU'},{name:'Sinker',pct:17.0,type:'SI'}],
+  'Mitchell Parker': [{name:'4-Seam Fastball',pct:55.5,type:'FF'},{name:'Curveball',pct:22.0,type:'CU'}],
+  'Mitch Keller': [{name:'4-Seam Fastball',pct:34.8,type:'FF'},{name:'Sweeper',pct:19.1,type:'ST'},{name:'Sinker',pct:17.8,type:'SI'}],
+  'Nathan Eovaldi': [{name:'Split-Finger',pct:31.4,type:'FS'},{name:'4-Seam Fastball',pct:22.5,type:'FF'}],
+  'Nick Lodolo': [{name:'Curveball',pct:28.7,type:'CU'},{name:'4-Seam Fastball',pct:27.8,type:'FF'},{name:'Sinker',pct:21.8,type:'SI'},{name:'Changeup',pct:21.7,type:'CH'}],
+  'Nick Pivetta': [{name:'4-Seam Fastball',pct:47.4,type:'FF'},{name:'Curveball',pct:22.4,type:'CU'},{name:'Sweeper',pct:18.6,type:'ST'}],
+  'Pablo López': [{name:'4-Seam Fastball',pct:41.2,type:'FF'}],
+  'Patrick Corbin': [{name:'Slider',pct:33.5,type:'SL'},{name:'Sinker',pct:28.9,type:'SI'},{name:'Cutter',pct:25.0,type:'FC'}],
+  'Paul Skenes': [{name:'4-Seam Fastball',pct:38.9,type:'FF'},{name:'Sweeper',pct:15.8,type:'ST'},{name:'Split-Finger',pct:13.5,type:'FS'}],
+  'Quinn Priester': [{name:'Sinker',pct:41.7,type:'SI'},{name:'Slider',pct:26.9,type:'SL'},{name:'Cutter',pct:20.6,type:'FC'}],
+  'Rafael Montero': [{name:'Split-Finger',pct:47.0,type:'FS'},{name:'4-Seam Fastball',pct:40.6,type:'FF'}],
+  'Ranger Suarez': [{name:'Sinker',pct:28.6,type:'SI'},{name:'Changeup',pct:19.1,type:'CH'},{name:'Cutter',pct:17.6,type:'FC'}],
+  'Reid Detmers': [{name:'4-Seam Fastball',pct:45.4,type:'FF'}],
+  'Robbie Ray': [{name:'4-Seam Fastball',pct:51.9,type:'FF'},{name:'Slider',pct:22.6,type:'SL'}],
+  'Ronel Blanco': [{name:'4-Seam Fastball',pct:37.5,type:'FF'}],
+  'Ryan Helsley': [{name:'Slider',pct:47.4,type:'SL'},{name:'4-Seam Fastball',pct:45.5,type:'FF'}],
+  'Ryan Pepiot': [{name:'4-Seam Fastball',pct:45.0,type:'FF'},{name:'Changeup',pct:25.1,type:'CH'},{name:'Slider',pct:17.8,type:'SL'}],
+  'Ryne Nelson': [{name:'4-Seam Fastball',pct:61.9,type:'FF'}],
+  'Sandy Alcantara': [{name:'Sinker',pct:25.8,type:'SI'},{name:'Changeup',pct:23.2,type:'CH'},{name:'4-Seam Fastball',pct:17.1,type:'FF'},{name:'Slider',pct:17.1,type:'SL'},{name:'Cutter',pct:16.7,type:'FC'}],
+  'Sean Burke': [{name:'4-Seam Fastball',pct:43.1,type:'FF'},{name:'Curveball',pct:23.7,type:'CU'},{name:'Slider',pct:21.9,type:'SL'}],
+  'Sean Manaea': [{name:'4-Seam Fastball',pct:60.5,type:'FF'}],
+  'Seth Lugo': [{name:'Curveball',pct:23.0,type:'CU'},{name:'4-Seam Fastball',pct:21.1,type:'FF'}],
+  'Shane Baz': [{name:'4-Seam Fastball',pct:43.9,type:'FF'},{name:'Curveball',pct:26.9,type:'CU'}],
+  'Shota Imanaga': [{name:'4-Seam Fastball',pct:48.7,type:'FF'},{name:'Split-Finger',pct:31.4,type:'FS'}],
+  'Simeon Woods Richardson': [{name:'4-Seam Fastball',pct:45.6,type:'FF'},{name:'Slider',pct:27.2,type:'SL'}],
+  'Sonny Gray': [{name:'4-Seam Fastball',pct:21.7,type:'FF'},{name:'Sweeper',pct:19.2,type:'ST'},{name:'Curveball',pct:18.4,type:'CU'},{name:'Sinker',pct:18.0,type:'SI'}],
+  'Spencer Strider': [{name:'4-Seam Fastball',pct:51.2,type:'FF'},{name:'Slider',pct:35.3,type:'SL'}],
+  'Steven Matz': [{name:'Sinker',pct:58.4,type:'SI'}],
+  'Taijuan Walker': [{name:'Cutter',pct:30.1,type:'FC'},{name:'Split-Finger',pct:22.5,type:'FS'},{name:'Sinker',pct:20.2,type:'SI'}],
+  'Taj Bradley': [{name:'4-Seam Fastball',pct:38.6,type:'FF'},{name:'Cutter',pct:22.6,type:'FC'}],
+  'Tanner Bibee': [{name:'4-Seam Fastball',pct:27.9,type:'FF'},{name:'Cutter',pct:20.7,type:'FC'},{name:'Sweeper',pct:16.0,type:'ST'},{name:'Sinker',pct:15.2,type:'SI'},{name:'Changeup',pct:15.2,type:'CH'}],
+  'Tanner Scott': [{name:'4-Seam Fastball',pct:52.6,type:'FF'},{name:'Slider',pct:47.2,type:'SL'}],
+  'Tarik Skubal': [{name:'Changeup',pct:31.4,type:'CH'},{name:'4-Seam Fastball',pct:29.3,type:'FF'},{name:'Sinker',pct:23.9,type:'SI'}],
+  'Taylor Rogers': [{name:'Sweeper',pct:50.9,type:'ST'},{name:'Sinker',pct:49.1,type:'SI'}],
+  'Trevor Rogers': [{name:'4-Seam Fastball',pct:40.9,type:'FF'},{name:'Changeup',pct:25.0,type:'CH'}],
+  'Trevor Williams': [{name:'4-Seam Fastball',pct:42.3,type:'FF'}],
+  'Tyler Anderson': [{name:'4-Seam Fastball',pct:38.1,type:'FF'},{name:'Changeup',pct:34.0,type:'CH'},{name:'Cutter',pct:20.5,type:'FC'}],
+  'Tyler Glasnow': [{name:'4-Seam Fastball',pct:36.3,type:'FF'}],
+  'Tyler Mahle': [{name:'4-Seam Fastball',pct:49.7,type:'FF'}],
+  'Tylor Megill': [{name:'4-Seam Fastball',pct:42.3,type:'FF'}],
+  'Will Warren': [{name:'4-Seam Fastball',pct:41.6,type:'FF'},{name:'Sinker',pct:21.0,type:'SI'},{name:'Sweeper',pct:20.6,type:'ST'}],
+  'Yariel Rodríguez': [{name:'Slider',pct:41.3,type:'SL'},{name:'4-Seam Fastball',pct:40.8,type:'FF'}],
+  'Yoshinobu Yamamoto': [{name:'4-Seam Fastball',pct:35.2,type:'FF'},{name:'Split-Finger',pct:25.5,type:'FS'},{name:'Curveball',pct:17.6,type:'CU'}],
+  'Yu Darvish': [{name:'Slider',pct:28.1,type:'SL'},{name:'Cutter',pct:25.5,type:'FC'},{name:'Split-Finger',pct:19.9,type:'FS'},{name:'Sinker',pct:14.3,type:'SI'}],
+  'Yusei Kikuchi': [{name:'Slider',pct:36.2,type:'SL'},{name:'4-Seam Fastball',pct:34.9,type:'FF'},{name:'Curveball',pct:15.4,type:'CU'}],
+  'Zac Gallen': [{name:'4-Seam Fastball',pct:45.0,type:'FF'},{name:'Curveball',pct:23.5,type:'CU'},{name:'Changeup',pct:16.0,type:'CH'}],
+  'Zack Littell': [{name:'Slider',pct:27.5,type:'SL'},{name:'Split-Finger',pct:27.3,type:'FS'},{name:'4-Seam Fastball',pct:23.9,type:'FF'},{name:'Sinker',pct:15.8,type:'SI'}],
+  'Zack Wheeler': [{name:'4-Seam Fastball',pct:40.9,type:'FF'},{name:'Sinker',pct:17.1,type:'SI'}],
+};
+
+const PITCH_COLORS = {
+  FF:'#3B82F6', SI:'#F472B6', FC:'#FB923C',
+  SL:'#06D6A0', ST:'#A78BFA', CH:'#FACC15',
+  CU:'#60a5fa', KC:'#60a5fa', FS:'#4ade80',
+  KN:'#e2e8f0', SV:'#c084fc', FA:'#3B82F6',
+};
+
+function PitchBars({ pitches }) {
+  if (!pitches?.length) return null;
+  return (
+    <div style={{ marginTop:12, paddingTop:12, borderTop:'0.5px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', marginBottom:10, textTransform:'uppercase', letterSpacing:0.5 }}>
+        Pitch usage · 2025 season · Baseball Savant
+      </div>
+      {pitches.map(p => {
+        const color = PITCH_COLORS[p.type] || '#94a3b8';
+        return (
+          <div key={p.name} style={{ marginBottom:7 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:3 }}>
+              <span style={{ fontSize:12, color:'rgba(255,255,255,0.7)' }}>{p.name}</span>
+              <span style={{ fontSize:12, fontWeight:600, color, minWidth:42, textAlign:'right' }}>{p.pct}%</span>
+            </div>
+            <div style={{ height:5, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden' }}>
+              <div style={{ height:'100%', width:`${p.pct}%`, background:color, borderRadius:3, transition:'width 0.6s ease' }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function PitcherCard({ pitcher, isWinner, isLoser, isFinal }) {
+  const arsenal = PITCH_ARSENALS[pitcher.name] || null;
   const roleLabel = pitcher.isStarter ? 'Starting Pitcher' : 'Relief Pitcher';
   const showPitching = pitcher.isCurrentPitcher && !isFinal;
 
@@ -35,6 +224,7 @@ function PitcherCard({ pitcher, isWinner, isLoser, isFinal }) {
           ))}
         </div>
       </div>
+      {arsenal && <PitchBars pitches={arsenal} />}
     </div>
   );
 }
@@ -66,27 +256,19 @@ function AIAnalysis({ awayPitchers, homePitchers, awayTeam, homeTeam, awayScore,
 
     const gameContext = isFinal
       ? `GAME STATUS: FINAL. Score: ${awayTeam.abbr} ${awayScore}, ${homeTeam.abbr} ${homeScore}.`
-      : `GAME STATUS: IN PROGRESS. Current score: ${awayTeam.abbr} ${awayScore}, ${homeTeam.abbr} ${homeScore}. Now: ${inningHalf || ''} ${inning || ''}.`;
+      : `GAME STATUS: IN PROGRESS. Score: ${awayTeam.abbr} ${awayScore}, ${homeTeam.abbr} ${homeScore}. Now: ${inningHalf || ''} ${inning || ''}.`;
 
     const tenseGuide = isFinal
-      ? `The game has finished. Write entirely in PAST TENSE. Give a definitive verdict on why the game was won or lost. Use phrases like "threw", "allowed", "struggled", "dominated", "was the difference".`
-      : `The game is still in progress. Write entirely in PRESENT/PRESENT PERFECT TENSE. Focus on what has happened so far and what to watch going forward. Use phrases like "has thrown", "is working", "looks sharp", "will need to", "to watch in the later innings".`;
+      ? `The game has finished. Write entirely in PAST TENSE. Give a definitive verdict on why the game was won or lost.`
+      : `The game is still in progress. Write entirely in PRESENT/PRESENT PERFECT TENSE. Focus on what has happened so far and what to watch.`;
 
     const prompt = `You are an expert baseball analyst. ${gameContext}
 
 ${tenseGuide}
 
-Pitching data:
 ${lines.join('\n')}
 
-Give 3-4 sentences of genuine analytical insight — not a stat recap. Focus on:
-- Pitch efficiency: pitches per out = total pitches divided by (innings pitched × 3). A good starter averages 3.5-4.5 pitches per out. Above 5 is laboring.
-- Command — BB rate, any control issues?
-- Whether any starter's line contradicts the scoreline
-- Bullpen impact if relevant
-- One standout hitter if notable
-
-IMPORTANT: Never show infinity or division symbols. If no walks, say "no walks allowed". Be direct and specific like a veteran analyst.`;
+3-4 sentences of genuine insight. Focus on pitch efficiency (pitches per out = pitches divided by innings×3, good is 3.5-4.5), command, whether the line contradicts the score, bullpen impact, or a standout hitter. Never show infinity or ÷ symbols. If no walks, say "no walks allowed".`;
 
     fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -106,7 +288,7 @@ IMPORTANT: Never show infinity or division symbols. If no walks, say "no walks a
       const outs = parseFloat(sp1.ip) * 3;
       const ppo = outs > 0 ? (sp1.pitchCount / outs).toFixed(1) : '?';
       const kbb = sp1.bb > 0 ? (sp1.k / sp1.bb).toFixed(1) : 'no walks allowed';
-      parts.push(`${sp1.name} ${finished?'threw':'has thrown'} ${sp1.pitchCount} pitches over ${sp1.ip} innings — ${ppo} pitches per out — K/BB ${kbb}.`);
+      parts.push(`${sp1.name} ${finished?'threw':'has thrown'} ${sp1.pitchCount} pitches over ${sp1.ip} innings (${ppo} per out), K/BB ${kbb}.`);
     }
     if (sp2) {
       const kbb = sp2.bb > 0 ? (sp2.k / sp2.bb).toFixed(1) : 'no walks allowed';
@@ -148,7 +330,7 @@ export default function PitchingTab({ data }) {
         </div>
       ))}
       <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
-        <AIAnalysis awayPitchers={awayPitchers} homePitchers={homePitchers} awayTeam={awayTeam} homeTeam={homeTeam} awayScore={awayScore} homeScore={homeScore} awayBatters={awayBatters || []} homeBatters={homeBatters || []} keyPlays={keyPlays || []} isFinal={isFinal} inning={inning} inningHalf={inningHalf} />
+        <AIAnalysis awayPitchers={awayPitchers} homePitchers={homePitchers} awayTeam={awayTeam} homeTeam={homeTeam} awayScore={awayScore} homeScore={homeScore} awayBatters={awayBatters||[]} homeBatters={homeBatters||[]} keyPlays={keyPlays||[]} isFinal={isFinal} inning={inning} inningHalf={inningHalf} />
       </div>
     </div>
   );
