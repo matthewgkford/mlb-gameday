@@ -98,7 +98,6 @@ export default function TimelineTab({ data }) {
     <div className="tab-panel">
       <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
         <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginBottom:12, lineHeight:1.7 }}>
-          <strong style={{ color:'rgba(255,255,255,0.5)' }}>Inning:</strong> "Top" = away team batting · "Bot" = home team batting<br/>
           <strong style={{ color:'rgba(255,255,255,0.5)' }}>Pressure (LI):</strong> how much this at-bat could swing the outcome — average is 1.0<br/>
           <strong style={{ color:'rgba(255,255,255,0.4)' }}>Note:</strong> Shows notable plays only. Full pitch-by-pitch requires a Statcast subscription.
         </div>

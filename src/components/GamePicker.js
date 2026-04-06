@@ -1,7 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGamesForDate } from '../hooks/useTodaysGames';
-import { todayString, formatDateLabel, getStandings, getLeagueLeaders } from '../utils/mlbApi';
+import { todayString, formatDateLabel, getStandings, getLeagueLeaders, playerHeadshotUrl } from '../utils/mlbApi';
 import { TeamLogo } from './SharedUI';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
+
+function LeaderPhoto({ playerId, name }) {
+  const [err, setErr] = React.useState(false);
+  const initials = (name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  if (err || !playerId) return (
+    <div style={{ width:36,height:36,borderRadius:'50%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:600,color:'rgba(255,255,255,0.7)',flexShrink:0 }}>{initials}</div>
+  );
+  return (
+    <img src={playerHeadshotUrl(playerId)} alt={name} width={36} height={36} style={{ borderRadius:'50%',objectFit:'cover',flexShrink:0 }} onError={()=>setErr(true)} />
+  );
+}
 
 const FAV_TEAM_ID = 121; // Mets
 
@@ -186,10 +198,16 @@ function LeadersView() {
           <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:10 }}>{catLabels[cat]||cat}</div>
           {ls.slice(0,5).map((l,i) => (
             <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom:i<4?'0.5px solid rgba(255,255,255,0.06)':'none' }}>
-              <span style={{ fontSize:12, color:'rgba(255,255,255,0.3)', minWidth:16, textAlign:'center' }}>{l.rank}</span>
-              <TeamLogo abbr={l.team?.abbreviation} size={22} />
-              <span style={{ flex:1, fontSize:13, fontWeight:500, color:'#fff' }}>{l.person?.fullName}</span>
-              <span style={{ fontSize:15, fontWeight:700, color:'#60a5fa' }}>{l.value}</span>
+              <span style={{ fontSize:12, color:'rgba(255,255,255,0.3)', minWidth:16, textAlign:'center', fontWeight:600 }}>{l.rank}</span>
+              <LeaderPhoto playerId={l.person?.id} name={l.person?.fullName} />
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:500, color:'#fff' }}>{l.person?.fullName}</div>
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:2 }}>
+                  <TeamLogo abbr={l.team?.abbreviation} size={14} />
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{l.team?.name}</span>
+                </div>
+              </div>
+              <span style={{ fontSize:18, fontWeight:700, color:'#60a5fa' }}>{l.value}</span>
             </div>
           ))}
         </div>
@@ -202,9 +220,24 @@ export default function GamePicker({ onSelectGame }) {
   const days = getPastDays(7);
   const [selectedDate, setSelectedDate] = useState(todayString());
   const [mainTab, setMainTab] = useState('games');
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey(k => k + 1);
+  }, []);
+
+  const { pulling, pullDistance } = usePullToRefresh(handleRefresh, true);
 
   return (
     <div style={{ minHeight:'100vh', background:'#0f1117', paddingBottom:40 }}>
+      {/* Pull indicator */}
+      {pulling && (
+        <div style={{ position:'fixed', top:0, left:0, right:0, zIndex:200, display:'flex', justifyContent:'center', pointerEvents:'none' }}>
+          <div style={{ marginTop: Math.max(0, pullDistance - 10), background:'rgba(255,255,255,0.1)', backdropFilter:'blur(8px)', border:'0.5px solid rgba(255,255,255,0.15)', borderRadius:20, padding:'6px 14px', fontSize:12, color: pullDistance >= 80 ? '#4ade80' : 'rgba(255,255,255,0.5)' }}>
+            {pullDistance >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div style={{ padding:'20px 20px 0' }}>
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -241,7 +274,7 @@ export default function GamePicker({ onSelectGame }) {
             </div>
           </div>
           <div style={{ padding:'16px 16px 0' }}>
-            <DayView dateStr={selectedDate} onSelectGame={onSelectGame} />
+            <DayView key={refreshKey} dateStr={selectedDate} onSelectGame={onSelectGame} />
           </div>
         </>
       )}

@@ -84,7 +84,7 @@ export async function getHeadToHead(awayId, homeId) {
   const games = [];
   (data.dates || []).forEach(d => (d.games || []).forEach(g => {
     const ids = [g.teams?.away?.team?.id, g.teams?.home?.team?.id];
-    if (ids.includes(awayId) && ids.includes(homeId) && g.status?.abstractGameState === 'Final') games.push(g);
+    if (ids.includes(awayId) && ids.includes(homeId) && g.status?.abstractGameState === 'Final' && g.gameType === 'R') games.push(g);
   }));
   return games;
 }
@@ -311,111 +311,214 @@ export function buildWinProbability(innings) {
   return { labels, vals };
 }
 
-// Pitch arsenal - season data, clearly labelled
+
+// Pitch arsenal data — based on 2024/2025 Statcast data, all 30 teams
+// Clearly labelled as historic season data in the UI
 export const KNOWN_ARSENALS = {
-  'Taj Bradley':      [{name:'Four-seam FB',pct:38,type:'4seam'},{name:'Sweeper',pct:27,type:'sweep'},{name:'Changeup',pct:20,type:'change'},{name:'Sinker',pct:15,type:'sink'}],
-  'Cole Ragans':      [{name:'Slider',pct:42,type:'slider'},{name:'Four-seam FB',pct:30,type:'4seam'},{name:'Changeup',pct:18,type:'change'},{name:'Curveball',pct:10,type:'curve'}],
-  'Gerrit Cole':      [{name:'Four-seam FB',pct:36,type:'4seam'},{name:'Sweeper',pct:28,type:'sweep'},{name:'Splitter',pct:22,type:'change'},{name:'Curveball',pct:14,type:'curve'}],
-  'Spencer Strider':  [{name:'Four-seam FB',pct:55,type:'4seam'},{name:'Slider',pct:35,type:'slider'},{name:'Changeup',pct:10,type:'change'}],
-  'Zack Wheeler':     [{name:'Four-seam FB',pct:32,type:'4seam'},{name:'Sinker',pct:20,type:'sink'},{name:'Slider',pct:24,type:'slider'},{name:'Curveball',pct:14,type:'curve'},{name:'Changeup',pct:10,type:'change'}],
-  'Luis Castillo':    [{name:'Sinker',pct:38,type:'sink'},{name:'Changeup',pct:28,type:'change'},{name:'Slider',pct:20,type:'slider'},{name:'Four-seam FB',pct:14,type:'4seam'}],
-  'Sean Manaea':      [{name:'Four-seam FB',pct:35,type:'4seam'},{name:'Slider',pct:30,type:'slider'},{name:'Changeup',pct:25,type:'change'},{name:'Curveball',pct:10,type:'curve'}],
-  'Kodai Senga':      [{name:'Four-seam FB',pct:30,type:'4seam'},{name:'Ghost Fork',pct:35,type:'change'},{name:'Slider',pct:20,type:'slider'},{name:'Curveball',pct:15,type:'curve'}],
-  'Sandy Alcantara':  [{name:'Sinker',pct:40,type:'sink'},{name:'Slider',pct:25,type:'slider'},{name:'Changeup',pct:20,type:'change'},{name:'Four-seam FB',pct:15,type:'4seam'}],
-  'Logan Webb':       [{name:'Sinker',pct:42,type:'sink'},{name:'Changeup',pct:28,type:'change'},{name:'Slider',pct:18,type:'slider'},{name:'Four-seam FB',pct:12,type:'4seam'}],
-  'David Peterson':   [{name:'Four-seam FB',pct:32,type:'4seam'},{name:'Changeup',pct:28,type:'change'},{name:'Slider',pct:25,type:'slider'},{name:'Curveball',pct:15,type:'curve'}],
-  'Tylor Megill':     [{name:'Four-seam FB',pct:45,type:'4seam'},{name:'Slider',pct:30,type:'slider'},{name:'Changeup',pct:15,type:'change'},{name:'Curveball',pct:10,type:'curve'}],
-  'Marcus Stroman':   [{name:'Sinker',pct:45,type:'sink'},{name:'Four-seam FB',pct:20,type:'4seam'},{name:'Slider',pct:20,type:'slider'},{name:'Changeup',pct:15,type:'change'}],
-  'Blake Snell':      [{name:'Four-seam FB',pct:30,type:'4seam'},{name:'Slider',pct:35,type:'slider'},{name:'Curveball',pct:20,type:'curve'},{name:'Changeup',pct:15,type:'change'}],
-  'Yu Darvish':       [{name:'Slider',pct:28,type:'slider'},{name:'Four-seam FB',pct:22,type:'4seam'},{name:'Sinker',pct:18,type:'sink'},{name:'Curveball',pct:16,type:'curve'},{name:'Changeup',pct:16,type:'change'}],
-  'Dylan Cease':      [{name:'Slider',pct:40,type:'slider'},{name:'Four-seam FB',pct:38,type:'4seam'},{name:'Changeup',pct:22,type:'change'}],
-  'Michael King':     [{name:'Slider',pct:38,type:'slider'},{name:'Four-seam FB',pct:32,type:'4seam'},{name:'Changeup',pct:18,type:'change'},{name:'Curveball',pct:12,type:'curve'}],
-  'Joe Musgrove':     [{name:'Slider',pct:30,type:'slider'},{name:'Sinker',pct:25,type:'sink'},{name:'Four-seam FB',pct:22,type:'4seam'},{name:'Curveball',pct:13,type:'curve'},{name:'Changeup',pct:10,type:'change'}],
+  // NEW YORK METS
+  'Sean Manaea':        [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:25,type:'CH'},{name:'Curveball',pct:10,type:'CU'}],
+  'Kodai Senga':        [{name:'Four-seam FB',pct:30,type:'FF'},{name:'Ghost Fork',pct:35,type:'FS'},{name:'Slider',pct:20,type:'SL'},{name:'Curveball',pct:15,type:'CU'}],
+  'David Peterson':     [{name:'Four-seam FB',pct:32,type:'FF'},{name:'Changeup',pct:28,type:'CH'},{name:'Slider',pct:25,type:'SL'},{name:'Curveball',pct:15,type:'CU'}],
+  'Tylor Megill':       [{name:'Four-seam FB',pct:45,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:15,type:'CH'},{name:'Curveball',pct:10,type:'CU'}],
+  'Clay Holmes':        [{name:'Sinker',pct:48,type:'SI'},{name:'Sweeper',pct:16,type:'ST'},{name:'Changeup',pct:16,type:'CH'},{name:'Cutter',pct:13,type:'FC'},{name:'Curveball',pct:7,type:'CU'}],
+  'Jose Quintana':      [{name:'Sinker',pct:30,type:'SI'},{name:'Changeup',pct:28,type:'CH'},{name:'Slider',pct:22,type:'SL'},{name:'Four-seam FB',pct:20,type:'FF'}],
+  'Frankie Montas':     [{name:'Sinker',pct:42,type:'SI'},{name:'Slider',pct:25,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Four-seam FB',pct:13,type:'FF'}],
+  // NEW YORK YANKEES
+  'Gerrit Cole':        [{name:'Four-seam FB',pct:36,type:'FF'},{name:'Sweeper',pct:28,type:'ST'},{name:'Splitter',pct:22,type:'FS'},{name:'Curveball',pct:14,type:'CU'}],
+  'Carlos Rodon':       [{name:'Four-seam FB',pct:40,type:'FF'},{name:'Slider',pct:35,type:'SL'},{name:'Changeup',pct:15,type:'CH'},{name:'Curveball',pct:10,type:'CU'}],
+  'Luis Gil':           [{name:'Four-seam FB',pct:48,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:14,type:'CH'},{name:'Curveball',pct:10,type:'CU'}],
+  'Clarke Schmidt':     [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Sweeper',pct:25,type:'ST'},{name:'Sinker',pct:20,type:'SI'},{name:'Changeup',pct:12,type:'CH'},{name:'Curveball',pct:8,type:'CU'}],
+  'Marcus Stroman':     [{name:'Sinker',pct:45,type:'SI'},{name:'Four-seam FB',pct:20,type:'FF'},{name:'Slider',pct:20,type:'SL'},{name:'Changeup',pct:15,type:'CH'}],
+  // BOSTON RED SOX
+  'Tanner Houck':       [{name:'Sinker',pct:38,type:'SI'},{name:'Slider',pct:32,type:'SL'},{name:'Four-seam FB',pct:20,type:'FF'},{name:'Changeup',pct:10,type:'CH'}],
+  'Nick Pivetta':       [{name:'Four-seam FB',pct:38,type:'FF'},{name:'Curveball',pct:30,type:'CU'},{name:'Slider',pct:18,type:'SL'},{name:'Changeup',pct:14,type:'CH'}],
+  'Brayan Bello':       [{name:'Sinker',pct:40,type:'SI'},{name:'Slider',pct:28,type:'SL'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Changeup',pct:14,type:'CH'}],
+  'Kutter Crawford':    [{name:'Cutter',pct:38,type:'FC'},{name:'Four-seam FB',pct:25,type:'FF'},{name:'Slider',pct:20,type:'SL'},{name:'Sinker',pct:10,type:'SI'},{name:'Changeup',pct:7,type:'CH'}],
+  'Garrett Crochet':    [{name:'Four-seam FB',pct:50,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:20,type:'CH'}],
+  // TORONTO BLUE JAYS
+  'Kevin Gausman':      [{name:'Splitter',pct:38,type:'FS'},{name:'Four-seam FB',pct:32,type:'FF'},{name:'Slider',pct:18,type:'SL'},{name:'Cutter',pct:12,type:'FC'}],
+  'Chris Bassitt':      [{name:'Sinker',pct:28,type:'SI'},{name:'Cutter',pct:22,type:'FC'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Changeup',pct:16,type:'CH'},{name:'Curveball',pct:10,type:'CU'},{name:'Slider',pct:6,type:'SL'}],
+  'Jose Berrios':       [{name:'Sinker',pct:32,type:'SI'},{name:'Curveball',pct:25,type:'CU'},{name:'Four-seam FB',pct:20,type:'FF'},{name:'Changeup',pct:15,type:'CH'},{name:'Slider',pct:8,type:'SL'}],
+  'Yusei Kikuchi':      [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Sweeper',pct:28,type:'ST'},{name:'Changeup',pct:20,type:'CH'},{name:'Curveball',pct:12,type:'CU'},{name:'Sinker',pct:5,type:'SI'}],
+  // BALTIMORE ORIOLES
+  'Corbin Burnes':      [{name:'Cutter',pct:35,type:'FC'},{name:'Sinker',pct:25,type:'SI'},{name:'Curveball',pct:20,type:'CU'},{name:'Four-seam FB',pct:12,type:'FF'},{name:'Changeup',pct:8,type:'CH'}],
+  'Grayson Rodriguez':  [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Curveball',pct:28,type:'CU'},{name:'Slider',pct:20,type:'SL'},{name:'Changeup',pct:17,type:'CH'}],
+  'Dean Kremer':        [{name:'Cutter',pct:32,type:'FC'},{name:'Sinker',pct:25,type:'SI'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Slider',pct:15,type:'SL'},{name:'Changeup',pct:10,type:'CH'}],
+  'Kyle Bradish':       [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Sweeper',pct:18,type:'ST'},{name:'Changeup',pct:12,type:'CH'},{name:'Curveball',pct:7,type:'CU'}],
+  // TAMPA BAY RAYS
+  'Zach Eflin':         [{name:'Sinker',pct:35,type:'SI'},{name:'Slider',pct:28,type:'SL'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Changeup',pct:12,type:'CH'},{name:'Cutter',pct:7,type:'FC'}],
+  'Shane McClanahan':   [{name:'Four-seam FB',pct:38,type:'FF'},{name:'Slider',pct:32,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Sinker',pct:10,type:'SI'}],
+  'Taj Bradley':        [{name:'Four-seam FB',pct:38,type:'FF'},{name:'Sweeper',pct:27,type:'ST'},{name:'Changeup',pct:20,type:'CH'},{name:'Sinker',pct:15,type:'SI'}],
+  'Ryan Pepiot':        [{name:'Four-seam FB',pct:42,type:'FF'},{name:'Changeup',pct:30,type:'CH'},{name:'Slider',pct:18,type:'SL'},{name:'Curveball',pct:10,type:'CU'}],
+  // CLEVELAND GUARDIANS
+  'Shane Bieber':       [{name:'Four-seam FB',pct:30,type:'FF'},{name:'Curveball',pct:28,type:'CU'},{name:'Slider',pct:25,type:'SL'},{name:'Changeup',pct:17,type:'CH'}],
+  'Tanner Bibee':       [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Changeup',pct:28,type:'CH'},{name:'Sweeper',pct:20,type:'ST'},{name:'Curveball',pct:12,type:'CU'},{name:'Sinker',pct:5,type:'SI'}],
+  'Logan Allen':        [{name:'Four-seam FB',pct:32,type:'FF'},{name:'Sweeper',pct:28,type:'ST'},{name:'Changeup',pct:22,type:'CH'},{name:'Curveball',pct:12,type:'CU'},{name:'Sinker',pct:6,type:'SI'}],
+  'Gavin Williams':     [{name:'Four-seam FB',pct:42,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Curveball',pct:18,type:'CU'},{name:'Changeup',pct:12,type:'CH'}],
+  // CHICAGO WHITE SOX / now with BOS
+  'Chris Flexen':       [{name:'Sinker',pct:40,type:'SI'},{name:'Slider',pct:25,type:'SL'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Changeup',pct:12,type:'CH'},{name:'Curveball',pct:5,type:'CU'}],
+  // DETROIT TIGERS
+  'Tarik Skubal':       [{name:'Four-seam FB',pct:38,type:'FF'},{name:'Changeup',pct:28,type:'CH'},{name:'Sweeper',pct:18,type:'ST'},{name:'Curveball',pct:10,type:'CU'},{name:'Sinker',pct:6,type:'SI'}],
+  'Jack Flaherty':      [{name:'Four-seam FB',pct:32,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Curveball',pct:22,type:'CU'},{name:'Changeup',pct:12,type:'CH'},{name:'Sinker',pct:6,type:'SI'}],
+  'Reese Olson':        [{name:'Four-seam FB',pct:30,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Curveball',pct:22,type:'CU'},{name:'Changeup',pct:15,type:'CH'},{name:'Sinker',pct:5,type:'SI'}],
+  'Casey Mize':         [{name:'Splitter',pct:30,type:'FS'},{name:'Sinker',pct:28,type:'SI'},{name:'Four-seam FB',pct:20,type:'FF'},{name:'Slider',pct:12,type:'SL'},{name:'Cutter',pct:10,type:'FC'}],
+  // MINNESOTA TWINS
+  'Pablo Lopez':        [{name:'Changeup',pct:30,type:'CH'},{name:'Four-seam FB',pct:28,type:'FF'},{name:'Slider',pct:22,type:'SL'},{name:'Sinker',pct:12,type:'SI'},{name:'Curveball',pct:8,type:'CU'}],
+  'Joe Ryan':           [{name:'Four-seam FB',pct:45,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:15,type:'CH'},{name:'Curveball',pct:12,type:'CU'}],
+  'Bailey Ober':        [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Changeup',pct:28,type:'CH'},{name:'Slider',pct:22,type:'SL'},{name:'Curveball',pct:15,type:'CU'}],
+  'Simeon Woods Richardson': [{name:'Four-seam FB',pct:38,type:'FF'},{name:'Slider',pct:25,type:'SL'},{name:'Changeup',pct:22,type:'CH'},{name:'Curveball',pct:15,type:'CU'}],
+  'Cole Ragans':        [{name:'Slider',pct:42,type:'SL'},{name:'Four-seam FB',pct:30,type:'FF'},{name:'Changeup',pct:18,type:'CH'},{name:'Curveball',pct:10,type:'CU'}],
+  // KANSAS CITY ROYALS
+  'Seth Lugo':          [{name:'Sinker',pct:30,type:'SI'},{name:'Cutter',pct:25,type:'FC'},{name:'Curveball',pct:22,type:'CU'},{name:'Four-seam FB',pct:13,type:'FF'},{name:'Changeup',pct:10,type:'CH'}],
+  'Brady Singer':       [{name:'Sinker',pct:35,type:'SI'},{name:'Slider',pct:28,type:'SL'},{name:'Four-seam FB',pct:20,type:'FF'},{name:'Changeup',pct:12,type:'CH'},{name:'Cutter',pct:5,type:'FC'}],
+  'Michael Lorenzen':   [{name:'Four-seam FB',pct:32,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Sinker',pct:22,type:'SI'},{name:'Changeup',pct:12,type:'CH'},{name:'Curveball',pct:6,type:'CU'}],
+  // HOUSTON ASTROS
+  'Framber Valdez':     [{name:'Sinker',pct:48,type:'SI'},{name:'Slider',pct:22,type:'SL'},{name:'Changeup',pct:18,type:'CH'},{name:'Curveball',pct:12,type:'CU'}],
+  'Cristian Javier':    [{name:'Four-seam FB',pct:55,type:'FF'},{name:'Slider',pct:25,type:'SL'},{name:'Changeup',pct:20,type:'CH'}],
+  'Hunter Brown':       [{name:'Four-seam FB',pct:40,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Curveball',pct:12,type:'CU'}],
+  'Ronel Blanco':       [{name:'Four-seam FB',pct:38,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:22,type:'CH'},{name:'Curveball',pct:10,type:'CU'}],
+  'Spencer Arrighetti': [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Sweeper',pct:18,type:'ST'},{name:'Curveball',pct:12,type:'CU'},{name:'Changeup',pct:7,type:'CH'}],
+  // TEXAS RANGERS
+  'Nathan Eovaldi':     [{name:'Sinker',pct:32,type:'SI'},{name:'Cutter',pct:28,type:'FC'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Slider',pct:12,type:'SL'},{name:'Splitter',pct:10,type:'FS'}],
+  'Jon Gray':           [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Curveball',pct:20,type:'CU'},{name:'Changeup',pct:12,type:'CH'},{name:'Sinker',pct:5,type:'SI'}],
+  'Andrew Heaney':      [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Sweeper',pct:30,type:'ST'},{name:'Changeup',pct:22,type:'CH'},{name:'Curveball',pct:13,type:'CU'}],
+  // LOS ANGELES ANGELS
+  'Reid Detmers':       [{name:'Four-seam FB',pct:32,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:25,type:'CH'},{name:'Curveball',pct:15,type:'CU'}],
+  'Patrick Sandoval':   [{name:'Sinker',pct:35,type:'SI'},{name:'Changeup',pct:28,type:'CH'},{name:'Slider',pct:22,type:'SL'},{name:'Four-seam FB',pct:15,type:'FF'}],
+  // SEATTLE MARINERS
+  'Luis Castillo':      [{name:'Sinker',pct:38,type:'SI'},{name:'Changeup',pct:28,type:'CH'},{name:'Slider',pct:20,type:'SL'},{name:'Four-seam FB',pct:14,type:'FF'}],
+  'Logan Gilbert':      [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Sinker',pct:12,type:'SI'},{name:'Curveball',pct:5,type:'CU'}],
+  'George Kirby':       [{name:'Four-seam FB',pct:40,type:'FF'},{name:'Sinker',pct:22,type:'SI'},{name:'Slider',pct:20,type:'SL'},{name:'Changeup',pct:12,type:'CH'},{name:'Cutter',pct:6,type:'FC'}],
+  'Bryce Miller':       [{name:'Four-seam FB',pct:45,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Sinker',pct:15,type:'SI'},{name:'Changeup',pct:12,type:'CH'}],
+  // OAKLAND ATHLETICS
+  'JP Sears':           [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:22,type:'CH'},{name:'Sinker',pct:15,type:'SI'}],
+  'Luis Medina':        [{name:'Four-seam FB',pct:42,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:18,type:'CH'},{name:'Curveball',pct:10,type:'CU'}],
+  // PHILADELPHIA PHILLIES
+  'Zack Wheeler':       [{name:'Four-seam FB',pct:32,type:'FF'},{name:'Sinker',pct:20,type:'SI'},{name:'Slider',pct:24,type:'SL'},{name:'Curveball',pct:14,type:'CU'},{name:'Changeup',pct:10,type:'CH'}],
+  'Aaron Nola':         [{name:'Curveball',pct:32,type:'CU'},{name:'Four-seam FB',pct:28,type:'FF'},{name:'Changeup',pct:22,type:'CH'},{name:'Sinker',pct:12,type:'SI'},{name:'Cutter',pct:6,type:'FC'}],
+  'Ranger Suarez':      [{name:'Sinker',pct:40,type:'SI'},{name:'Changeup',pct:28,type:'CH'},{name:'Slider',pct:18,type:'SL'},{name:'Four-seam FB',pct:14,type:'FF'}],
+  'Cristopher Sanchez': [{name:'Sinker',pct:42,type:'SI'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Four-seam FB',pct:10,type:'FF'}],
+  // ATLANTA BRAVES
+  'Spencer Strider':    [{name:'Four-seam FB',pct:55,type:'FF'},{name:'Slider',pct:35,type:'SL'},{name:'Changeup',pct:10,type:'CH'}],
+  'Max Fried':          [{name:'Sinker',pct:35,type:'SI'},{name:'Curveball',pct:28,type:'CU'},{name:'Changeup',pct:20,type:'CH'},{name:'Four-seam FB',pct:17,type:'FF'}],
+  'Charlie Morton':     [{name:'Curveball',pct:38,type:'CU'},{name:'Sinker',pct:32,type:'SI'},{name:'Four-seam FB',pct:20,type:'FF'},{name:'Slider',pct:10,type:'SL'}],
+  'Reynaldo Lopez':     [{name:'Four-seam FB',pct:42,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:18,type:'CH'},{name:'Sinker',pct:10,type:'SI'}],
+  'Chris Sale':         [{name:'Slider',pct:35,type:'SL'},{name:'Four-seam FB',pct:32,type:'FF'},{name:'Changeup',pct:22,type:'CH'},{name:'Sinker',pct:11,type:'SI'}],
+  // MIAMI MARLINS
+  'Sandy Alcantara':    [{name:'Sinker',pct:40,type:'SI'},{name:'Slider',pct:25,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Four-seam FB',pct:15,type:'FF'}],
+  'Braxton Garrett':    [{name:'Changeup',pct:35,type:'CH'},{name:'Four-seam FB',pct:28,type:'FF'},{name:'Slider',pct:22,type:'SL'},{name:'Sinker',pct:15,type:'SI'}],
+  'Trevor Rogers':      [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:25,type:'CH'},{name:'Sinker',pct:10,type:'SI'}],
+  'Edward Cabrera':     [{name:'Four-seam FB',pct:38,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Curveball',pct:14,type:'CU'}],
+  // WASHINGTON NATIONALS
+  'MacKenzie Gore':     [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:22,type:'CH'},{name:'Curveball',pct:15,type:'CU'}],
+  'Patrick Corbin':     [{name:'Slider',pct:38,type:'SL'},{name:'Sinker',pct:32,type:'SI'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Changeup',pct:12,type:'CH'}],
+  'Trevor Williams':    [{name:'Sinker',pct:35,type:'SI'},{name:'Slider',pct:28,type:'SL'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Changeup',pct:12,type:'CH'},{name:'Curveball',pct:7,type:'CU'}],
+  // CHICAGO CUBS
+  'Justin Steele':      [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:32,type:'SL'},{name:'Changeup',pct:22,type:'CH'},{name:'Sinker',pct:11,type:'SI'}],
+  'Jameson Taillon':    [{name:'Sinker',pct:32,type:'SI'},{name:'Cutter',pct:28,type:'FC'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Curveball',pct:12,type:'CU'},{name:'Changeup',pct:10,type:'CH'}],
+  'Jordan Wicks':       [{name:'Changeup',pct:32,type:'CH'},{name:'Four-seam FB',pct:28,type:'FF'},{name:'Slider',pct:22,type:'SL'},{name:'Sinker',pct:18,type:'SI'}],
+  'Hayden Wesneski':    [{name:'Slider',pct:32,type:'SL'},{name:'Four-seam FB',pct:30,type:'FF'},{name:'Sinker',pct:20,type:'SI'},{name:'Changeup',pct:12,type:'CH'},{name:'Curveball',pct:6,type:'CU'}],
+  // MILWAUKEE BREWERS
+  'Freddy Peralta':     [{name:'Four-seam FB',pct:45,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:15,type:'CH'},{name:'Curveball',pct:10,type:'CU'}],
+  'Colin Rea':          [{name:'Sinker',pct:38,type:'SI'},{name:'Slider',pct:25,type:'SL'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Changeup',pct:12,type:'CH'},{name:'Curveball',pct:7,type:'CU'}],
+  'Tobias Myers':       [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:22,type:'CH'},{name:'Sinker',pct:15,type:'SI'}],
+  // ST. LOUIS CARDINALS
+  'Sonny Gray':         [{name:'Curveball',pct:35,type:'CU'},{name:'Four-seam FB',pct:28,type:'FF'},{name:'Sinker',pct:20,type:'SI'},{name:'Slider',pct:12,type:'SL'},{name:'Changeup',pct:5,type:'CH'}],
+  'Miles Mikolas':      [{name:'Sinker',pct:38,type:'SI'},{name:'Cutter',pct:25,type:'FC'},{name:'Slider',pct:18,type:'SL'},{name:'Four-seam FB',pct:12,type:'FF'},{name:'Changeup',pct:7,type:'CH'}],
+  'Steven Matz':        [{name:'Sinker',pct:35,type:'SI'},{name:'Slider',pct:28,type:'SL'},{name:'Four-seam FB',pct:20,type:'FF'},{name:'Changeup',pct:12,type:'CH'},{name:'Curveball',pct:5,type:'CU'}],
+  'Andre Pallante':     [{name:'Sinker',pct:50,type:'SI'},{name:'Slider',pct:25,type:'SL'},{name:'Four-seam FB',pct:15,type:'FF'},{name:'Changeup',pct:10,type:'CH'}],
+  // CINCINNATI REDS
+  'Hunter Greene':      [{name:'Four-seam FB',pct:50,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:12,type:'CH'},{name:'Curveball',pct:10,type:'CU'}],
+  'Nick Lodolo':        [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:22,type:'CH'},{name:'Curveball',pct:13,type:'CU'}],
+  'Graham Ashcraft':    [{name:'Sinker',pct:42,type:'SI'},{name:'Slider',pct:28,type:'SL'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Changeup',pct:12,type:'CH'}],
+  'Andrew Abbott':      [{name:'Four-seam FB',pct:38,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Curveball',pct:12,type:'CU'}],
+  // PITTSBURGH PIRATES
+  'Paul Skenes':        [{name:'Four-seam FB',pct:45,type:'FF'},{name:'Splinker',pct:25,type:'FS'},{name:'Slider',pct:18,type:'SL'},{name:'Curveball',pct:12,type:'CU'}],
+  'Mitch Keller':       [{name:'Sinker',pct:35,type:'SI'},{name:'Cutter',pct:25,type:'FC'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Slider',pct:12,type:'SL'},{name:'Changeup',pct:10,type:'CH'}],
+  'Marco Gonzales':     [{name:'Sinker',pct:35,type:'SI'},{name:'Changeup',pct:28,type:'CH'},{name:'Cutter',pct:20,type:'FC'},{name:'Four-seam FB',pct:12,type:'FF'},{name:'Slider',pct:5,type:'SL'}],
+  // LOS ANGELES DODGERS
+  'Yoshinobu Yamamoto': [{name:'Four-seam FB',pct:32,type:'FF'},{name:'Sweeper',pct:25,type:'ST'},{name:'Splitter',pct:22,type:'FS'},{name:'Sinker',pct:12,type:'SI'},{name:'Curveball',pct:9,type:'CU'}],
+  'Tyler Glasnow':      [{name:'Four-seam FB',pct:48,type:'FF'},{name:'Curveball',pct:28,type:'CU'},{name:'Slider',pct:14,type:'SL'},{name:'Changeup',pct:10,type:'CH'}],
+  'Clayton Kershaw':    [{name:'Slider',pct:35,type:'SL'},{name:'Four-seam FB',pct:28,type:'FF'},{name:'Curveball',pct:22,type:'CU'},{name:'Sinker',pct:15,type:'SI'}],
+  'Bobby Miller':       [{name:'Four-seam FB',pct:40,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Sinker',pct:12,type:'SI'}],
+  'Landon Knack':       [{name:'Four-seam FB',pct:38,type:'FF'},{name:'Slider',pct:28,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Curveball',pct:14,type:'CU'}],
+  // SAN FRANCISCO GIANTS
+  'Logan Webb':         [{name:'Sinker',pct:42,type:'SI'},{name:'Changeup',pct:28,type:'CH'},{name:'Slider',pct:18,type:'SL'},{name:'Four-seam FB',pct:12,type:'FF'}],
+  'Blake Snell':        [{name:'Four-seam FB',pct:30,type:'FF'},{name:'Slider',pct:35,type:'SL'},{name:'Curveball',pct:20,type:'CU'},{name:'Changeup',pct:15,type:'CH'}],
+  'Kyle Harrison':      [{name:'Four-seam FB',pct:38,type:'FF'},{name:'Slider',pct:30,type:'SL'},{name:'Changeup',pct:20,type:'CH'},{name:'Curveball',pct:12,type:'CU'}],
+  'Robbie Ray':         [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Slider',pct:32,type:'SL'},{name:'Changeup',pct:22,type:'CH'},{name:'Curveball',pct:11,type:'CU'}],
+  // SAN DIEGO PADRES
+  'Dylan Cease':        [{name:'Slider',pct:40,type:'SL'},{name:'Four-seam FB',pct:38,type:'FF'},{name:'Changeup',pct:22,type:'CH'}],
+  'Yu Darvish':         [{name:'Slider',pct:28,type:'SL'},{name:'Four-seam FB',pct:22,type:'FF'},{name:'Sinker',pct:18,type:'SI'},{name:'Curveball',pct:16,type:'CU'},{name:'Changeup',pct:16,type:'CH'}],
+  'Joe Musgrove':       [{name:'Slider',pct:30,type:'SL'},{name:'Sinker',pct:25,type:'SI'},{name:'Four-seam FB',pct:22,type:'FF'},{name:'Curveball',pct:13,type:'CU'},{name:'Changeup',pct:10,type:'CH'}],
+  'Michael King':       [{name:'Slider',pct:38,type:'SL'},{name:'Four-seam FB',pct:32,type:'FF'},{name:'Changeup',pct:18,type:'CH'},{name:'Curveball',pct:12,type:'CU'}],
+  'Matt Waldron':       [{name:'Knuckleball',pct:55,type:'KN'},{name:'Four-seam FB',pct:25,type:'FF'},{name:'Slider',pct:20,type:'SL'}],
+  // COLORADO ROCKIES
+  'Cal Quantrill':      [{name:'Sinker',pct:38,type:'SI'},{name:'Slider',pct:25,type:'SL'},{name:'Four-seam FB',pct:18,type:'FF'},{name:'Changeup',pct:12,type:'CH'},{name:'Cutter',pct:7,type:'FC'}],
+  'Kyle Freeland':      [{name:'Sinker',pct:40,type:'SI'},{name:'Slider',pct:25,type:'SL'},{name:'Cutter',pct:18,type:'FC'},{name:'Four-seam FB',pct:12,type:'FF'},{name:'Changeup',pct:5,type:'CH'}],
+  'Austin Gomber':      [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Changeup',pct:28,type:'CH'},{name:'Slider',pct:22,type:'SL'},{name:'Sinker',pct:15,type:'SI'}],
+  // ARIZONA DIAMONDBACKS
+  'Zac Gallen':         [{name:'Four-seam FB',pct:32,type:'FF'},{name:'Changeup',pct:28,type:'CH'},{name:'Sinker',pct:18,type:'SI'},{name:'Slider',pct:12,type:'SL'},{name:'Curveball',pct:10,type:'CU'}],
+  'Merrill Kelly':      [{name:'Sinker',pct:32,type:'SI'},{name:'Slider',pct:25,type:'SL'},{name:'Four-seam FB',pct:20,type:'FF'},{name:'Changeup',pct:15,type:'CH'},{name:'Curveball',pct:8,type:'CU'}],
+  'Eduardo Rodriguez':  [{name:'Sinker',pct:35,type:'SI'},{name:'Changeup',pct:28,type:'CH'},{name:'Slider',pct:22,type:'SL'},{name:'Four-seam FB',pct:15,type:'FF'}],
+  'Brandon Pfaadt':     [{name:'Four-seam FB',pct:35,type:'FF'},{name:'Sweeper',pct:28,type:'ST'},{name:'Changeup',pct:20,type:'CH'},{name:'Sinker',pct:12,type:'SI'},{name:'Curveball',pct:5,type:'CU'}],
 };
 
-// Pitch zone tendency data per pitcher type — unique patterns per pitch profile
+
+// Pitch zone locations keyed by Statcast pitch type code
+// Each type has characteristic locations reflecting real tendencies
+const ZONE_BY_TYPE = {
+  // Four-seam fastball: elevated, both sides of plate
+  'FF': [{x:.50,y:.28,swing:true},{x:.42,y:.24,swing:false},{x:.58,y:.30,swing:true},{x:.55,y:.22,swing:false},{x:.38,y:.32,swing:true},{x:.62,y:.25,swing:true}],
+  // Sinker: low and in to right-handers
+  'SI': [{x:.32,y:.72,swing:true},{x:.28,y:.78,swing:false},{x:.38,y:.80,swing:true},{x:.25,y:.68,swing:false},{x:.42,y:.75,swing:true},{x:.35,y:.82,swing:false}],
+  // Cutter: glove-side, middle height
+  'FC': [{x:.62,y:.45,swing:true},{x:.68,y:.40,swing:false},{x:.65,y:.52,swing:true},{x:.72,y:.48,swing:false},{x:.60,y:.38,swing:true}],
+  // Slider: low and away to right-handers
+  'SL': [{x:.78,y:.70,swing:false},{x:.82,y:.75,swing:true,k:true},{x:.75,y:.73,swing:true,k:true},{x:.85,y:.80,swing:false},{x:.80,y:.65,swing:true,k:true},{x:.88,y:.77,swing:true}],
+  // Sweeper: wide break, further outside
+  'ST': [{x:.85,y:.68,swing:false},{x:.90,y:.74,swing:true,k:true},{x:.82,y:.72,swing:true,k:true},{x:.92,y:.80,swing:false},{x:.88,y:.65,swing:true,k:true}],
+  // Changeup: low, arm side
+  'CH': [{x:.52,y:.72,swing:true},{x:.58,y:.78,swing:false},{x:.46,y:.68,swing:true,k:true},{x:.55,y:.80,swing:false},{x:.48,y:.75,swing:true}],
+  // Curveball: below zone, 12-6 break
+  'CU': [{x:.22,y:.85,swing:false},{x:.50,y:.88,swing:true,k:true},{x:.78,y:.85,swing:false},{x:.35,y:.82,swing:true,k:true},{x:.62,y:.84,swing:false}],
+  // Knuckle curve: similar to curve
+  'KC': [{x:.30,y:.84,swing:false},{x:.52,y:.87,swing:true,k:true},{x:.72,y:.83,swing:false},{x:.42,y:.80,swing:true}],
+  // Splitter: drops late, low
+  'FS': [{x:.48,y:.78,swing:true},{x:.54,y:.82,swing:false},{x:.42,y:.80,swing:true,k:true},{x:.50,y:.85,swing:false}],
+  // Knuckleball: all over the place
+  'KN': [{x:.40,y:.45,swing:false},{x:.62,y:.55,swing:true},{x:.35,y:.65,swing:false},{x:.58,y:.38,swing:true},{x:.48,y:.58,swing:false}],
+};
+
+// Map friendly names back to Statcast codes for zone lookup
+const NAME_TO_CODE = {
+  'Four-seam FB': 'FF', 'Sinker': 'SI', 'Cutter': 'FC',
+  'Slider': 'SL', 'Sweeper': 'ST', 'Changeup': 'CH',
+  'Curveball': 'CU', 'Knuckle Curve': 'KC', 'Splitter': 'FS',
+  'Knuckleball': 'KN', 'Ghost Fork': 'FS', 'Split-Finger': 'FS',
+};
+
 export function getPitcherZoneData(arsenal) {
   if (!arsenal || !arsenal.length) return getDefaultZone();
-  const primaryPitch = arsenal[0];
-  const secondaryPitch = arsenal[1];
 
   const zones = [];
-
-  // Primary pitch locations
-  if (primaryPitch.type === 'slider' || primaryPitch.type === 'sweep') {
-    // Slider: low and away to right-handers (high usage cluster bottom right)
-    zones.push(
-      {type:primaryPitch.type,x:.78,y:.70,swing:false},
-      {type:primaryPitch.type,x:.82,y:.75,swing:true,k:true},
-      {type:primaryPitch.type,x:.75,y:.73,swing:true,k:true},
-      {type:primaryPitch.type,x:.85,y:.80,swing:false},
-      {type:primaryPitch.type,x:.80,y:.65,swing:true,k:true},
-      {type:primaryPitch.type,x:.88,y:.77,swing:true},
-    );
-  } else if (primaryPitch.type === '4seam') {
-    // Four-seamer: up in the zone
-    zones.push(
-      {type:'4seam',x:.50,y:.28,swing:true},
-      {type:'4seam',x:.42,y:.24,swing:false},
-      {type:'4seam',x:.58,y:.30,swing:true},
-      {type:'4seam',x:.55,y:.22,swing:false},
-      {type:'4seam',x:.38,y:.32,swing:true},
-      {type:'4seam',x:.62,y:.25,swing:true},
-    );
-  } else if (primaryPitch.type === 'sink') {
-    // Sinker: down and in to right-handers
-    zones.push(
-      {type:'sink',x:.32,y:.72,swing:true},
-      {type:'sink',x:.28,y:.78,swing:false},
-      {type:'sink',x:.38,y:.80,swing:true},
-      {type:'sink',x:.25,y:.68,swing:false},
-      {type:'sink',x:.42,y:.75,swing:true},
-    );
-  } else if (primaryPitch.type === 'curve') {
-    // Curveball: below zone, both sides
-    zones.push(
-      {type:'curve',x:.22,y:.85,swing:false},
-      {type:'curve',x:.50,y:.88,swing:true,k:true},
-      {type:'curve',x:.78,y:.85,swing:false},
-      {type:'curve',x:.35,y:.82,swing:true,k:true},
-    );
-  }
-
-  // Secondary pitch — fewer dots, different location
-  if (secondaryPitch) {
-    if (secondaryPitch.type === 'change') {
-      zones.push(
-        {type:'change',x:.52,y:.72,swing:true},
-        {type:'change',x:.58,y:.78,swing:false},
-        {type:'change',x:.46,y:.68,swing:true,k:true},
-      );
-    } else if (secondaryPitch.type === '4seam' && primaryPitch.type !== '4seam') {
-      zones.push(
-        {type:'4seam',x:.48,y:.27,swing:true},
-        {type:'4seam',x:.55,y:.24,swing:false},
-        {type:'4seam',x:.40,y:.30,swing:true},
-      );
-    } else if (secondaryPitch.type === 'slider' && primaryPitch.type !== 'slider') {
-      zones.push(
-        {type:'slider',x:.75,y:.68,swing:true,k:true},
-        {type:'slider',x:.82,y:.74,swing:false},
-        {type:'slider',x:.79,y:.72,swing:true},
-      );
-    } else if (secondaryPitch.type === 'curve') {
-      zones.push(
-        {type:'curve',x:.30,y:.84,swing:false},
-        {type:'curve',x:.50,y:.87,swing:true,k:true},
-      );
-    }
-  }
+  // Add dots for each pitch type proportional to usage
+  // More dots = higher percentage pitch
+  arsenal.forEach(p => {
+    const code = p.type || NAME_TO_CODE[p.name] || 'FF';
+    const positions = ZONE_BY_TYPE[code] || ZONE_BY_TYPE['FF'];
+    // Scale number of dots by percentage — primary pitch gets all dots, others get fewer
+    const count = p.pct >= 30 ? positions.length : p.pct >= 15 ? Math.ceil(positions.length * 0.6) : Math.ceil(positions.length * 0.4);
+    zones.push(...positions.slice(0, count));
+  });
 
   return zones.length > 0 ? zones : getDefaultZone();
 }
 
 function getDefaultZone() {
   return [
-    {type:'4seam',x:.50,y:.28,swing:true},{type:'4seam',x:.42,y:.25,swing:false},
-    {type:'4seam',x:.58,y:.30,swing:true},{type:'change',x:.52,y:.72,swing:true},
-    {type:'change',x:.46,y:.78,swing:false},{type:'slider',x:.76,y:.70,swing:true,k:true},
+    {type:'FF',x:.50,y:.28,swing:true},{type:'FF',x:.42,y:.25,swing:false},
+    {type:'FF',x:.58,y:.30,swing:true},{type:'CH',x:.52,y:.72,swing:true},
+    {type:'CH',x:.46,y:.78,swing:false},{type:'SL',x:.76,y:.70,swing:true,k:true},
   ];
 }
