@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TeamLogo, PlayerPhoto, TrendArrow, rateERA, rateWHIP } from './SharedUI';
+import PlayerPage from './PlayerPage';
 
 // Real 2025 pitch usage data from Baseball Savant
 // Source: baseballsavant.mlb.com pitch arsenal stats export
@@ -193,15 +194,22 @@ function PitcherCard({ pitcher, isWinner, isLoser, isFinal }) {
   const arsenal = PITCH_ARSENALS[pitcher.name] || null;
   const roleLabel = pitcher.isStarter ? 'Starting Pitcher' : 'Relief Pitcher';
   const showPitching = pitcher.isCurrentPitcher && !isFinal;
+  const [playerPage, setPlayerPage] = useState(null);
 
   return (
     <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:12, padding:'12px 14px', marginBottom:8 }}>
+      {playerPage && <PlayerPage playerId={playerPage.id} playerName={playerPage.name} onClose={() => setPlayerPage(null)} />}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:8 }}>
         <div style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
-          <PlayerPhoto playerId={pitcher.id} name={pitcher.name} size={36} />
+          <div onClick={() => setPlayerPage({ id: pitcher.id, name: pitcher.name })} style={{ cursor:'pointer' }}>
+            <PlayerPhoto playerId={pitcher.id} name={pitcher.name} size={36} />
+          </div>
           <div>
             <div style={{ fontSize:14, fontWeight:600, color:'#fff', display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-              {pitcher.name}
+              <span
+                onClick={() => setPlayerPage({ id: pitcher.id, name: pitcher.name })}
+                style={{ color:'#60a5fa', textDecoration:'underline', textDecorationStyle:'dotted', textDecorationColor:'rgba(96,165,250,0.5)', cursor:'pointer' }}
+              >{pitcher.name}</span>
               {isWinner && <span style={{ fontSize:10, background:'rgba(74,222,128,0.15)', color:'#4ade80', borderRadius:8, padding:'2px 7px', fontWeight:600 }}>W</span>}
               {isLoser && <span style={{ fontSize:10, background:'rgba(248,113,113,0.15)', color:'#f87171', borderRadius:8, padding:'2px 7px', fontWeight:600 }}>L</span>}
               {showPitching && <span style={{ fontSize:10, background:'rgba(251,191,36,0.15)', color:'#fbbf24', borderRadius:8, padding:'2px 7px', fontWeight:600 }}>Pitching now</span>}
@@ -302,6 +310,108 @@ ${lines.join('\n')}
       <div style={{ fontSize:10, textTransform:'uppercase', letterSpacing:0.5, color:'rgba(255,255,255,0.3)', fontWeight:600, marginBottom:8 }}>AI analysis</div>
       <div style={{ fontSize:13, lineHeight:1.7, color: loading ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.75)', fontStyle: loading ? 'italic' : 'normal' }}>
         {loading ? 'Generating analysis...' : text}
+      </div>
+    </div>
+  );
+}
+
+export function GameRecap({ awayTeam, homeTeam, awayScore, homeScore, awayPitchers, homePitchers, awayBatters, homeBatters, keyPlays, decisions }) {
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const winner = awayScore > homeScore ? awayTeam : homeTeam;
+    const loser = awayScore > homeScore ? homeTeam : awayTeam;
+    const winScore = Math.max(awayScore, homeScore);
+    const loseScore = Math.min(awayScore, homeScore);
+
+    const sp1 = awayPitchers.find(p => p.isStarter);
+    const sp2 = homePitchers.find(p => p.isStarter);
+    const allRelievers = [...awayPitchers.filter(p=>!p.isStarter), ...homePitchers.filter(p=>!p.isStarter)];
+    const hrs = keyPlays.filter(p => p.event === 'home_run');
+    const scoringPlays = keyPlays.filter(p => p.rbi > 0).slice(0, 5);
+
+    const allBatters = [...awayBatters, ...homeBatters];
+    const topHitters = allBatters
+      .filter(b => b.h >= 2 || b.hr > 0 || b.rbi >= 2)
+      .sort((a, b) => (b.hr * 3 + b.rbi * 2 + b.h) - (a.hr * 3 + a.rbi * 2 + a.h))
+      .slice(0, 4)
+      .map(b => `${b.name} (${awayBatters.includes(b) ? awayTeam.abbr : homeTeam.abbr}): ${b.h}H, ${b.rbi}RBI${b.hr > 0 ? ', ' + b.hr + 'HR' : ''}${b.bb > 0 ? ', ' + b.bb + 'BB' : ''}`)
+      .join('\n');
+
+    const lines = [`${awayTeam.name} ${awayScore}, ${homeTeam.name} ${homeScore}`];
+    if (decisions?.winner?.fullName) lines.push(`W: ${decisions.winner.fullName}${decisions.loser?.fullName ? '  L: ' + decisions.loser.fullName : ''}${decisions.save?.fullName ? '  SV: ' + decisions.save.fullName : ''}`);
+    if (sp1) {
+      const outs = parseFloat(sp1.ip) * 3;
+      const ppo = outs > 0 ? (sp1.pitchCount / outs).toFixed(1) : '?';
+      lines.push(`${sp1.name} (${awayTeam.abbr} SP): ${sp1.ip} IP, ${sp1.er} ER, ${sp1.k} K, ${sp1.bb} BB — ${ppo} pitches/out`);
+    }
+    if (sp2) {
+      const outs = parseFloat(sp2.ip) * 3;
+      const ppo = outs > 0 ? (sp2.pitchCount / outs).toFixed(1) : '?';
+      lines.push(`${sp2.name} (${homeTeam.abbr} SP): ${sp2.ip} IP, ${sp2.er} ER, ${sp2.k} K, ${sp2.bb} BB — ${ppo} pitches/out`);
+    }
+    if (allRelievers.length) lines.push(`Relievers: ${allRelievers.map(p=>`${p.name} ${p.ip}IP/${p.er}ER`).join(', ')}`);
+    if (hrs.length) lines.push(`HRs: ${hrs.map(h=>`${h.batter} (${h.half==='top'?awayTeam.abbr:homeTeam.abbr})`).join(', ')}`);
+    if (topHitters) lines.push(`Key performers:\n${topHitters}`);
+    if (scoringPlays.length) lines.push(`Scoring plays: ${scoringPlays.map(p=>`${p.batter} (${p.rbi} RBI)`).join(', ')}`);
+
+    if (!sp1 && !sp2 && !topHitters) {
+      setText(`${winner.name} defeated ${loser.name} ${winScore}-${loseScore}.`);
+      setLoading(false);
+      return;
+    }
+
+    const prompt = `You are writing a post-game recap for a baseball fan who just watched this game. Write 3-4 sentences in past tense. Be specific and analytical — reference actual players and stats. Do NOT start with the final score (they already know it). Lead with the most interesting story of the game: was it a dominant pitching performance? A comeback? A single player who drove everything?
+
+Avoid: clichés, phrases like "gutsy" "electric" "fired up", generic praise.
+Include: specific stat observations (pitch count efficiency, K/BB ratio, exit velos if notable), context for why something matters.
+
+Game data:
+${lines.join('\n')}`;
+
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 350, messages: [{ role: 'user', content: prompt }] }),
+    })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => {
+        const t = d?.content?.find(b => b.type === 'text')?.text;
+        if (t) setText(t);
+        else throw new Error('no text');
+      })
+      .catch(() => {
+        setError(true);
+        // Build a decent fallback from the data we have
+        const parts = [];
+        if (sp1 || sp2) {
+          const starter = sp1 && parseFloat(sp1.ip) >= parseFloat(sp2?.ip||0) ? sp1 : sp2;
+          const team = starter === sp1 ? awayTeam : homeTeam;
+          const outs = parseFloat(starter.ip) * 3;
+          const ppo = outs > 0 ? (starter.pitchCount / outs).toFixed(1) : null;
+          parts.push(`${starter.name} led ${team.name} with ${starter.ip} innings pitched, allowing ${starter.er} earned run${starter.er!==1?'s':''} on ${ppo ? ppo + ' pitches per out' : starter.pitchCount + ' pitches'}.`);
+        }
+        if (hrs.length) parts.push(`${hrs.map(h=>h.batter).join(' and ')} hit ${hrs.length > 1 ? 'home runs' : 'a home run'} in the game.`);
+        if (topHitters.split('\n')[0]) {
+          const top = allBatters.sort((a,b)=>(b.hr*3+b.rbi*2+b.h)-(a.hr*3+a.rbi*2+a.h))[0];
+          if (top && (top.h >= 2 || top.rbi >= 2)) parts.push(`${top.name} went ${top.h}-for-${top.ab} with ${top.rbi} RBI.`);
+        }
+        if (!parts.length) parts.push(`${winner.name} defeated ${loser.name} ${winScore}-${loseScore}.`);
+        setText(parts.join(' '));
+      })
+      .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
+      <div style={{ fontSize:10, textTransform:'uppercase', letterSpacing:0.5, color:'rgba(255,255,255,0.3)', fontWeight:600, marginBottom:10 }}>
+        Game recap
+      </div>
+      <div style={{ fontSize:14, lineHeight:1.75, color: loading ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.85)', fontStyle: loading ? 'italic' : 'normal' }}>
+        {loading ? 'Writing recap...' : text}
       </div>
     </div>
   );

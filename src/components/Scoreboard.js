@@ -57,17 +57,17 @@ function WinProbChart({ winProb, awayAbbr, homeAbbr }) {
   const data = {
     labels: winProb.labels,
     datasets: [
-      { label:awayAbbr, data:winProb.vals, borderColor:'#C6002C', backgroundColor:'rgba(198,0,44,0.07)', fill:true, tension:0.35, pointRadius:2, pointBackgroundColor:'#C6002C', borderWidth:2 },
-      { label:homeAbbr, data:winProb.vals.map(v=>100-v), borderColor:'#004687', backgroundColor:'rgba(0,70,135,0.05)', fill:true, tension:0.35, pointRadius:2, pointBackgroundColor:'#004687', borderWidth:2 },
+      { label:homeAbbr, data:winProb.vals, borderColor:'#004687', backgroundColor:'rgba(0,70,135,0.07)', fill:true, tension:0.35, pointRadius:2, pointBackgroundColor:'#004687', borderWidth:2 },
+      { label:awayAbbr, data:winProb.vals.map(v=>100-v), borderColor:'#C6002C', backgroundColor:'rgba(198,0,44,0.05)', fill:true, tension:0.35, pointRadius:2, pointBackgroundColor:'#C6002C', borderWidth:2 },
     ],
   };
   return (
     <div style={{ marginTop:14, paddingTop:12, borderTop:'0.5px solid rgba(255,255,255,0.08)' }}>
       <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginBottom:6, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <span>Win probability — based on historical MLB run tables</span>
+        <span>Win probability — Tango Tiger win expectancy (home team)</span>
         <span style={{ display:'flex', gap:12 }}>
-          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10,height:2,background:'#C6002C',display:'inline-block',borderRadius:1 }}></span>{awayAbbr}</span>
           <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10,height:2,background:'#004687',display:'inline-block',borderRadius:1 }}></span>{homeAbbr}</span>
+          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10,height:2,background:'#C6002C',display:'inline-block',borderRadius:1 }}></span>{awayAbbr}</span>
         </span>
       </div>
       <div style={{ height:120 }}>

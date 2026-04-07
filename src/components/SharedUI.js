@@ -1,51 +1,41 @@
 import React from 'react';
 import { playerHeadshotUrl } from '../utils/mlbApi';
 
-// Fixed trend arrow - no box bleed, clean SVG paths
+// Trend arrows: double arrow for elite/poor, single for good/below avg, flat for average
 export function TrendArrow({ rating, size = 13 }) {
-  const configs = {
-    elite: { color: '#4ade80', d: 'M3,13 L8,5 L13,13', arrow: 'M8,5 L13,5 L13,11' },
-    good:  { color: '#60a5fa', d: 'M3,12 L8,5 L13,12', arrow: null },
-    avg:   { color: '#71717a', d: 'M3,8 L13,8',         arrow: null },
-    poor:  { color: '#f87171', d: 'M3,5 L8,13 L13,5',  arrow: null },
-  };
-  const c = configs[rating] || configs.avg;
-  const isUp = rating === 'elite' || rating === 'good';
-  const isDown = rating === 'poor';
-  const isFlat = rating === 'avg';
+  const green = '#4ade80';
+  const ltgreen = '#86efac'; // lighter green for single arrow vs double
+  const grey  = '#71717a';
+  const red   = '#f87171';
 
-  return (
-    <svg
-      width={size} height={size}
-      viewBox="2 3 12 12"
-      fill="none"
-      style={{ display:'inline-block', verticalAlign:'middle', flexShrink:0 }}
-    >
-      {isUp && (
-        <polyline
-          points="3,13 8,4 13,13"
-          stroke={c.color}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
+  const Arrow = ({ color, direction, style = {} }) => (
+    <svg width={size} height={size} viewBox="2 3 12 12" fill="none"
+      style={{ display:'inline-block', verticalAlign:'middle', flexShrink:0, ...style }}>
+      {direction === 'up' && (
+        <polyline points="3,13 8,4 13,13" stroke={color} strokeWidth="2"
+          strokeLinecap="round" strokeLinejoin="round" fill="none" />
       )}
-      {isDown && (
-        <polyline
-          points="3,4 8,13 13,4"
-          stroke={c.color}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
+      {direction === 'down' && (
+        <polyline points="3,4 8,13 13,4" stroke={color} strokeWidth="2"
+          strokeLinecap="round" strokeLinejoin="round" fill="none" />
       )}
-      {isFlat && (
-        <line x1="3" y1="8.5" x2="13" y2="8.5" stroke={c.color} strokeWidth="2" strokeLinecap="round"/>
+      {direction === 'flat' && (
+        <line x1="3" y1="8.5" x2="13" y2="8.5" stroke={color} strokeWidth="2" strokeLinecap="round" />
       )}
     </svg>
   );
+
+  if (rating === 'elite') return (
+    <span style={{ display:'inline-flex', flexDirection:'column', gap:0, alignItems:'center', verticalAlign:'middle' }}>
+      <Arrow color={green} direction="up" style={{ marginBottom:-3 }} />
+      <Arrow color={green} direction="up" />
+    </span>
+  );
+  if (rating === 'good') return <Arrow color={ltgreen} direction="up" />;
+  if (rating === 'avg')  return <Arrow color={grey} direction="flat" />;
+  if (rating === 'poor') return <Arrow color={red} direction="down" />;
+  // below average (very poor) — if ever needed, default poor to single down
+  return <Arrow color={grey} direction="flat" />;
 }
 
 export function rateBAT(avg)  { const n=parseFloat(avg)||0;  return n>=.300?'elite':n>=.270?'good':n>=.240?'avg':'poor'; }

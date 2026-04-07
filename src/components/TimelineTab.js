@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GameRecap } from './PitchingTab';
 
 const EVENT_META = {
   home_run:         { label:'HR',  color:'#60a5fa', bg:'rgba(96,165,250,0.12)' },
@@ -70,7 +71,7 @@ function PlayCard({ play, delay }) {
 }
 
 export default function TimelineTab({ data }) {
-  const { keyPlays, awayTeam, homeTeam } = data;
+  const { keyPlays, awayTeam, homeTeam, isFinal, awayScore, homeScore, awayPitchers, homePitchers, awayBatters, homeBatters, decisions } = data;
   const [filter, setFilter] = useState('key');
 
   const filters = [
@@ -96,6 +97,16 @@ export default function TimelineTab({ data }) {
 
   return (
     <div className="tab-panel">
+      {/* Game recap at top — finished games only */}
+      {isFinal && (
+        <GameRecap
+          awayTeam={awayTeam} homeTeam={homeTeam}
+          awayScore={awayScore} homeScore={homeScore}
+          awayPitchers={awayPitchers||[]} homePitchers={homePitchers||[]}
+          awayBatters={awayBatters||[]} homeBatters={homeBatters||[]}
+          keyPlays={keyPlays||[]} decisions={decisions||{}}
+        />
+      )}
       <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
         <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginBottom:12, lineHeight:1.7 }}>
           <strong style={{ color:'rgba(255,255,255,0.5)' }}>Pressure (LI):</strong> how much this at-bat could swing the outcome — average is 1.0<br/>

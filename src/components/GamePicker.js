@@ -179,39 +179,136 @@ function StandingsView() {
   );
 }
 
+const BASE_URL = 'https://statsapi.mlb.com/api/v1';
+const METS_ID = 121;
+const YEAR = new Date().getFullYear();
+
+async function getMetsLeaders() {
+  const battingCats = ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','stolenBases','rbi'];
+  const pitchingCats = ['earnedRunAverage','strikeouts','wins','saves','whip'];
+
+  const [battingResults, pitchingResults] = await Promise.all([
+    Promise.all(battingCats.map(cat =>
+      fetch(`${BASE_URL}/stats/leaders?leaderCategories=${cat}&season=${YEAR}&teamId=${METS_ID}&limit=1&sportId=1&statGroup=hitting`)
+        .then(r => r.json())
+        .then(d => ({ cat, leader: d.leagueLeaders?.[0]?.leaders?.[0] || null }))
+        .catch(() => ({ cat, leader: null }))
+    )),
+    Promise.all(pitchingCats.map(cat =>
+      fetch(`${BASE_URL}/stats/leaders?leaderCategories=${cat}&season=${YEAR}&teamId=${METS_ID}&limit=1&sportId=1&statGroup=pitching`)
+        .then(r => r.json())
+        .then(d => ({ cat, leader: d.leagueLeaders?.[0]?.leaders?.[0] || null }))
+        .catch(() => ({ cat, leader: null }))
+    )),
+  ]);
+
+  return [...battingResults, ...pitchingResults];
+}
+
 function LeadersView() {
   const [leaders, setLeaders] = useState([]);
+  const [metsLeaders, setMetsLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [leaderTab, setLeaderTab] = useState('batting');
 
   useEffect(() => {
-    getLeagueLeaders().then(setLeaders).catch(()=>{}).finally(()=>setLoading(false));
+    Promise.all([
+      getLeagueLeaders(),
+      getMetsLeaders(),
+    ]).then(([lg, mets]) => {
+      setLeaders(lg);
+      setMetsLeaders(mets);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>Loading leaders...</div>;
 
-  const catLabels = { homeRuns:'Home runs', battingAverage:'Batting avg', earnedRunAverage:'ERA leaders', strikeouts:'Strikeouts' };
+  const leagueBatting = leaders.filter(l => ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','stolenBases','rbi'].includes(l.cat));
+  const leaguePitching = leaders.filter(l => ['earnedRunAverage','strikeouts','wins','saves','whip'].includes(l.cat));
+
+  const catLabels = {
+    homeRuns:'Home runs', battingAverage:'Batting avg',
+    earnedRunAverage:'ERA', strikeouts:'Strikeouts',
+    onBasePercentage:'On-base %', sluggingPercentage:'Slugging %',
+    stolenBases:'Stolen bases', runs:'Runs', rbi:'RBI',
+    wins:'Wins', saves:'Saves', whip:'WHIP',
+  };
+
+  const metsBattingCats = ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','stolenBases','rbi'];
+  const metsPitchingCats = ['earnedRunAverage','strikeouts','wins','saves','whip'];
+
+  function LeaderRow({ l, i, total }) {
+    // Leaders API may return team.abbreviation or team.teamCode
+    const teamAbbr = l.team?.abbreviation || l.team?.teamCode?.toUpperCase() || l.team?.clubName?.slice(0,3).toUpperCase();
+    return (
+      <div style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom:i<total-1?'0.5px solid rgba(255,255,255,0.06)':'none' }}>
+        <span style={{ fontSize:12, color:'rgba(255,255,255,0.3)', minWidth:16, textAlign:'center', fontWeight:600 }}>{l.rank||1}</span>
+        <LeaderPhoto playerId={l.person?.id} name={l.person?.fullName} />
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:13, fontWeight:500, color:'#fff' }}>{l.person?.fullName}</div>
+          <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:2 }}>
+            {teamAbbr && <TeamLogo abbr={teamAbbr} size={18} />}
+            <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{l.team?.name || teamAbbr}</span>
+          </div>
+        </div>
+        <span style={{ fontSize:18, fontWeight:700, color:'#60a5fa' }}>{l.value}</span>
+      </div>
+    );
+  }
+
+  function LeagueSection({ items }) {
+    return items.map(({ cat, leaders: ls }) => (
+      <div key={cat} style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:14, padding:14, marginBottom:10 }}>
+        <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:10 }}>{catLabels[cat]||cat}</div>
+        {ls.slice(0,5).map((l,i) => <LeaderRow key={i} l={l} i={i} total={Math.min(5, ls.length)} />)}
+      </div>
+    ));
+  }
+
+  function MetsSection({ cats }) {
+    const relevantLeaders = metsLeaders.filter(l => cats.includes(l.cat) && l.leader);
+    if (!relevantLeaders.length) return <div style={{ color:'rgba(255,255,255,0.3)', fontSize:13 }}>No data available</div>;
+    return (
+      <div style={{ background:'rgba(0,45,114,0.2)', border:'0.5px solid rgba(0,45,114,0.5)', borderRadius:14, padding:14, marginBottom:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+          <TeamLogo abbr="NYM" size={20} />
+          <span style={{ fontSize:12, fontWeight:600, color:'#60a5fa', textTransform:'uppercase', letterSpacing:0.5 }}>Mets leaders</span>
+        </div>
+        {relevantLeaders.map(({ cat, leader }, i) => (
+          <div key={cat} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom:i<relevantLeaders.length-1?'0.5px solid rgba(255,255,255,0.06)':'none' }}>
+            <LeaderPhoto playerId={leader.person?.id} name={leader.person?.fullName} />
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:500, color:'#fff' }}>{leader.person?.fullName}</div>
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:1 }}>{catLabels[cat]||cat}</div>
+            </div>
+            <span style={{ fontSize:18, fontWeight:700, color:'#60a5fa' }}>{leader.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="fade-in">
-      {leaders.map(({ cat, leaders: ls }) => (
-        <div key={cat} style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:14, padding:14, marginBottom:10 }}>
-          <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:10 }}>{catLabels[cat]||cat}</div>
-          {ls.slice(0,5).map((l,i) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom:i<4?'0.5px solid rgba(255,255,255,0.06)':'none' }}>
-              <span style={{ fontSize:12, color:'rgba(255,255,255,0.3)', minWidth:16, textAlign:'center', fontWeight:600 }}>{l.rank}</span>
-              <LeaderPhoto playerId={l.person?.id} name={l.person?.fullName} />
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:13, fontWeight:500, color:'#fff' }}>{l.person?.fullName}</div>
-                <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:2 }}>
-                  <TeamLogo abbr={l.team?.abbreviation} size={14} />
-                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{l.team?.name}</span>
-                </div>
-              </div>
-              <span style={{ fontSize:18, fontWeight:700, color:'#60a5fa' }}>{l.value}</span>
-            </div>
-          ))}
-        </div>
-      ))}
+      {/* Sub tabs */}
+      <div style={{ display:'flex', gap:6, marginBottom:14 }}>
+        {[['batting','Batting'],['pitching','Pitching']].map(([id,label])=>(
+          <button key={id} onClick={()=>setLeaderTab(id)} style={{ padding:'6px 16px', fontSize:13, borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', background:leaderTab===id?'#fff':'rgba(255,255,255,0.07)', color:leaderTab===id?'#0f1117':'rgba(255,255,255,0.5)', fontWeight:leaderTab===id?600:400, transition:'all 0.15s' }}>{label}</button>
+        ))}
+      </div>
+
+      {leaderTab === 'batting' && (
+        <>
+          <MetsSection cats={metsBattingCats} />
+          <LeagueSection items={leagueBatting} />
+        </>
+      )}
+      {leaderTab === 'pitching' && (
+        <>
+          <MetsSection cats={metsPitchingCats} />
+          <LeagueSection items={leaguePitching} />
+        </>
+      )}
     </div>
   );
 }
