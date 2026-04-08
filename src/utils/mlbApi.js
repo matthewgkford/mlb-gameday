@@ -570,7 +570,8 @@ function lookupWP(inn, half, outs, runners, homeMinusAway) {
 }
 
 // Build win probability series from completed innings linescore
-// Returns home team win probability at each half-inning boundary
+// Plots once per completed full inning to avoid half-inning oscillation
+// (the Tango table alternates slightly between T and B halves due to last-licks advantage)
 export function buildWinProbability(innings) {
   if (!innings || !innings.length) return { labels: [], vals: [] };
   const labels = [];
@@ -578,20 +579,13 @@ export function buildWinProbability(innings) {
   let cumAway = 0, cumHome = 0;
 
   innings.forEach(inn => {
-    // After top of inning: away has just batted, home about to bat
     cumAway += inn.away?.runs ?? 0;
-    const diff = cumHome - cumAway;
-    const wpBot = lookupWP(inn.num, 'B', 0, 'Empty', diff);
-    vals.push(Math.round(wpBot * 100));
-    labels.push(`B${inn.num}`);
-
-    // After bottom of inning: home has just batted, top of next inning
     cumHome += inn.home?.runs ?? 0;
-    const diff2 = cumHome - cumAway;
+    const diff = cumHome - cumAway;
     const nextInn = Math.min(9, inn.num + 1);
-    const wpTop = lookupWP(nextInn, 'T', 0, 'Empty', diff2);
-    vals.push(Math.round(wpTop * 100));
-    labels.push(`T${nextInn}`);
+    const wp = lookupWP(nextInn, 'T', 0, 'Empty', diff);
+    vals.push(Math.round(wp * 100));
+    labels.push(`End ${inn.num}`);
   });
 
   return { labels, vals };
