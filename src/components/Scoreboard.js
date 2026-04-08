@@ -52,22 +52,62 @@ function BaseDiamond({ onFirst, onSecond, onThird }) {
   );
 }
 
+// Team primary colours for win probability chart — chosen to be visible on dark backgrounds
+// If two teams have similar hues, the away team will get a lighter variant
+const TEAM_COLOURS = {
+  NYM:'#006EFF', NYY:'#C4CED4', BOS:'#BD3039', TOR:'#134A8E', BAL:'#DF4601',
+  TB:'#8FBCE6',  MIL:'#FFC52F', CHC:'#0E3386', CWS:'#C4CED4', MIN:'#D31145',
+  DET:'#FA4616', CLE:'#E31937', KC:'#004687',  HOU:'#EB6E1F', LAA:'#BA0021',
+  OAK:'#003831', ATH:'#003831', SEA:'#005C5C',
+  LAD:'#005A9C', SF:'#FD5A1E',  SD:'#FFC425',  COL:'#333366', AZ:'#A71930',
+  ATL:'#CE1141', MIA:'#00A3E0', PHI:'#E81828', WSH:'#AB0003',
+  STL:'#C41E3A', PIT:'#FDB827', CIN:'#C6011F', CHC2:'#0E3386',
+  TEX:'#003278', OAK2:'#EFB21E',
+};
+// Fallback palette for unknowns or clashes
+const FALLBACK_PAIRS = [['#60a5fa','#f97316'],['#a78bfa','#34d399'],['#e879f9','#fbbf24']];
+
+function colourDistance(hex1, hex2) {
+  const parse = h => { const n=parseInt(h.replace('#',''),16); return [(n>>16)&255,(n>>8)&255,n&255]; };
+  const [r1,g1,b1]=parse(hex1), [r2,g2,b2]=parse(hex2);
+  return Math.abs(r1-r2)+Math.abs(g1-g2)+Math.abs(b1-b2);
+}
+
+function hexToRgba(hex, alpha) {
+  const n = parseInt(hex.replace('#',''), 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${alpha})`;
+}
+
+function getTeamColours(homeAbbr, awayAbbr) {
+  let hc = TEAM_COLOURS[homeAbbr] || '#60a5fa';
+  let ac = TEAM_COLOURS[awayAbbr] || '#f97316';
+  // If colours are too similar or either is too dark on our background, use fallback
+  const dist = colourDistance(hc, ac);
+  if (dist < 120) {
+    // Pick from fallback pairs
+    const pair = FALLBACK_PAIRS[0];
+    hc = pair[0]; ac = pair[1];
+  }
+  return { homeColour: hc, awayColour: ac };
+}
+
 function WinProbChart({ winProb, awayAbbr, homeAbbr }) {
-  if (!winProb || winProb.vals.length < 3) return null;
+  if (!winProb || winProb.vals.length < 2) return null;
+  const { homeColour, awayColour } = getTeamColours(homeAbbr, awayAbbr);
   const data = {
     labels: winProb.labels,
     datasets: [
-      { label:homeAbbr, data:winProb.vals, borderColor:'#004687', backgroundColor:'rgba(0,70,135,0.07)', fill:true, tension:0.35, pointRadius:2, pointBackgroundColor:'#004687', borderWidth:2 },
-      { label:awayAbbr, data:winProb.vals.map(v=>100-v), borderColor:'#C6002C', backgroundColor:'rgba(198,0,44,0.05)', fill:true, tension:0.35, pointRadius:2, pointBackgroundColor:'#C6002C', borderWidth:2 },
+      { label:homeAbbr, data:winProb.vals, borderColor:homeColour, backgroundColor:hexToRgba(homeColour, 0.07), fill:true, tension:0.35, pointRadius:2, pointBackgroundColor:homeColour, borderWidth:2 },
+      { label:awayAbbr, data:winProb.vals.map(v=>100-v), borderColor:awayColour, backgroundColor:hexToRgba(awayColour, 0.05), fill:true, tension:0.35, pointRadius:2, pointBackgroundColor:awayColour, borderWidth:2 },
     ],
   };
   return (
     <div style={{ marginTop:14, paddingTop:12, borderTop:'0.5px solid rgba(255,255,255,0.08)' }}>
       <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginBottom:6, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <span>Win probability — Tango Tiger win expectancy (home team)</span>
+        <span>Win probability · Tango Tiger</span>
         <span style={{ display:'flex', gap:12 }}>
-          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10,height:2,background:'#004687',display:'inline-block',borderRadius:1 }}></span>{homeAbbr}</span>
-          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10,height:2,background:'#C6002C',display:'inline-block',borderRadius:1 }}></span>{awayAbbr}</span>
+          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10,height:2,background:homeColour,display:'inline-block',borderRadius:1 }}></span>{homeAbbr}</span>
+          <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10,height:2,background:awayColour,display:'inline-block',borderRadius:1 }}></span>{awayAbbr}</span>
         </span>
       </div>
       <div style={{ height:120 }}>

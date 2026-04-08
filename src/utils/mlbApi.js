@@ -49,7 +49,7 @@ export async function getGameFeed(gamePk) {
 }
 
 export async function getBoxScore(gamePk) {
-  const res = await fetch(`${BASE}/game/${gamePk}/boxscore`);
+  const res = await fetch(`${BASE}/game/${gamePk}/boxscore?hydrate=person`);
   return res.json();
 }
 
@@ -68,7 +68,7 @@ export async function getStandings() {
 export async function getLeagueLeaders() {
   const year = new Date().getFullYear();
   // Batting stats — specify playerPool=Qualified to only get actual hitters
-  const battingCats = ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','stolenBases','rbi'];
+  const battingCats = ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','onBasePlusSlugging','stolenBases','rbi'];
   // Pitching stats — these naturally return pitchers
   const pitchingCats = ['earnedRunAverage','strikeouts','wins','saves','whip'];
 
@@ -90,8 +90,28 @@ export async function getLeagueLeaders() {
   return [...battingResults, ...pitchingResults];
 }
 
+export async function getUpcomingMetsGames() {
+  const today = new Date();
+  const from = today.toISOString().split('T')[0];
+  const future = new Date(today);
+  future.setDate(today.getDate() + 14);
+  const to = future.toISOString().split('T')[0];
+  const res = await fetch(
+    `${BASE}/schedule?sportId=1&teamId=121&startDate=${from}&endDate=${to}&hydrate=probablePitcher,linescore,team&gameType=R`
+  );
+  const data = await res.json();
+  const games = [];
+  (data.dates || []).forEach(d => {
+    (d.games || []).forEach(g => {
+      if (g.status?.abstractGameState === 'Final') return; // skip finished
+      games.push(g);
+    });
+  });
+  // Return next 5 upcoming (not yet started or in progress)
+  return games.slice(0, 5);
+}
+
 export async function getHeadToHead(awayId, homeId) {
-  const year = new Date().getFullYear();
   const res = await fetch(`${BASE}/schedule?sportId=1&teamId=${awayId}&season=${year}&hydrate=linescore`);
   const data = await res.json();
   const games = [];
@@ -204,6 +224,7 @@ export function parseBatterStats(boxscore, teamKey) {
       id,
       name: p.person?.fullName || '',
       position: pos,
+      batSide: p.person?.batSide?.code || null,
       ab: s.atBats ?? 0,
       h: s.hits ?? 0,
       hr: s.homeRuns ?? 0,
@@ -551,20 +572,20 @@ function lookupWP(inn, half, outs, runners, homeMinusAway) {
 // Build win probability series from completed innings linescore
 // Returns home team win probability at each half-inning boundary
 export function buildWinProbability(innings) {
-  const labels = ['Start'];
-  // Start of game: top of 1st, empty, 0 outs, tie = 0.5 exactly
-  const vals = [Math.round(lookupWP(1, 'T', 0, 'Empty', 0) * 100)];
-
+  if (!innings || !innings.length) return { labels: [], vals: [] };
+  const labels = [];
+  const vals = [];
   let cumAway = 0, cumHome = 0;
+
   innings.forEach(inn => {
-    // After top of inning (away batted, now start of bottom)
+    // After top of inning: away has just batted, home about to bat
     cumAway += inn.away?.runs ?? 0;
-    const diff = cumHome - cumAway; // home - away
+    const diff = cumHome - cumAway;
     const wpBot = lookupWP(inn.num, 'B', 0, 'Empty', diff);
     vals.push(Math.round(wpBot * 100));
     labels.push(`B${inn.num}`);
 
-    // After bottom of inning (home batted, now start of next top)
+    // After bottom of inning: home has just batted, top of next inning
     cumHome += inn.home?.runs ?? 0;
     const diff2 = cumHome - cumAway;
     const nextInn = Math.min(9, inn.num + 1);

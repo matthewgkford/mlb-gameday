@@ -417,6 +417,56 @@ ${lines.join('\n')}`;
   );
 }
 
+function BullpenSection({ awayTeam, homeTeam, awayPitchers, homePitchers }) {
+  const teams = [
+    { team: awayTeam, pitchers: awayPitchers },
+    { team: homeTeam, pitchers: homePitchers },
+  ];
+  const hasRelievers = teams.some(({ pitchers }) => pitchers.some(p => !p.isStarter));
+  if (!hasRelievers) return null;
+
+  return (
+    <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
+      <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:14 }}>Bullpen — today's usage</div>
+      <div style={{ fontSize:11, color:'rgba(255,255,255,0.2)', marginBottom:12 }}>Pitch counts from this game only</div>
+      {teams.map(({ team, pitchers }) => {
+        const relievers = pitchers.filter(p => !p.isStarter);
+        if (!relievers.length) return null;
+        return (
+          <div key={team.abbr} style={{ marginBottom:14 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+              <TeamLogo abbr={team.abbr} size={18} />
+              <span style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.5)' }}>{team.name}</span>
+            </div>
+            {relievers.map(p => {
+              const outs = Math.round(parseFloat(p.ip || 0) * 3);
+              const ppo = outs > 0 ? (p.pitchCount / outs).toFixed(1) : '—';
+              return (
+                <div key={p.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, fontWeight:500, color:'#fff' }}>{p.name}</div>
+                    <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:2 }}>
+                      {p.ip} IP · {p.pitchCount} pitches · {ppo} per out
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', gap:10, textAlign:'center' }}>
+                    {[['K',p.k,'#60a5fa'],['BB',p.bb,'rgba(255,255,255,0.6)'],['ER',p.er,p.er>0?'#f87171':'#4ade80']].map(([label,val,color])=>(
+                      <div key={label}>
+                        <div style={{ fontSize:15, fontWeight:600, color }}>{val}</div>
+                        <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)' }}>{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function PitchingTab({ data }) {
   const { awayTeam, homeTeam, awayPitchers, homePitchers, decisions, awayScore, homeScore, awayBatters, homeBatters, keyPlays, isFinal, inning, inningHalf } = data;
   const winnerName = decisions?.winner?.fullName || '';
@@ -439,6 +489,7 @@ export default function PitchingTab({ data }) {
           {!pitchers.length && <div style={{ fontSize:13, color:'rgba(255,255,255,0.3)', textAlign:'center', padding:'20px 0' }}>No pitching data yet</div>}
         </div>
       ))}
+      <BullpenSection awayTeam={awayTeam} homeTeam={homeTeam} awayPitchers={awayPitchers} homePitchers={homePitchers} />
       <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
         <AIAnalysis awayPitchers={awayPitchers} homePitchers={homePitchers} awayTeam={awayTeam} homeTeam={homeTeam} awayScore={awayScore} homeScore={homeScore} awayBatters={awayBatters||[]} homeBatters={homeBatters||[]} keyPlays={keyPlays||[]} isFinal={isFinal} inning={inning} inningHalf={inningHalf} />
       </div>

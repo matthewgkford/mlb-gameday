@@ -51,42 +51,6 @@ function MetricCard({ label, val, tip, rating }) {
   );
 }
 
-function BullpenSection({ pitchers, teamAbbr, isFinal }) {
-  const relievers = pitchers.filter(p => !p.isStarter);
-  if (!relievers.length) return (
-    <div style={{ fontSize:13, color:'rgba(255,255,255,0.3)', textAlign:'center', padding:'12px 0' }}>No relief appearances yet</div>
-  );
-  return (
-    <div>
-      <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginBottom:10 }}>
-        Today's usage only · pitch counts from this game
-      </div>
-      {relievers.map(p => {
-        const outs = Math.round(parseFloat(p.ip || 0) * 3);
-        const ppo = outs > 0 ? (p.pitchCount / outs).toFixed(1) : '—';
-        return (
-          <div key={p.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:13, fontWeight:500, color:'#fff' }}>{p.name}</div>
-              <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:2 }}>
-                {p.ip} IP · {p.pitchCount} pitches · {ppo} per out
-              </div>
-            </div>
-            <div style={{ display:'flex', gap:10, textAlign:'center' }}>
-              {[['K',p.k,'#60a5fa'],['BB',p.bb,'rgba(255,255,255,0.6)'],['ER',p.er,p.er>0?'#f87171':'#4ade80']].map(([label,val,color])=>(
-                <div key={label}>
-                  <div style={{ fontSize:15, fontWeight:600, color }}>{val}</div>
-                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)' }}>{label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 function StatcastRow({ play }) {
   if (!play.exitVelocity) return null;
   return (
@@ -166,8 +130,8 @@ export default function AdvancedTab({ data }) {
   const statcastPlays = [...keyPlays].filter(p=>p.exitVelocity).sort((a,b)=>(b.exitVelocity||0)-(a.exitVelocity||0)).slice(0,5);
 
   const teams = [
-    { team:awayTeam, batting:awayTeamStats, pitching:awayTeamPitching, pitchers:awayPitchers },
-    { team:homeTeam, batting:homeTeamStats, pitching:homeTeamPitching, pitchers:homePitchers },
+    { team:awayTeam, batting:awayTeamStats, pitching:awayTeamPitching },
+    { team:homeTeam, batting:homeTeamStats, pitching:homeTeamPitching },
   ];
 
   return (
@@ -198,22 +162,6 @@ export default function AdvancedTab({ data }) {
         <div style={{ display:'flex', gap:12, marginTop:14, paddingTop:12, borderTop:'0.5px solid rgba(255,255,255,0.08)', flexWrap:'wrap', fontSize:11, color:'rgba(255,255,255,0.3)' }}>
           {[['elite','↑↑ Well above avg'],['good','↑ Above avg'],['avg','→ Average'],['poor','↓ Below avg']].map(([r,lbl])=>(
             <span key={r} style={{ display:'flex', alignItems:'center', gap:5 }}><TrendArrow rating={r} size={12} />{lbl}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* Bullpen status */}
-      <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
-        <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:14 }}>Bullpen — today's usage</div>
-        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          {teams.map(({ team, pitchers }) => (
-            <div key={team.abbr}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-                <TeamLogo abbr={team.abbr} size={20} />
-                <span style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.5)' }}>{team.name}</span>
-              </div>
-              <BullpenSection pitchers={pitchers} teamAbbr={team.abbr} isFinal={isFinal} />
-            </div>
           ))}
         </div>
       </div>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useGamesForDate } from '../hooks/useTodaysGames';
-import { todayString, formatDateLabel, getStandings, getLeagueLeaders, playerHeadshotUrl } from '../utils/mlbApi';
+import { todayString, formatDateLabel, getStandings, getLeagueLeaders, playerHeadshotUrl, getUpcomingMetsGames } from '../utils/mlbApi';
 import { TeamLogo } from './SharedUI';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
+import PlayerPage from './PlayerPage';
 
 function LeaderPhoto({ playerId, name }) {
   const [err, setErr] = React.useState(false);
@@ -32,12 +33,17 @@ function GameCard({ game, onClick }) {
   const isFinal = game.status === 'Final';
   const isFav = game.awayTeam.id === FAV_TEAM_ID || game.homeTeam.id === FAV_TEAM_ID;
 
+  // Close game: live, 7th inning or later, margin 1 run or tied
+  const inningNum = parseInt(game.inning) || 0;
+  const margin = Math.abs((game.awayTeam.score||0) - (game.homeTeam.score||0));
+  const isCloseGame = isLive && inningNum >= 7 && margin <= 1;
+
   return (
     <button onClick={() => onClick(game)} style={{
       display:'block', width:'100%', textAlign:'left', cursor:'pointer', border:'none',
       background: isFav?'rgba(0,45,114,0.25)':isLive?'rgba(220,38,38,0.08)':'rgba(255,255,255,0.04)',
       borderRadius:16, padding:'14px 16px', marginBottom:10,
-      outline: isFav?'1px solid rgba(0,45,114,0.5)':isLive?'0.5px solid rgba(220,38,38,0.3)':'0.5px solid rgba(255,255,255,0.08)',
+      outline: isCloseGame?'1px solid rgba(251,191,36,0.5)':isFav?'1px solid rgba(0,45,114,0.5)':isLive?'0.5px solid rgba(220,38,38,0.3)':'0.5px solid rgba(255,255,255,0.08)',
       transition:'background 0.15s',
     }}>
       {isFav && <div style={{ fontSize:10, color:'#60a5fa', fontWeight:600, letterSpacing:0.5, marginBottom:6, textTransform:'uppercase' }}>⭐ Your team</div>}
@@ -68,10 +74,13 @@ function GameCard({ game, onClick }) {
           </div>
         </div>
       </div>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:8 }}>
-        {isLive && <span style={{ fontSize:10, fontWeight:700, background:'#dc2626', color:'#fff', borderRadius:6, padding:'2px 8px' }}>● LIVE {game.statusLabel}</span>}
-        {isFinal && <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>Final</span>}
-        {!isLive&&!isFinal && <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{game.statusLabel}</span>}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:8, flexWrap:'wrap', gap:4 }}>
+        <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
+          {isLive && <span style={{ fontSize:10, fontWeight:700, background:'#dc2626', color:'#fff', borderRadius:6, padding:'2px 8px' }}>● LIVE {game.statusLabel}</span>}
+          {isCloseGame && <span style={{ fontSize:10, fontWeight:700, background:'rgba(251,191,36,0.15)', color:'#fbbf24', borderRadius:6, padding:'2px 8px', border:'0.5px solid rgba(251,191,36,0.3)' }}>🔥 Close game</span>}
+          {isFinal && <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>Final</span>}
+          {!isLive&&!isFinal && <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{game.statusLabel}</span>}
+        </div>
         <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)' }}>{game.venue}</span>
       </div>
       {game.probableAwayPitcher && !isLive && !isFinal && (
@@ -184,7 +193,7 @@ const METS_ID = 121;
 const YEAR = new Date().getFullYear();
 
 async function getMetsLeaders() {
-  const battingCats = ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','stolenBases','rbi'];
+  const battingCats = ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','onBasePlusSlugging','stolenBases','rbi'];
   const pitchingCats = ['earnedRunAverage','strikeouts','wins','saves','whip'];
 
   const [battingResults, pitchingResults] = await Promise.all([
@@ -210,6 +219,7 @@ function LeadersView() {
   const [metsLeaders, setMetsLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [leaderTab, setLeaderTab] = useState('batting');
+  const [playerPage, setPlayerPage] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -223,29 +233,31 @@ function LeadersView() {
 
   if (loading) return <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>Loading leaders...</div>;
 
-  const leagueBatting = leaders.filter(l => ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','stolenBases','rbi'].includes(l.cat));
+  const leagueBatting = leaders.filter(l => ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','onBasePlusSlugging','stolenBases','rbi'].includes(l.cat));
   const leaguePitching = leaders.filter(l => ['earnedRunAverage','strikeouts','wins','saves','whip'].includes(l.cat));
 
   const catLabels = {
     homeRuns:'Home runs', battingAverage:'Batting avg',
     earnedRunAverage:'ERA', strikeouts:'Strikeouts',
     onBasePercentage:'On-base %', sluggingPercentage:'Slugging %',
+    onBasePlusSlugging:'OPS',
     stolenBases:'Stolen bases', runs:'Runs', rbi:'RBI',
     wins:'Wins', saves:'Saves', whip:'WHIP',
   };
 
-  const metsBattingCats = ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','stolenBases','rbi'];
+  const metsBattingCats = ['homeRuns','battingAverage','onBasePercentage','sluggingPercentage','onBasePlusSlugging','stolenBases','rbi'];
   const metsPitchingCats = ['earnedRunAverage','strikeouts','wins','saves','whip'];
 
   function LeaderRow({ l, i, total }) {
-    // Leaders API may return team.abbreviation or team.teamCode
     const teamAbbr = l.team?.abbreviation || l.team?.teamCode?.toUpperCase() || l.team?.clubName?.slice(0,3).toUpperCase();
     return (
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom:i<total-1?'0.5px solid rgba(255,255,255,0.06)':'none' }}>
         <span style={{ fontSize:12, color:'rgba(255,255,255,0.3)', minWidth:16, textAlign:'center', fontWeight:600 }}>{l.rank||1}</span>
         <LeaderPhoto playerId={l.person?.id} name={l.person?.fullName} />
         <div style={{ flex:1 }}>
-          <div style={{ fontSize:13, fontWeight:500, color:'#fff' }}>{l.person?.fullName}</div>
+          <div onClick={() => l.person?.id && setPlayerPage({ id: l.person.id, name: l.person.fullName })}
+            style={{ fontSize:13, fontWeight:500, color:'#60a5fa', cursor:'pointer', textDecoration:'underline', textDecorationStyle:'dotted', textDecorationColor:'rgba(96,165,250,0.4)', display:'inline' }}
+          >{l.person?.fullName}</div>
           <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:2 }}>
             {teamAbbr && <TeamLogo abbr={teamAbbr} size={18} />}
             <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{l.team?.name || teamAbbr}</span>
@@ -276,9 +288,12 @@ function LeadersView() {
         </div>
         {relevantLeaders.map(({ cat, leader }, i) => (
           <div key={cat} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom:i<relevantLeaders.length-1?'0.5px solid rgba(255,255,255,0.06)':'none' }}>
+            <span style={{ minWidth:16 }} />{/* spacer to align with rank in league rows */}
             <LeaderPhoto playerId={leader.person?.id} name={leader.person?.fullName} />
             <div style={{ flex:1 }}>
-              <div style={{ fontSize:13, fontWeight:500, color:'#fff' }}>{leader.person?.fullName}</div>
+              <div onClick={() => leader.person?.id && setPlayerPage({ id: leader.person.id, name: leader.person.fullName })}
+                style={{ fontSize:13, fontWeight:500, color:'#60a5fa', cursor:'pointer', textDecoration:'underline', textDecorationStyle:'dotted', textDecorationColor:'rgba(96,165,250,0.4)', display:'inline' }}
+              >{leader.person?.fullName}</div>
               <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:1 }}>{catLabels[cat]||cat}</div>
             </div>
             <span style={{ fontSize:18, fontWeight:700, color:'#60a5fa' }}>{leader.value}</span>
@@ -290,6 +305,7 @@ function LeadersView() {
 
   return (
     <div className="fade-in">
+      {playerPage && <PlayerPage playerId={playerPage.id} playerName={playerPage.name} onClose={() => setPlayerPage(null)} />}
       {/* Sub tabs */}
       <div style={{ display:'flex', gap:6, marginBottom:14 }}>
         {[['batting','Batting'],['pitching','Pitching']].map(([id,label])=>(
@@ -309,6 +325,88 @@ function LeadersView() {
           <LeagueSection items={leaguePitching} />
         </>
       )}
+    </div>
+  );
+}
+
+function ScheduleView() {
+  const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getUpcomingMetsGames()
+      .then(setGames)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>Loading schedule...</div>;
+  if (!games.length) return <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>No upcoming games found</div>;
+
+  return (
+    <div className="fade-in">
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
+        <TeamLogo abbr="NYM" size={22} />
+        <span style={{ fontSize:14, fontWeight:600, color:'#fff' }}>Mets — upcoming games</span>
+      </div>
+      {games.map((g, i) => {
+        const isMetsHome = g.teams?.home?.team?.id === 121;
+        const metsTeam = isMetsHome ? g.teams?.home : g.teams?.away;
+        const oppTeam  = isMetsHome ? g.teams?.away : g.teams?.home;
+        const oppAbbr  = oppTeam?.team?.abbreviation || '???';
+        const oppName  = oppTeam?.team?.name || '';
+        const metsPitcher = metsTeam?.probablePitcher?.fullName;
+        const oppPitcher  = oppTeam?.probablePitcher?.fullName;
+        const gameDate = new Date(g.gameDate);
+        const dateLabel = gameDate.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+        const timeLabel = gameDate.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short' });
+        const isLive = g.status?.abstractGameState === 'Live';
+        const venue = g.venue?.name;
+
+        return (
+          <div key={g.gamePk || i} style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:'14px 16px', marginBottom:10 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+              <span style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.5)' }}>{dateLabel}</span>
+              <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                {isLive && <span style={{ fontSize:10, fontWeight:700, background:'#dc2626', color:'#fff', borderRadius:6, padding:'2px 8px' }}>● LIVE</span>}
+                <span style={{ fontSize:12, color:'rgba(255,255,255,0.35)' }}>{timeLabel}</span>
+              </div>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <TeamLogo abbr="NYM" size={36} />
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:15, fontWeight:600, color:'#fff' }}>
+                  {isMetsHome ? `vs ${oppName}` : `@ ${oppName}`}
+                </div>
+                {venue && <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:2 }}>{venue}</div>}
+              </div>
+              <TeamLogo abbr={oppAbbr} size={36} />
+            </div>
+            {(metsPitcher || oppPitcher) && (
+              <div style={{ marginTop:10, paddingTop:10, borderTop:'0.5px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontSize:10, fontWeight:600, color:'rgba(255,255,255,0.25)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:6 }}>Probable starters</div>
+                <div style={{ display:'flex', justifyContent:'space-between', gap:8 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <TeamLogo abbr="NYM" size={14} />
+                    <span style={{ fontSize:12, color: metsPitcher ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)' }}>
+                      {metsPitcher || 'TBD'}
+                    </span>
+                  </div>
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <span style={{ fontSize:12, color: oppPitcher ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)' }}>
+                      {oppPitcher || 'TBD'}
+                    </span>
+                    <TeamLogo abbr={oppAbbr} size={14} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <div style={{ fontSize:11, color:'rgba(255,255,255,0.2)', textAlign:'center', marginTop:4 }}>
+        MLB Stats API · probable pitchers subject to change
+      </div>
     </div>
   );
 }
@@ -347,14 +445,13 @@ export default function GamePicker({ onSelectGame }) {
           />
           <div>
             <div style={{ fontSize:22, fontWeight:700, color:'#fff', letterSpacing:-0.5 }}>Between Innings</div>
-            <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', marginTop:1 }}>Mets fan · MLB gameday</div>
           </div>
         </div>
       </div>
 
       {/* Main nav */}
-      <div style={{ display:'flex', gap:4, padding:'14px 16px 0' }}>
-        {[['games','Games'],['standings','Standings'],['leaders','Leaders']].map(([id,label])=>(
+      <div style={{ display:'flex', gap:4, padding:'14px 16px 0', flexWrap:'wrap' }}>
+        {[['games','Games'],['schedule','Schedule'],['standings','Standings'],['leaders','Leaders']].map(([id,label])=>(
           <button key={id} onClick={()=>setMainTab(id)} style={{ padding:'7px 16px', fontSize:13, borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', background:mainTab===id?'#fff':'rgba(255,255,255,0.07)', color:mainTab===id?'#0f1117':'rgba(255,255,255,0.5)', fontWeight:mainTab===id?600:400, transition:'all 0.15s' }}>{label}</button>
         ))}
       </div>
@@ -377,6 +474,7 @@ export default function GamePicker({ onSelectGame }) {
       )}
       {mainTab === 'standings' && <div style={{ padding:'16px 16px 0' }}><StandingsView /></div>}
       {mainTab === 'leaders' && <div style={{ padding:'16px 16px 0' }}><LeadersView /></div>}
+      {mainTab === 'schedule' && <div style={{ padding:'16px 16px 0' }}><ScheduleView /></div>}
     </div>
   );
 }
