@@ -490,9 +490,17 @@ export default function PitchingTab({ data }) {
         </div>
       ))}
       <BullpenSection awayTeam={awayTeam} homeTeam={homeTeam} awayPitchers={awayPitchers} homePitchers={homePitchers} />
-      <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
-        <AIAnalysis awayPitchers={awayPitchers} homePitchers={homePitchers} awayTeam={awayTeam} homeTeam={homeTeam} awayScore={awayScore} homeScore={homeScore} awayBatters={awayBatters||[]} homeBatters={homeBatters||[]} keyPlays={keyPlays||[]} isFinal={isFinal} inning={inning} inningHalf={inningHalf} />
-      </div>
+      {/* Only show AI analysis once there's something to analyse */}
+      {(() => {
+        const allPitchers = [...awayPitchers, ...homePitchers];
+        const totalPitches = allPitchers.reduce((sum, p) => sum + (p.pitchCount || 0), 0);
+        if (totalPitches < 20) return null;
+        return (
+          <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
+            <AIAnalysis awayPitchers={awayPitchers} homePitchers={homePitchers} awayTeam={awayTeam} homeTeam={homeTeam} awayScore={awayScore} homeScore={homeScore} awayBatters={awayBatters||[]} homeBatters={homeBatters||[]} keyPlays={keyPlays||[]} isFinal={isFinal} inning={inning} inningHalf={inningHalf} />
+          </div>
+        );
+      })()}
     </div>
   );
 }

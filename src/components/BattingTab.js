@@ -75,7 +75,7 @@ function SeasonStatsModal({ batter, onClose }) {
   return ReactDOM.createPortal(modal, document.body);
 }
 
-function TopPerformers({ batters, teamAbbr }) {
+function TopPerformers({ batters, onPlayerTap }) {
   const performers = batters
     .filter(b => b.h > 0 || b.hr > 0 || b.rbi > 1)
     .sort((a, b) => (b.hr * 3 + b.rbi * 2 + b.h) - (a.hr * 3 + a.rbi * 2 + a.h))
@@ -88,10 +88,12 @@ function TopPerformers({ batters, teamAbbr }) {
       <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:8 }}>Top performers</div>
       <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
         {performers.map(b => (
-          <div key={b.id} style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'8px 12px', flex:'1 1 auto', minWidth:130 }}>
+          <div key={b.id} onClick={() => onPlayerTap(b)} style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'8px 12px', flex:'1 1 auto', minWidth:130, cursor:'pointer' }}>
             <PlayerPhoto playerId={b.id} name={b.name} size={32} />
             <div>
-              <div style={{ fontSize:12, fontWeight:600, color:'#fff' }}>{(() => { const parts = b.name.split(' '); const last = parts[parts.length - 1]; return (last === 'Jr.' || last === 'Jr' || last === 'Sr.' || last === 'Sr' || last === 'II' || last === 'III') ? parts[parts.length - 2] : last; })()}</div>
+              <div style={{ fontSize:12, fontWeight:600, color:'#60a5fa', textDecoration:'underline', textDecorationStyle:'dotted', textDecorationColor:'rgba(96,165,250,0.4)' }}>
+                {(() => { const parts = b.name.split(' '); const last = parts[parts.length - 1]; return (last === 'Jr.' || last === 'Jr' || last === 'Sr.' || last === 'Sr' || last === 'II' || last === 'III') ? parts[parts.length - 2] : last; })()}
+              </div>
               <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:1 }}>
                 {b.h}H{b.hr > 0 ? ` · ${b.hr}HR` : ''}{b.rbi > 0 ? ` · ${b.rbi}RBI` : ''}
               </div>
@@ -130,13 +132,15 @@ function BatterRow({ b, onRowClick, onNameClick, delay }) {
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <PlayerPhoto playerId={b.id} name={b.name} size={26} />
           <div>
-            <span
-              onClick={e => { e.stopPropagation(); onNameClick(b); }}
-              style={{ fontWeight:600, color:'#60a5fa', fontSize:13, textDecoration:'underline', textDecorationStyle:'dotted', textDecorationColor:'rgba(96,165,250,0.5)', cursor:'pointer' }}
-            >{b.name}</span>
-            <span style={{ color:'rgba(255,255,255,0.3)', fontSize:11, marginLeft:5 }}>
+            <div>
+              <span
+                onClick={e => { e.stopPropagation(); onNameClick(b); }}
+                style={{ fontWeight:600, color:'#60a5fa', fontSize:13, textDecoration:'underline', textDecorationStyle:'dotted', textDecorationColor:'rgba(96,165,250,0.5)', cursor:'pointer' }}
+              >{b.name}</span>
+            </div>
+            <div style={{ color:'rgba(255,255,255,0.3)', fontSize:11, marginTop:1 }}>
               {b.position}{b.batSide ? <span style={{ color:'rgba(255,255,255,0.2)' }}> · {b.batSide}</span> : ''}
-            </span>
+            </div>
           </div>
         </div>
       </td>
@@ -149,17 +153,6 @@ function BatterRow({ b, onRowClick, onNameClick, delay }) {
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right', color:'rgba(255,255,255,0.8)' }}>{b.bb||<span style={{ color:'rgba(255,255,255,0.3)' }}>–</span>}</td>
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right', color:b.r>0?'#60a5fa':'rgba(255,255,255,0.3)' }}>{b.r||'–'}</td>
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right', color:b.k>0?'#f87171':'rgba(255,255,255,0.3)' }}>{b.k||'–'}</td>
-      <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right', color:'rgba(255,255,255,0.6)', fontSize:12 }}>
-        {(() => {
-          // Calculate OPS from this game's plate appearance data
-          const pa = b.ab + b.bb + (b.sacFlies || 0);
-          if (pa === 0) return <span style={{ color:'rgba(255,255,255,0.25)' }}>–</span>;
-          const obp = (b.h + b.bb) / pa;
-          const tb = (b.h - b.hr - (b.doubles||0) - (b.triples||0)) + (b.doubles||0)*2 + (b.triples||0)*3 + b.hr*4;
-          const slg = b.ab > 0 ? tb / b.ab : 0;
-          return (obp + slg).toFixed(3);
-        })()}
-      </td>
     </tr>
   );
 }
@@ -175,14 +168,14 @@ function TeamSection({ side, team, batters, stats }) {
         <TeamLogo abbr={team.abbr} size={24} />
         <span style={{ fontSize:14, fontWeight:600, color:'#fff' }}>{team.city} {team.name}</span>
       </div>
-      <TopPerformers batters={batters} teamAbbr={team.abbr} />
+      <TopPerformers batters={batters} onPlayerTap={setPlayerPage} />
       <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginBottom:8 }}>Tap a player's name for their full profile · tap a row for this game's stats</div>
       <div style={{ overflowX:'auto' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
           <thead>
             <tr>
               <th style={{ textAlign:'left', padding:'4px 8px', color:'rgba(255,255,255,0.3)', fontWeight:400, fontSize:11, borderBottom:'0.5px solid rgba(255,255,255,0.1)' }}>Batter</th>
-              {['AB','H','HR','RBI','BB','R','K','OPS'].map(h=>(
+              {['AB','H','HR','RBI','BB','R','K'].map(h=>(
                 <th key={h} style={{ textAlign:'right', padding:'4px 8px', color:'rgba(255,255,255,0.3)', fontWeight:400, fontSize:11, borderBottom:'0.5px solid rgba(255,255,255,0.1)' }}>{h}</th>
               ))}
             </tr>
@@ -197,7 +190,6 @@ function TeamSection({ side, team, batters, stats }) {
                     {batters.reduce((a,b)=>a+(b[f]||0),0)}
                   </td>
                 ))}
-                <td style={{ padding:'7px 8px', textAlign:'right', color:'rgba(255,255,255,0.3)', fontSize:12 }}>—</td>
               </tr>
             )}
           </tbody>

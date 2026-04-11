@@ -111,7 +111,63 @@ export async function getUpcomingMetsGames() {
   return games.slice(0, 5);
 }
 
+export async function getMetsBullpenStatus() {
+  const METS_ID = 121;
+  const year = new Date().getFullYear();
+
+  // Get last 5 days of Mets games
+  const today = new Date();
+  const dates = [];
+  for (let i = 1; i <= 5; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+
+  // Fetch Mets roster (active pitchers)
+  const rosterRes = await fetch(`${BASE}/teams/${METS_ID}/roster?rosterType=active&season=${year}&hydrate=person`);
+  const rosterData = await rosterRes.json();
+  const pitchers = (rosterData.roster || [])
+    .filter(p => p.position?.type === 'Pitcher' && p.position?.abbreviation !== 'SP')
+    .map(p => ({
+      id: p.person?.id,
+      name: p.person?.fullName,
+      hand: p.person?.pitchHand?.code || '?',
+    }));
+
+  // Fetch each day's game box score
+  const pitchCounts = {}; // { playerId: { date: count } }
+  await Promise.all(dates.map(async date => {
+    try {
+      const schedRes = await fetch(`${BASE}/schedule?sportId=1&teamId=${METS_ID}&date=${date}&hydrate=linescore`);
+      const schedData = await schedRes.json();
+      const games = [];
+      (schedData.dates || []).forEach(d => (d.games || []).forEach(g => {
+        if (g.status?.abstractGameState === 'Final') games.push(g);
+      }));
+      if (!games.length) return;
+      const gamePk = games[0].gamePk;
+      const boxRes = await fetch(`${BASE}/game/${gamePk}/boxscore`);
+      const box = await boxRes.json();
+      const teamKey = games[0].teams?.home?.team?.id === METS_ID ? 'home' : 'away';
+      const team = box.teams?.[teamKey];
+      if (!team) return;
+      (team.pitchers || []).forEach(id => {
+        const p = team.players?.[`ID${id}`];
+        if (!p) return;
+        const pitches = p.stats?.pitching?.numberOfPitches;
+        if (!pitches) return;
+        if (!pitchCounts[id]) pitchCounts[id] = {};
+        pitchCounts[id][date] = pitches;
+      });
+    } catch { /* skip failed days */ }
+  }));
+
+  return { pitchers, dates, pitchCounts };
+}
+
 export async function getHeadToHead(awayId, homeId) {
+  const year = new Date().getFullYear();
   const res = await fetch(`${BASE}/schedule?sportId=1&teamId=${awayId}&season=${year}&hydrate=linescore`);
   const data = await res.json();
   const games = [];

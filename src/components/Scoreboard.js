@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip } from 'chart.js';
 import { TeamLogo } from './SharedUI';
@@ -94,13 +94,61 @@ function getTeamColours(homeAbbr, awayAbbr) {
 function WinProbChart({ winProb, awayAbbr, homeAbbr }) {
   if (!winProb || winProb.vals.length < 2) return null;
   const { homeColour, awayColour } = getTeamColours(homeAbbr, awayAbbr);
-  const data = {
+  const chartRef = useRef(null);
+
+  const handleTouch = useCallback((e) => {
+    e.preventDefault();
+    const chart = chartRef.current;
+    if (!chart) return;
+    const touch = e.touches[0];
+    const rect = chart.canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    // Find nearest data index
+    const datasetMeta = chart.getDatasetMeta(0);
+    if (!datasetMeta.data.length) return;
+    let nearest = 0, minDist = Infinity;
+    datasetMeta.data.forEach((pt, i) => {
+      const dist = Math.abs(pt.x - x);
+      if (dist < minDist) { minDist = dist; nearest = i; }
+    });
+    chart.tooltip.setActiveElements(
+      [{ datasetIndex:0, index:nearest }, { datasetIndex:1, index:nearest }],
+      { x, y: touch.clientY - rect.top }
+    );
+    chart.update('none');
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    chart.tooltip.setActiveElements([], {});
+    chart.update('none');
+  }, []);
+
+  const chartData = {
     labels: winProb.labels,
     datasets: [
       { label:homeAbbr, data:winProb.vals, borderColor:homeColour, backgroundColor:hexToRgba(homeColour, 0.07), fill:true, tension:0.35, pointRadius:2, pointBackgroundColor:homeColour, borderWidth:2 },
       { label:awayAbbr, data:winProb.vals.map(v=>100-v), borderColor:awayColour, backgroundColor:hexToRgba(awayColour, 0.05), fill:true, tension:0.35, pointRadius:2, pointBackgroundColor:awayColour, borderWidth:2 },
     ],
   };
+
+  const options = {
+    responsive:true, maintainAspectRatio:false,
+    interaction: { mode:'index', intersect:false },
+    scales:{
+      y:{ min:0,max:100,ticks:{callback:v=>v+'%',font:{size:9},color:'rgba(255,255,255,0.3)'},grid:{color:'rgba(255,255,255,0.05)'},border:{display:false} },
+      x:{ ticks:{font:{size:9},color:'rgba(255,255,255,0.3)',maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{display:false},border:{display:false} }
+    },
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        mode:'index', intersect:false,
+        callbacks:{ label:ctx=>`${ctx.dataset.label}: ${ctx.raw}%` }
+      }
+    }
+  };
+
   return (
     <div style={{ marginTop:14, paddingTop:12, borderTop:'0.5px solid rgba(255,255,255,0.08)' }}>
       <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginBottom:6, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -110,8 +158,16 @@ function WinProbChart({ winProb, awayAbbr, homeAbbr }) {
           <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10,height:2,background:awayColour,display:'inline-block',borderRadius:1 }}></span>{awayAbbr}</span>
         </span>
       </div>
-      <div style={{ height:120 }}>
-        <Line data={data} options={{ responsive:true, maintainAspectRatio:false, scales:{ y:{ min:0,max:100,ticks:{callback:v=>v+'%',font:{size:9},color:'rgba(255,255,255,0.3)'},grid:{color:'rgba(255,255,255,0.05)'},border:{display:false} }, x:{ ticks:{font:{size:9},color:'rgba(255,255,255,0.3)',maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{display:false},border:{display:false} } }, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw}%`}} } }} />
+      <div
+        style={{ height:120 }}
+        onTouchStart={handleTouch}
+        onTouchMove={handleTouch}
+        onTouchEnd={handleTouchEnd}
+      >
+        <Line ref={chartRef} data={chartData} options={options} />
+      </div>
+      <div style={{ fontSize:10, color:'rgba(255,255,255,0.2)', textAlign:'center', marginTop:4 }}>
+        Hold and drag to scrub
       </div>
     </div>
   );

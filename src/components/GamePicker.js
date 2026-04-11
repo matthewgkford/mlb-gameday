@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useGamesForDate } from '../hooks/useTodaysGames';
-import { todayString, formatDateLabel, getStandings, getLeagueLeaders, playerHeadshotUrl, getUpcomingMetsGames } from '../utils/mlbApi';
-import { TeamLogo } from './SharedUI';
+import { todayString, formatDateLabel, getStandings, getLeagueLeaders, playerHeadshotUrl, getUpcomingMetsGames, getMetsBullpenStatus } from '../utils/mlbApi';
+import { TeamLogo, PlayerPhoto } from './SharedUI';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import PlayerPage from './PlayerPage';
 
@@ -357,6 +357,8 @@ function ScheduleView() {
         const oppName  = oppTeam?.team?.name || '';
         const metsPitcher = metsTeam?.probablePitcher?.fullName;
         const oppPitcher  = oppTeam?.probablePitcher?.fullName;
+        const metsPitcherId = metsTeam?.probablePitcher?.id;
+        const oppPitcherId  = oppTeam?.probablePitcher?.id;
         const gameDate = new Date(g.gameDate);
         const dateLabel = gameDate.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
         const timeLabel = gameDate.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short' });
@@ -384,19 +386,22 @@ function ScheduleView() {
             </div>
             {(metsPitcher || oppPitcher) && (
               <div style={{ marginTop:10, paddingTop:10, borderTop:'0.5px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ fontSize:10, fontWeight:600, color:'rgba(255,255,255,0.25)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:6 }}>Probable starters</div>
-                <div style={{ display:'flex', justifyContent:'space-between', gap:8 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <TeamLogo abbr="NYM" size={14} />
-                    <span style={{ fontSize:12, color: metsPitcher ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)' }}>
-                      {metsPitcher || 'TBD'}
-                    </span>
+                <div style={{ fontSize:10, fontWeight:600, color:'rgba(255,255,255,0.25)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:8 }}>Probable starters</div>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:8 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <PlayerPhoto playerId={metsPitcherId} name={metsPitcher || 'TBD'} size={32} />
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:500, color: metsPitcher ? '#fff' : 'rgba(255,255,255,0.25)' }}>{metsPitcher || 'TBD'}</div>
+                      <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)' }}>NYM</div>
+                    </div>
                   </div>
-                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <span style={{ fontSize:12, color: oppPitcher ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)' }}>
-                      {oppPitcher || 'TBD'}
-                    </span>
-                    <TeamLogo abbr={oppAbbr} size={14} />
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)' }}>vs</span>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, flexDirection:'row-reverse' }}>
+                    <PlayerPhoto playerId={oppPitcherId} name={oppPitcher || 'TBD'} size={32} />
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:12, fontWeight:500, color: oppPitcher ? '#fff' : 'rgba(255,255,255,0.25)' }}>{oppPitcher || 'TBD'}</div>
+                      <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)' }}>{oppAbbr}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -406,6 +411,101 @@ function ScheduleView() {
       })}
       <div style={{ fontSize:11, color:'rgba(255,255,255,0.2)', textAlign:'center', marginTop:4 }}>
         MLB Stats API · probable pitchers subject to change
+      </div>
+    </div>
+  );
+}
+
+function BullpenView() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getMetsBullpenStatus()
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>Loading bullpen data...</div>;
+  if (!data) return <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.3)', fontSize:13 }}>Could not load bullpen data</div>;
+
+  const { pitchers, dates, pitchCounts } = data;
+
+  function pitchColor(count) {
+    if (!count) return 'transparent';
+    if (count < 20) return 'rgba(74,222,128,0.2)';
+    if (count < 30) return 'rgba(251,191,36,0.2)';
+    return 'rgba(248,113,113,0.2)';
+  }
+  function pitchTextColor(count) {
+    if (!count) return 'rgba(255,255,255,0.15)';
+    if (count < 20) return '#4ade80';
+    if (count < 30) return '#fbbf24';
+    return '#f87171';
+  }
+
+  // Day labels — Mon, Tue etc
+  const dayLabels = dates.map(d => {
+    const dt = new Date(d + 'T12:00:00');
+    return dt.toLocaleDateString('en-US', { weekday:'short' });
+  });
+
+  // Only show pitchers who appear on the roster
+  const activePitchers = pitchers.filter(p => p.id);
+
+  return (
+    <div className="fade-in">
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
+        <TeamLogo abbr="NYM" size={22} />
+        <span style={{ fontSize:14, fontWeight:600, color:'#fff' }}>Mets bullpen — last 5 days</span>
+      </div>
+
+      <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, overflow:'hidden', marginBottom:10 }}>
+        {/* Header row */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr auto auto auto auto auto auto', borderBottom:'0.5px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ padding:'8px 12px', fontSize:10, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5 }}>Pitcher</div>
+          {dayLabels.map((d, i) => (
+            <div key={i} style={{ padding:'8px 10px', fontSize:10, fontWeight:600, color:'rgba(255,255,255,0.3)', textAlign:'center', minWidth:36 }}>{d}</div>
+          ))}
+        </div>
+
+        {activePitchers.length === 0 && (
+          <div style={{ padding:16, fontSize:13, color:'rgba(255,255,255,0.3)', textAlign:'center' }}>No bullpen data available</div>
+        )}
+
+        {activePitchers.map((pitcher, idx) => (
+          <div key={pitcher.id} style={{ display:'grid', gridTemplateColumns:'1fr auto auto auto auto auto auto', borderBottom: idx < activePitchers.length-1 ? '0.5px solid rgba(255,255,255,0.06)' : 'none', alignItems:'center' }}>
+            <div style={{ padding:'10px 12px', display:'flex', alignItems:'center', gap:8 }}>
+              <PlayerPhoto playerId={pitcher.id} name={pitcher.name} size={28} />
+              <div>
+                <div style={{ fontSize:12, fontWeight:500, color:'#fff' }}>{pitcher.name}</div>
+                <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:1 }}>
+                  {pitcher.hand === 'L' ? 'LHP' : pitcher.hand === 'R' ? 'RHP' : '—'}
+                </div>
+              </div>
+            </div>
+            {dates.map((date, i) => {
+              const count = pitchCounts[pitcher.id]?.[date];
+              return (
+                <div key={i} style={{ padding:'10px 6px', textAlign:'center', minWidth:36, background:pitchColor(count), borderLeft:'0.5px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ fontSize:12, fontWeight:count ? 600 : 400, color:pitchTextColor(count) }}>
+                    {count || '—'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display:'flex', gap:12, flexWrap:'wrap', fontSize:11, color:'rgba(255,255,255,0.3)', marginBottom:4 }}>
+        <span style={{ display:'flex', alignItems:'center', gap:5 }}><span style={{ width:10, height:10, background:'rgba(74,222,128,0.3)', borderRadius:3, display:'inline-block' }}></span>Under 20</span>
+        <span style={{ display:'flex', alignItems:'center', gap:5 }}><span style={{ width:10, height:10, background:'rgba(251,191,36,0.3)', borderRadius:3, display:'inline-block' }}></span>20–29</span>
+        <span style={{ display:'flex', alignItems:'center', gap:5 }}><span style={{ width:10, height:10, background:'rgba(248,113,113,0.3)', borderRadius:3, display:'inline-block' }}></span>30+</span>
+      </div>
+      <div style={{ fontSize:11, color:'rgba(255,255,255,0.2)' }}>
+        Pitch counts from this season's games · MLB Stats API
       </div>
     </div>
   );
@@ -451,7 +551,7 @@ export default function GamePicker({ onSelectGame }) {
 
       {/* Main nav */}
       <div style={{ display:'flex', gap:4, padding:'14px 16px 0', flexWrap:'wrap' }}>
-        {[['games','Games'],['schedule','Schedule'],['standings','Standings'],['leaders','Leaders']].map(([id,label])=>(
+        {[['games','Games'],['schedule','Schedule'],['standings','Standings'],['leaders','Leaders'],['bullpen','Bullpen']].map(([id,label])=>(
           <button key={id} onClick={()=>setMainTab(id)} style={{ padding:'7px 16px', fontSize:13, borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', background:mainTab===id?'#fff':'rgba(255,255,255,0.07)', color:mainTab===id?'#0f1117':'rgba(255,255,255,0.5)', fontWeight:mainTab===id?600:400, transition:'all 0.15s' }}>{label}</button>
         ))}
       </div>
@@ -475,6 +575,7 @@ export default function GamePicker({ onSelectGame }) {
       {mainTab === 'standings' && <div style={{ padding:'16px 16px 0' }}><StandingsView /></div>}
       {mainTab === 'leaders' && <div style={{ padding:'16px 16px 0' }}><LeadersView /></div>}
       {mainTab === 'schedule' && <div style={{ padding:'16px 16px 0' }}><ScheduleView /></div>}
+      {mainTab === 'bullpen' && <div style={{ padding:'16px 16px 0' }}><BullpenView /></div>}
     </div>
   );
 }
