@@ -452,7 +452,22 @@ function BullpenView() {
   });
 
   // Only show pitchers who appear on the roster
-  const activePitchers = pitchers.filter(p => p.id);
+  // Sort: most recently used at top, hasn't pitched recently at bottom
+  // Within same day: higher pitch count = more used = higher in list
+  const activePitchers = pitchers.filter(p => p.id).sort((a, b) => {
+    const lastDateA = dates.find(d => pitchCounts[a.id]?.[d]);
+    const lastDateB = dates.find(d => pitchCounts[b.id]?.[d]);
+    // Pitchers who haven't thrown recently go to the bottom
+    if (!lastDateA && !lastDateB) return 0;
+    if (!lastDateA) return 1;
+    if (!lastDateB) return -1;
+    // dates[0] is most recent — lower index = more recent = top
+    const idxA = dates.indexOf(lastDateA);
+    const idxB = dates.indexOf(lastDateB);
+    if (idxA !== idxB) return idxA - idxB;
+    // Same day — more pitches = higher up
+    return (pitchCounts[b.id]?.[lastDateB] || 0) - (pitchCounts[a.id]?.[lastDateA] || 0);
+  });
 
   return (
     <div className="fade-in">

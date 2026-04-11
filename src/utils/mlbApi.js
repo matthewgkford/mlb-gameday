@@ -124,11 +124,17 @@ export async function getMetsBullpenStatus() {
     dates.push(d.toISOString().slice(0, 10));
   }
 
-  // Fetch Mets roster (active pitchers)
+  // Hardcoded Mets starters to exclude — update as rotation changes
+  const METS_STARTERS = new Set([
+    'Clay Holmes', 'David Peterson', 'Freddy Peralta', 'Kodai Senga',
+    'Sean Manaea', 'Tylor Megill', 'Jose Quintana', 'Griffin Canning',
+    'Nolan McLean',
+  ]);
+
   const rosterRes = await fetch(`${BASE}/teams/${METS_ID}/roster?rosterType=active&season=${year}&hydrate=person`);
   const rosterData = await rosterRes.json();
   const pitchers = (rosterData.roster || [])
-    .filter(p => p.position?.type === 'Pitcher' && p.position?.abbreviation !== 'SP')
+    .filter(p => p.position?.type === 'Pitcher' && !METS_STARTERS.has(p.person?.fullName))
     .map(p => ({
       id: p.person?.id,
       name: p.person?.fullName,
