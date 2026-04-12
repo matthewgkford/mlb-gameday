@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { PlayerPhoto, TrendArrow, rateBAT, rateOBP, rateSLG, rateOPS, rateERA, rateWHIP } from './SharedUI';
+import { PlayerPhoto, TrendArrow, rateBAT, rateOBP, rateSLG, rateOPS, rateERA, rateWHIP, TeamLogo } from './SharedUI';
 
 const BASE = 'https://statsapi.mlb.com/api/v1';
+
+// Map team names to abbreviations for cases where API returns inconsistent abbrs
+const TEAM_NAME_TO_ABBR = {
+  'New York Mets':'NYM','New York Yankees':'NYY','Boston Red Sox':'BOS',
+  'Toronto Blue Jays':'TOR','Baltimore Orioles':'BAL','Tampa Bay Rays':'TB',
+  'Milwaukee Brewers':'MIL','Chicago Cubs':'CHC','Chicago White Sox':'CWS',
+  'Minnesota Twins':'MIN','Detroit Tigers':'DET','Cleveland Guardians':'CLE',
+  'Cleveland Indians':'CLE','Kansas City Royals':'KC','Houston Astros':'HOU',
+  'Los Angeles Angels':'LAA','Oakland Athletics':'ATH','Athletics':'ATH',
+  'Seattle Mariners':'SEA','Texas Rangers':'TEX','Los Angeles Dodgers':'LAD',
+  'San Francisco Giants':'SF','San Diego Padres':'SD','Colorado Rockies':'COL',
+  'Arizona Diamondbacks':'AZ','Atlanta Braves':'ATL','Miami Marlins':'MIA',
+  'Florida Marlins':'MIA','Philadelphia Phillies':'PHI','Washington Nationals':'WSH',
+  'Montreal Expos':'MON','St. Louis Cardinals':'STL','Pittsburgh Pirates':'PIT',
+  'Cincinnati Reds':'CIN','Anaheim Angels':'LAA','California Angels':'LAA',
+};
 
 async function fetchPlayerData(playerId) {
   const year = new Date().getFullYear();
@@ -75,7 +91,11 @@ export default function PlayerPage({ playerId, playerName, teamAbbr, onClose }) 
     const key = `${season}-${teamName}`;
     if (!seen.has(key)) {
       seen.add(key);
-      teamHistory.push({ teamName, teamAbbr: split.team?.abbreviation, season: parseInt(season) });
+      teamHistory.push({
+        teamName,
+        teamAbbr: TEAM_NAME_TO_ABBR[teamName] || split.team?.abbreviation || split.team?.teamCode?.toUpperCase(),
+        season: parseInt(season)
+      });
     }
   });
   // Sort by season descending, group consecutive years with same team
@@ -220,6 +240,7 @@ export default function PlayerPage({ playerId, playerName, teamAbbr, onClose }) 
                 <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                   {teamSummary.map((t, i) => (
                     <div key={i} style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'8px 12px' }}>
+                      <TeamLogo abbr={t.teamAbbr} size={24} />
                       <div style={{ flex:1, fontSize:13, color: i === 0 ? '#fff' : 'rgba(255,255,255,0.6)', fontWeight: i === 0 ? 500 : 400 }}>{t.teamName}</div>
                       <div style={{ fontSize:12, color:'rgba(255,255,255,0.35)' }}>
                         {t.from === t.to ? t.from : `${t.from}–${t.to}`}

@@ -82,6 +82,7 @@ const TEAM_STYLES = {
   NYM: { bg:'#002D72', text:'#FF5910', label:'NYM' },
   NYY: { bg:'#003087', text:'#C4CED4', label:'NYY' },
   OAK: { bg:'#003831', text:'#EFB21E', label:'OAK' },
+  ATH: { bg:'#003831', text:'#EFB21E', label:'ATH' },
   PHI: { bg:'#E81828', text:'#002D62', label:'PHI' },
   PIT: { bg:'#FDB827', text:'#27251F', label:'PIT' },
   SD:  { bg:'#2F241D', text:'#FFC425', label:'SD'  },
@@ -109,11 +110,24 @@ const LOCAL_LOGOS = {
   KC:  '/logos/kc.svg',
 };
 
+// Some teams use different abbreviations on ESPN CDN vs MLB API
+const ESPN_ABBR = {
+  ATH: 'oak',  // Athletics
+  CLE: 'cle',  // Guardians (ESPN still uses CLE)
+  WSH: 'wsh',
+  TB:  'tb',
+  SF:  'sf',
+  KC:  'kc',
+  LAA: 'laa',
+  LAD: 'lad',
+};
+
 export function TeamLogo({ abbr, size = 24 }) {
   const [err, setErr] = React.useState(false);
   const style = TEAM_STYLES[abbr] || { bg:'#1e293b', text:'#ffffff', label:abbr?.slice(0,3)||'?' };
   const fontSize = size < 30 ? size * 0.32 : size * 0.28;
-  const src = LOCAL_LOGOS[abbr] || `https://a.espncdn.com/i/teamlogos/mlb/500/${abbr?.toLowerCase()}.png`;
+  const espnAbbr = ESPN_ABBR[abbr] || abbr?.toLowerCase();
+  const src = LOCAL_LOGOS[abbr] || `https://a.espncdn.com/i/teamlogos/mlb/500/${espnAbbr}.png`;
 
   if (err) {
     return (

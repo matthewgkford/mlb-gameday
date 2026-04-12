@@ -128,7 +128,7 @@ function DayView({ dateStr, onSelectGame }) {
 function StandingsView() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeLeague, setActiveLeague] = useState('AL');
+  const [activeLeague, setActiveLeague] = useState('NL');
 
   useEffect(() => {
     getStandings().then(setRecords).catch(()=>{}).finally(()=>setLoading(false));
@@ -138,15 +138,24 @@ function StandingsView() {
 
   const leagues = { AL:[], NL:[] };
   records.forEach(div => {
-    // leagueId 103 = AL, 104 = NL — more reliable than parsing the name string
     const lg = div.league?.id === 103 || div.league?.name?.includes('American') ? 'AL' : 'NL';
     leagues[lg].push(div);
+  });
+
+  // Sort divisions: East first, then Central, then West
+  const divOrder = ['East','Central','West'];
+  Object.keys(leagues).forEach(lg => {
+    leagues[lg].sort((a, b) => {
+      const ai = divOrder.findIndex(d => a.division?.name?.includes(d));
+      const bi = divOrder.findIndex(d => b.division?.name?.includes(d));
+      return ai - bi;
+    });
   });
 
   return (
     <div className="fade-in">
       <div style={{ display:'flex', gap:6, marginBottom:14 }}>
-        {['AL','NL'].map(lg => (
+        {['NL','AL'].map(lg => (
           <button key={lg} onClick={()=>setActiveLeague(lg)} style={{ padding:'6px 16px', fontSize:13, borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', background:activeLeague===lg?'#fff':'rgba(255,255,255,0.07)', color:activeLeague===lg?'#0f1117':'rgba(255,255,255,0.5)', fontWeight:activeLeague===lg?600:400 }}>{lg}</button>
         ))}
       </div>
@@ -332,6 +341,7 @@ function LeadersView() {
 function ScheduleView() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [playerPage, setPlayerPage] = useState(null);
 
   useEffect(() => {
     getUpcomingMetsGames()
@@ -345,6 +355,7 @@ function ScheduleView() {
 
   return (
     <div className="fade-in">
+      {playerPage && <PlayerPage playerId={playerPage.id} playerName={playerPage.name} onClose={() => setPlayerPage(null)} />}
       <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
         <TeamLogo abbr="NYM" size={22} />
         <span style={{ fontSize:14, fontWeight:600, color:'#fff' }}>Mets — upcoming games</span>
@@ -391,7 +402,10 @@ function ScheduleView() {
                   <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                     <PlayerPhoto playerId={metsPitcherId} name={metsPitcher || 'TBD'} size={32} />
                     <div>
-                      <div style={{ fontSize:12, fontWeight:500, color: metsPitcher ? '#fff' : 'rgba(255,255,255,0.25)' }}>{metsPitcher || 'TBD'}</div>
+                      <div
+                        onClick={() => metsPitcherId && setPlayerPage({ id: metsPitcherId, name: metsPitcher })}
+                        style={{ fontSize:12, fontWeight:500, color: metsPitcherId ? '#60a5fa' : 'rgba(255,255,255,0.25)', cursor: metsPitcherId ? 'pointer' : 'default', textDecoration: metsPitcherId ? 'underline' : 'none', textDecorationStyle:'dotted' }}
+                      >{metsPitcher || 'TBD'}</div>
                       <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)' }}>NYM</div>
                     </div>
                   </div>
@@ -399,7 +413,10 @@ function ScheduleView() {
                   <div style={{ display:'flex', alignItems:'center', gap:8, flexDirection:'row-reverse' }}>
                     <PlayerPhoto playerId={oppPitcherId} name={oppPitcher || 'TBD'} size={32} />
                     <div style={{ textAlign:'right' }}>
-                      <div style={{ fontSize:12, fontWeight:500, color: oppPitcher ? '#fff' : 'rgba(255,255,255,0.25)' }}>{oppPitcher || 'TBD'}</div>
+                      <div
+                        onClick={() => oppPitcherId && setPlayerPage({ id: oppPitcherId, name: oppPitcher })}
+                        style={{ fontSize:12, fontWeight:500, color: oppPitcherId ? '#60a5fa' : 'rgba(255,255,255,0.25)', cursor: oppPitcherId ? 'pointer' : 'default', textDecoration: oppPitcherId ? 'underline' : 'none', textDecorationStyle:'dotted' }}
+                      >{oppPitcher || 'TBD'}</div>
                       <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)' }}>{oppAbbr}</div>
                     </div>
                   </div>
