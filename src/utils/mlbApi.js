@@ -217,6 +217,50 @@ export function formatDateLabel(dateStr) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+// Home team ID → IANA timezone for the venue
+const TEAM_VENUE_TIMEZONE = {
+  // Eastern
+  110: 'America/New_York',  // BAL
+  111: 'America/New_York',  // BOS
+  113: 'America/New_York',  // CIN
+  114: 'America/New_York',  // CLE
+  116: 'America/New_York',  // DET
+  120: 'America/New_York',  // WSH
+  121: 'America/New_York',  // NYM
+  134: 'America/New_York',  // PIT
+  141: 'America/Toronto',   // TOR
+  143: 'America/New_York',  // PHI
+  144: 'America/New_York',  // ATL
+  146: 'America/New_York',  // MIA
+  147: 'America/New_York',  // NYY
+  // Central
+  112: 'America/Chicago',   // CHC
+  117: 'America/Chicago',   // HOU
+  118: 'America/Chicago',   // KC
+  138: 'America/Chicago',   // STL
+  140: 'America/Chicago',   // TEX
+  142: 'America/Chicago',   // MIN
+  145: 'America/Chicago',   // CWS
+  158: 'America/Chicago',   // MIL
+  // Mountain
+  109: 'America/Phoenix',   // AZ (no DST)
+  115: 'America/Denver',    // COL
+  // Pacific
+  108: 'America/Los_Angeles', // LAA
+  119: 'America/Los_Angeles', // LAD
+  133: 'America/Los_Angeles', // OAK/ATH
+  135: 'America/Los_Angeles', // SD
+  136: 'America/Los_Angeles', // SEA
+  137: 'America/Los_Angeles', // SF
+};
+
+export function venueTimeLabel(gameDate, homeTeamId) {
+  if (!gameDate) return null;
+  const tz = TEAM_VENUE_TIMEZONE[homeTeamId];
+  if (!tz) return null;
+  return new Date(gameDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: tz, timeZoneName: 'short' });
+}
+
 export function gameStatusLabel(g) {
   const s = g.status?.abstractGameState;
   const detail = g.status?.detailedState;
@@ -262,6 +306,7 @@ export function mapGame(g) {
     probableAwayPitcherId: g.teams?.away?.probablePitcher?.id,
     probableHomePitcherId: g.teams?.home?.probablePitcher?.id,
     gameDate: g.gameDate,
+    venueTimeZone: TEAM_VENUE_TIMEZONE[g.teams?.home?.team?.id] || null,
     seriesDescription: g.seriesDescription,
     gameNumber: g.gameNumber,
     gamesInSeries: g.gamesInSeries,

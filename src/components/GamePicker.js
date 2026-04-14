@@ -32,6 +32,9 @@ function GameCard({ game, onClick }) {
   const isLive = game.status === 'Live';
   const isFinal = game.status === 'Final';
   const isFav = game.awayTeam.id === FAV_TEAM_ID || game.homeTeam.id === FAV_TEAM_ID;
+  const venueTimeLabel = game.gameDate && game.venueTimeZone && !isLive && !isFinal
+    ? new Date(game.gameDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: game.venueTimeZone, timeZoneName: 'short' })
+    : null;
 
   // Close game: live, 7th inning or later, margin 1 run or tied
   const inningNum = parseInt(game.inning) || 0;
@@ -79,7 +82,7 @@ function GameCard({ game, onClick }) {
           {isLive && <span style={{ fontSize:10, fontWeight:700, background:'#dc2626', color:'#fff', borderRadius:6, padding:'2px 8px' }}>● LIVE {game.statusLabel}</span>}
           {isCloseGame && <span style={{ fontSize:10, fontWeight:700, background:'rgba(251,191,36,0.15)', color:'#fbbf24', borderRadius:6, padding:'2px 8px', border:'0.5px solid rgba(251,191,36,0.3)' }}>🔥 Close game</span>}
           {isFinal && <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>Final</span>}
-          {!isLive&&!isFinal && <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{game.statusLabel}</span>}
+          {venueTimeLabel && <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{venueTimeLabel}</span>}
         </div>
         <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)' }}>{game.venue}</span>
       </div>
