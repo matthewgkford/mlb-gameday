@@ -884,7 +884,7 @@ function PitchBars({ pitches }) {
   return (
     <div style={{ marginTop:12, paddingTop:12, borderTop:'0.5px solid rgba(255,255,255,0.06)' }}>
       <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', marginBottom:10, textTransform:'uppercase', letterSpacing:0.5 }}>
-        Pitch usage · 2025 season · Baseball Savant
+        Pitch usage · 2025 season to date · Statcast
       </div>
       {pitches.map(p => {
         const color = PITCH_COLORS[p.type] || '#94a3b8';
