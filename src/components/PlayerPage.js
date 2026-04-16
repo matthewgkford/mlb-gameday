@@ -110,6 +110,13 @@ export default function PlayerPage({ playerId, playerName, teamAbbr, onClose }) 
       teamSummary.push({ teamName, teamAbbr, from: season, to: season });
     }
   });
+  // yearByYear reflects where stats were earned, not current team. If the player has
+  // since moved teams, prepend their actual current team so the "Current" badge is correct.
+  const currentYear = new Date().getFullYear();
+  if (person?.currentTeam?.name && teamSummary[0]?.teamName !== person.currentTeam.name) {
+    const abbr = TEAM_NAME_TO_ABBR[person.currentTeam.name] || person.currentTeam.abbreviation || person.currentTeam.teamCode?.toUpperCase();
+    teamSummary.unshift({ teamName: person.currentTeam.name, teamAbbr: abbr, from: currentYear, to: currentYear });
+  }
 
   const isPitcher = person?.primaryPosition?.abbreviation === 'P' || person?.primaryPosition?.abbreviation === 'SP' || person?.primaryPosition?.abbreviation === 'RP';
 

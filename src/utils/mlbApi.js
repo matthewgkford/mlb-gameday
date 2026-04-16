@@ -65,6 +65,20 @@ export async function getStandings() {
   return data.records || [];
 }
 
+// Batch-fetch currentTeam for a list of player IDs. Returns a map of id -> team object.
+export async function fetchCurrentTeams(playerIds) {
+  if (!playerIds.length) return {};
+  try {
+    const res = await fetch(`${BASE}/people?personIds=${playerIds.join(',')}&hydrate=currentTeam`);
+    const data = await res.json();
+    const map = {};
+    (data.people || []).forEach(p => { if (p.id && p.currentTeam) map[p.id] = p.currentTeam; });
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 export async function getLeagueLeaders() {
   const year = new Date().getFullYear();
   // Batting stats — specify playerPool=Qualified to only get actual hitters
@@ -87,7 +101,18 @@ export async function getLeagueLeaders() {
     )),
   ]);
 
-  return [...battingResults, ...pitchingResults];
+  const allResults = [...battingResults, ...pitchingResults];
+
+  // The stats API returns the team where stats were earned, not the player's current team.
+  // Batch-fetch currentTeam for all leaders to correct stale team affiliations.
+  const playerIds = [...new Set(allResults.flatMap(r => r.leaders.map(l => l.person?.id).filter(Boolean)))];
+  const currentTeamMap = await fetchCurrentTeams(playerIds);
+  allResults.forEach(r => r.leaders.forEach(l => {
+    const t = currentTeamMap[l.person?.id];
+    if (t) l.team = t;
+  }));
+
+  return allResults;
 }
 
 export async function getUpcomingMetsGames() {
@@ -127,7 +152,7 @@ export async function getMetsBullpenStatus() {
   // Hardcoded Mets starters to exclude — update as rotation changes
   const METS_STARTERS = new Set([
     'Clay Holmes', 'David Peterson', 'Freddy Peralta', 'Kodai Senga',
-    'Sean Manaea', 'Tylor Megill', 'Jose Quintana', 'Griffin Canning',
+    'Tylor Megill', 'Jose Quintana', 'Griffin Canning',
     'Nolan McLean',
   ]);
 

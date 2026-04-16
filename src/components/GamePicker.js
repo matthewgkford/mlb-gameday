@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useGamesForDate } from '../hooks/useTodaysGames';
-import { todayString, formatDateLabel, getStandings, getLeagueLeaders, playerHeadshotUrl, getUpcomingMetsGames, getMetsBullpenStatus } from '../utils/mlbApi';
+import { todayString, formatDateLabel, getStandings, getLeagueLeaders, fetchCurrentTeams, playerHeadshotUrl, getUpcomingMetsGames, getMetsBullpenStatus } from '../utils/mlbApi';
 import { TeamLogo, PlayerPhoto } from './SharedUI';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import PlayerPage from './PlayerPage';
@@ -223,7 +223,18 @@ async function getMetsLeaders() {
     )),
   ]);
 
-  return [...battingResults, ...pitchingResults];
+  const allResults = [...battingResults, ...pitchingResults];
+
+  // Correct stale team affiliations using currentTeam
+  const playerIds = [...new Set(allResults.map(r => r.leader?.person?.id).filter(Boolean))];
+  const currentTeamMap = await fetchCurrentTeams(playerIds);
+  allResults.forEach(r => {
+    if (!r.leader) return;
+    const t = currentTeamMap[r.leader.person?.id];
+    if (t) r.leader.team = t;
+  });
+
+  return allResults;
 }
 
 function LeadersView() {
