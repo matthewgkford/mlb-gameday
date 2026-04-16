@@ -147,7 +147,7 @@ function BatterRow({ b, onRowClick, onNameClick, delay }) {
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right', color:'rgba(255,255,255,0.8)' }}>{b.ab}</td>
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right', color:b.h>0?'#60a5fa':'rgba(255,255,255,0.4)', fontWeight:b.h>0?600:400 }}>{b.h}</td>
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right' }}>
-        {b.hr>0?<span style={{ color:'#60a5fa', fontWeight:600 }}>{b.hr}<span style={{ background:'rgba(96,165,250,0.15)', color:'#93c5fd', borderRadius:4, padding:'1px 4px', fontSize:10, marginLeft:3 }}>HR</span></span>:<span style={{ color:'rgba(255,255,255,0.3)' }}>–</span>}
+        {b.hr>0?<span style={{ color:'#60a5fa', fontWeight:600 }}>{b.hr}</span>:<span style={{ color:'rgba(255,255,255,0.3)' }}>–</span>}
       </td>
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right', color:'rgba(255,255,255,0.8)' }}>{b.rbi||<span style={{ color:'rgba(255,255,255,0.3)' }}>–</span>}</td>
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'right', color:'rgba(255,255,255,0.8)' }}>{b.bb||<span style={{ color:'rgba(255,255,255,0.3)' }}>–</span>}</td>
