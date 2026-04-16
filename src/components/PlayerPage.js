@@ -4,6 +4,24 @@ import { PlayerPhoto, TrendArrow, rateBAT, rateOBP, rateSLG, rateOPS, rateERA, r
 
 const BASE = 'https://statsapi.mlb.com/api/v1';
 
+// Map MLB API country names to ISO 3166-1 alpha-2 codes for flag emoji rendering
+const COUNTRY_TO_ISO = {
+  'USA':'US','Dominican Republic':'DO','Venezuela':'VE','Cuba':'CU','Panama':'PA',
+  'Puerto Rico':'PR','Japan':'JP','South Korea':'KR','Mexico':'MX','Canada':'CA',
+  'Colombia':'CO','Nicaragua':'NI','Curacao':'CW','Australia':'AU','Brazil':'BR',
+  'Netherlands':'NL','Germany':'DE','Bahamas':'BS','Taiwan':'TW','Aruba':'AW',
+  'Jamaica':'JM','Honduras':'HN','Costa Rica':'CR','Spain':'ES','Italy':'IT',
+  'South Africa':'ZA','China':'CN','Sweden':'SE','Finland':'FI','France':'FR',
+  'United Kingdom':'GB','England':'GB','Scotland':'GB','Ireland':'IE',
+};
+
+// Convert ISO 2-letter code to flag emoji via regional indicator symbols
+function countryFlag(countryName) {
+  const iso = COUNTRY_TO_ISO[countryName];
+  if (!iso) return null;
+  return iso.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0)));
+}
+
 // Map team names to abbreviations for cases where API returns inconsistent abbrs
 const TEAM_NAME_TO_ABBR = {
   'New York Mets':'NYM','New York Yankees':'NYY','Boston Red Sox':'BOS',
@@ -179,7 +197,10 @@ export default function PlayerPage({ playerId, playerName, teamAbbr, onClose }) 
                 {(person.birthCity || person.birthCountry) && (
                   <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'10px 12px' }}>
                     <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginBottom:3 }}>Born</div>
-                    <div style={{ fontSize:14, fontWeight:500, color:'#fff' }}>
+                    <div style={{ fontSize:14, fontWeight:500, color:'#fff', display:'flex', alignItems:'center', gap:6 }}>
+                      {countryFlag(person.birthCountry) && (
+                        <span style={{ fontSize:18, lineHeight:1 }}>{countryFlag(person.birthCountry)}</span>
+                      )}
                       {[person.birthCity, person.birthStateProvince, person.birthCountry].filter(Boolean).join(', ')}
                     </div>
                   </div>
