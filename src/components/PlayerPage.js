@@ -271,7 +271,7 @@ export default function PlayerPage({ playerId, playerName, teamAbbr, onClose }) 
                       <TeamLogo abbr={t.teamAbbr} size={24} />
                       <div style={{ flex:1, fontSize:13, color: i === 0 ? '#fff' : 'rgba(255,255,255,0.6)', fontWeight: i === 0 ? 500 : 400 }}>{t.teamName}</div>
                       <div style={{ fontSize:12, color:'rgba(255,255,255,0.35)' }}>
-                        {t.from === t.to ? t.from : `${t.from}–${t.to}`}
+                        {i === 0 ? `${t.from}–present` : t.from === t.to ? t.from : `${t.from}–${t.to}`}
                       </div>
                       {i === 0 && <span style={{ fontSize:10, background:'rgba(96,165,250,0.15)', color:'#60a5fa', borderRadius:6, padding:'2px 7px', fontWeight:600 }}>Current</span>}
                     </div>
