@@ -246,9 +246,9 @@ function TeamComparisonBar({ awayTeam, homeTeam, awayStats, homeStats, awayBatte
           return (
             <div key={label}>
               <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', marginBottom:4 }}>
-                <span style={{ fontSize:13, fontWeight:600, color: av > hv ? '#fff' : 'rgba(255,255,255,0.6)' }}>{av}</span>
+                <span style={{ fontSize:16, fontWeight:400, color: av > hv ? '#fff' : 'rgba(255,255,255,0.6)' }}>{av}</span>
                 <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)', letterSpacing:0.2 }}>{label}</span>
-                <span style={{ fontSize:13, fontWeight:600, color: hv > av ? '#fff' : 'rgba(255,255,255,0.6)' }}>{hv}</span>
+                <span style={{ fontSize:16, fontWeight:400, color: hv > av ? '#fff' : 'rgba(255,255,255,0.6)' }}>{hv}</span>
               </div>
               <div style={{ height:5, borderRadius:3, overflow:'hidden', display:'flex' }}>
                 <div style={{ width:`${awayPct}%`, background: total === 0 ? EMPTY_COLOR : AWAY_COLOR, transition:'width 0.4s ease' }} />
