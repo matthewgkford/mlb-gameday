@@ -125,9 +125,9 @@ function SlashLine({ stats }) {
   );
 }
 
-function BatterRow({ b, onRowClick, onNameClick, delay }) {
+function BatterRow({ b, onRowClick, onNameClick, delay, idx }) {
   return (
-    <tr onClick={() => onRowClick(b)} style={{ cursor:'pointer', animation:`fadeIn 0.3s ease forwards`, animationDelay:`${delay}ms`, opacity:0 }}>
+    <tr onClick={() => onRowClick(b)} style={{ cursor:'pointer', animation:`fadeIn 0.3s ease forwards`, animationDelay:`${delay}ms`, opacity:0, background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
       <td style={{ padding:'7px 8px', borderBottom:'0.5px solid rgba(255,255,255,0.06)', textAlign:'left' }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <PlayerPhoto playerId={b.id} name={b.name} size={26} />
@@ -181,7 +181,7 @@ function TeamSection({ side, team, batters, stats }) {
             </tr>
           </thead>
           <tbody>
-            {batters.map((b, i) => <BatterRow key={b.id} b={b} onRowClick={setModal} onNameClick={setPlayerPage} delay={i * 30} />)}
+            {batters.map((b, i) => <BatterRow key={b.id} b={b} onRowClick={setModal} onNameClick={setPlayerPage} delay={i * 30} idx={i} />)}
             {batters.length > 0 && (
               <tr style={{ background:'rgba(255,255,255,0.03)' }}>
                 <td style={{ padding:'7px 8px', fontWeight:600, color:'rgba(255,255,255,0.4)', fontSize:11 }}>Totals</td>
