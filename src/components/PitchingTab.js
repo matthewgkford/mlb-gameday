@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TeamLogo, PlayerPhoto, TrendArrow, rateERA, rateWHIP } from './SharedUI';
 import PlayerPage from './PlayerPage';
 
@@ -910,7 +910,8 @@ function PitchBars({ pitches }) {
 }
 
 function PitcherCard({ pitcher, isWinner, isLoser, isFinal }) {
-  const arsenal = PITCH_ARSENALS[pitcher.name] || null;
+  const raw = PITCH_ARSENALS[pitcher.name] || null;
+  const arsenal = raw ? raw.filter(p => p.type !== 'PO') : null;
   const roleLabel = pitcher.isStarter ? 'Starting Pitcher' : 'Relief Pitcher';
   const showPitching = pitcher.isCurrentPitcher && !isFinal;
   const [playerPage, setPlayerPage] = useState(null);
@@ -956,181 +957,195 @@ function PitcherCard({ pitcher, isWinner, isLoser, isFinal }) {
   );
 }
 
-function AIAnalysis({ awayPitchers, homePitchers, awayTeam, homeTeam, awayScore, homeScore, awayBatters, homeBatters, keyPlays, isFinal, inning, inningHalf }) {
-  const [text, setText] = useState('');
-  const [loading, setLoading] = useState(true);
+function parseIP(ip) {
+  const parts = String(ip).split('.');
+  return parseInt(parts[0] || 0) + (parseInt(parts[1] || 0) / 3);
+}
 
-  useEffect(() => {
-    const sp1 = awayPitchers.find(p => p.isStarter);
-    const sp2 = homePitchers.find(p => p.isStarter);
-    const rel1 = awayPitchers.filter(p => !p.isStarter);
-    const rel2 = homePitchers.filter(p => !p.isStarter);
-    const hrs = keyPlays.filter(p => p.event === 'home_run');
-    const topHitters = [...awayBatters, ...homeBatters]
-      .filter(b => b.h > 1 || b.hr > 0)
-      .map(b => `${b.name} (${b.h}H${b.hr > 0 ? ' ' + b.hr + 'HR' : ''})`)
-      .join(', ');
+function analyzePitching({ awayPitchers, homePitchers, awayTeam, homeTeam, awayScore, homeScore, keyPlays, isFinal }) {
+  const sp1 = awayPitchers.find(p => p.isStarter);
+  const sp2 = homePitchers.find(p => p.isStarter);
+  const rel1 = awayPitchers.filter(p => !p.isStarter);
+  const rel2 = homePitchers.filter(p => !p.isStarter);
+  const past = isFinal;
 
-    if (!sp1 && !sp2) { setText('No pitching data available yet.'); setLoading(false); return; }
+  const observations = [];
 
-    const lines = [];
-    if (sp1) lines.push(`${sp1.name} (${awayTeam.abbr}): ${sp1.ip} IP, ${sp1.er} ER, ${sp1.k} K, ${sp1.bb} BB, ${sp1.pitchCount} pitches.${sp1.seasonEra ? ' Season ERA: ' + sp1.seasonEra + '.' : ''}`);
-    if (rel1.length) lines.push(`${awayTeam.abbr} bullpen: ${rel1.map(p => `${p.name} ${p.ip}IP ${p.er}ER ${p.k}K`).join(', ')}.`);
-    if (sp2) lines.push(`${sp2.name} (${homeTeam.abbr}): ${sp2.ip} IP, ${sp2.er} ER, ${sp2.k} K, ${sp2.bb} BB, ${sp2.pitchCount} pitches.${sp2.seasonEra ? ' Season ERA: ' + sp2.seasonEra + '.' : ''}`);
-    if (rel2.length) lines.push(`${homeTeam.abbr} bullpen: ${rel2.map(p => `${p.name} ${p.ip}IP ${p.er}ER ${p.k}K`).join(', ')}.`);
-    if (hrs.length) lines.push(`Home runs: ${hrs.map(h => h.batter).join(', ')}.`);
-    if (topHitters) lines.push(`Standout hitters: ${topHitters}.`);
+  const pairs = [
+    [sp1, awayTeam, rel1, awayScore],
+    [sp2, homeTeam, rel2, homeScore],
+  ];
 
-    const gameContext = isFinal
-      ? `GAME STATUS: FINAL. Score: ${awayTeam.abbr} ${awayScore}, ${homeTeam.abbr} ${homeScore}.`
-      : `GAME STATUS: IN PROGRESS. Score: ${awayTeam.abbr} ${awayScore}, ${homeTeam.abbr} ${homeScore}. Now: ${inningHalf || ''} ${inning || ''}.`;
+  for (const [sp, team, rels] of pairs) {
+    if (!sp || sp.pitchCount < 15) continue;
 
-    const tenseGuide = isFinal
-      ? `The game has finished. Write entirely in PAST TENSE. Give a definitive verdict on why the game was won or lost.`
-      : `The game is still in progress. Write entirely in PRESENT/PRESENT PERFECT TENSE. Focus on what has happened so far and what to watch.`;
+    const ipNum = parseIP(sp.ip);
+    const outs = Math.round(ipNum * 3);
+    const ppo = outs > 0 ? sp.pitchCount / outs : null;
+    const seasonEraNum = sp.seasonEra ? parseFloat(sp.seasonEra) : null;
+    const gameEraEquiv = ipNum > 0 ? (sp.er / ipNum) * 9 : null;
+    const whip = ipNum > 0 ? (sp.h + sp.bb) / ipNum : null;
+    const hrsAllowed = keyPlays.filter(p => p.event === 'home_run' && p.pitcher === sp.name);
 
-    const prompt = `You are an expert baseball analyst. ${gameContext}
-
-${tenseGuide}
-
-${lines.join('\n')}
-
-3-4 sentences of genuine insight. Focus on pitch efficiency (pitches per out = pitches divided by innings×3, good is 3.5-4.5), command, whether the line contradicts the score, bullpen impact, or a standout hitter. Never show infinity or ÷ symbols. If no walks, say "no walks allowed".`;
-
-    fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 400, messages: [{ role: 'user', content: prompt }] }),
-    })
-      .then(r => r.json())
-      .then(d => { setText(d?.content?.find(b => b.type === 'text')?.text || buildFallback(sp1, sp2, isFinal)); })
-      .catch(() => { setText(buildFallback(sp1, sp2, isFinal)); })
-      .finally(() => setLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function buildFallback(sp1, sp2, finished) {
-    const parts = [];
-    if (sp1) {
-      const outs = parseFloat(sp1.ip) * 3;
-      const ppo = outs > 0 ? (sp1.pitchCount / outs).toFixed(1) : '?';
-      const kbb = sp1.bb > 0 ? (sp1.k / sp1.bb).toFixed(1) : 'no walks allowed';
-      parts.push(`${sp1.name} ${finished?'threw':'has thrown'} ${sp1.pitchCount} pitches over ${sp1.ip} innings (${ppo} per out), K/BB ${kbb}.`);
+    // Pitch efficiency — high burn rate
+    if (ppo !== null && ppo > 4.8 && sp.pitchCount >= 50) {
+      if (ipNum < 5) {
+        observations.push({ priority: 9, text: `${sp.name} ${past ? 'lasted' : 'has lasted'} just ${sp.ip} innings while throwing ${sp.pitchCount} pitches — ${ppo.toFixed(1)} per out — ${past ? 'putting the' : 'leaving a taxed'} ${team.abbr} bullpen to absorb the rest.` });
+      } else {
+        observations.push({ priority: 7, text: `${sp.name} ${past ? 'worked' : 'is working'} at an expensive ${ppo.toFixed(1)} pitches per out — ${sp.pitchCount} total — which ${past ? 'shortened' : 'threatens to shorten'} his outing more than the innings line suggests.` });
+      }
+    } else if (ppo !== null && ppo < 3.3 && sp.pitchCount >= 50) {
+      const qsNote = ipNum >= 6 && sp.er <= 3 ? `, easily clearing a quality start` : '';
+      observations.push({ priority: 5, text: `${sp.name} ${past ? 'was' : 'is'} dialled in on efficiency — ${ppo.toFixed(1)} pitches per out${qsNote}.` });
     }
-    if (sp2) {
-      const kbb = sp2.bb > 0 ? (sp2.k / sp2.bb).toFixed(1) : 'no walks allowed';
-      parts.push(`${sp2.name} ${finished?'went':'has gone'} ${sp2.ip} innings, K/BB ${kbb}, ${finished?'allowing':'having allowed'} ${sp2.er} earned run${sp2.er !== 1 ? 's' : ''}.`);
+
+    // Walk problems
+    if (sp.bb >= 4) {
+      observations.push({ priority: 9, text: `${sp.name} ${past ? 'had' : 'has'} a command problem: ${sp.bb} walks${sp.k > sp.bb ? ` against ${sp.k} strikeouts` : ` with only ${sp.k} Ks`}, running up pitch counts and ${past ? 'keeping' : 'keeping'} opponents on base all day.` });
+    } else if (sp.bb === 0 && sp.k >= 5) {
+      observations.push({ priority: 7, text: `${sp.name} ${past ? 'didn\'t issue' : 'hasn\'t issued'} a single walk and ${past ? 'struck out' : 'has struck out'} ${sp.k} — that kind of command means you almost never need to fear the big inning.` });
+    } else if (sp.bb === 0 && sp.k >= 3) {
+      observations.push({ priority: 5, text: `${sp.name} ${past ? 'kept it clean' : 'is keeping it clean'} with zero walks allowed.` });
+    } else if (sp.k >= 8) {
+      observations.push({ priority: 7, text: `${sp.name} ${past ? 'was' : 'is'} in strikeout mode — ${sp.k} Ks through ${sp.ip} innings, which at that pace makes hitters look helpless.` });
     }
-    return parts.join(' ') || 'Analysis unavailable.';
+
+    // Performance vs season norm
+    if (seasonEraNum && gameEraEquiv !== null && ipNum >= 4) {
+      const diff = gameEraEquiv - seasonEraNum;
+      if (diff > 3.5 && sp.er >= 3) {
+        observations.push({ priority: 8, text: `${sp.name} came in with a ${sp.seasonEra} ERA but ${past ? 'had' : 'is having'} a rough one — ${sp.er} earned over ${sp.ip} innings is well below his standard.` });
+      } else if (diff < -2.5 && ipNum >= 5 && sp.er <= 2) {
+        observations.push({ priority: 6, text: `${sp.name}'s ${sp.seasonEra} ERA doesn't tell the full story today — ${sp.er === 0 ? 'he\'s been spotless' : `only ${sp.er} earned in ${sp.ip} innings`}, one of his stronger outings.` });
+      }
+    }
+
+    // Home runs allowed — multiple
+    if (hrsAllowed.length >= 2) {
+      observations.push({ priority: 8, text: `${sp.name} ${past ? 'gave up' : 'has given up'} ${hrsAllowed.length} home runs — the long ball ${past ? 'was' : 'is'} the defining story of his day.` });
+    }
+
+    // High WHIP — traffic without necessarily a blowup
+    if (whip !== null && whip > 1.75 && ipNum >= 4 && sp.er <= 2) {
+      observations.push({ priority: 5, text: `${sp.name} ${past ? 'pitched around' : 'is pitching around'} heavy traffic — a game WHIP over ${whip.toFixed(2)} — but ${past ? 'kept' : 'is keeping'} the damage limited.` });
+    }
+
+    // Bullpen overuse after early starter exit
+    if (ipNum < 4.1 && rels.length >= 3) {
+      const totalRelIP = rels.reduce((s, p) => s + parseIP(p.ip), 0);
+      observations.push({ priority: 7, text: `With ${sp.name} out after ${sp.ip} innings, the ${team.name} bullpen ${past ? 'was leaned on heavily' : 'is carrying the load'} — ${rels.length} relievers covering ${totalRelIP.toFixed(1)} frames.` });
+    }
   }
+
+  // Contrast between the two starters
+  if (sp1 && sp2) {
+    const ip1 = parseIP(sp1.ip);
+    const ip2 = parseIP(sp2.ip);
+    const diff = Math.abs(ip1 - ip2);
+    if (diff >= 2.1) {
+      const longer = ip1 > ip2 ? sp1 : sp2;
+      const shorter = ip1 > ip2 ? sp2 : sp1;
+      const longerTeam = longer === sp1 ? awayTeam : homeTeam;
+      observations.push({ priority: 4, text: `${longer.name} went ${longer.ip} innings while ${shorter.name} lasted just ${shorter.ip} — a clear rotation edge for ${longerTeam.abbr} on the day.` });
+    }
+  }
+
+  observations.sort((a, b) => b.priority - a.priority);
+  const picked = observations.slice(0, 3);
+
+  if (!picked.length) {
+    const parts = [];
+    if (sp1) parts.push(`${sp1.name} ${past ? 'went' : 'has gone'} ${sp1.ip} innings for ${awayTeam.abbr}${sp1.er === 0 ? ', allowing no earned runs' : `, giving up ${sp1.er} earned`}.`);
+    if (sp2) parts.push(`${sp2.name} ${past ? 'went' : 'has gone'} ${sp2.ip} for ${homeTeam.abbr}${sp2.er === 0 ? ' and kept it scoreless' : `, yielding ${sp2.er} earned`}.`);
+    return parts.join(' ') || 'No pitching data available yet.';
+  }
+
+  return picked.map(o => o.text).join(' ');
+}
+
+function AIAnalysis({ awayPitchers, homePitchers, awayTeam, homeTeam, awayScore, homeScore, awayBatters, homeBatters, keyPlays, isFinal, inning, inningHalf }) {
+  const text = analyzePitching({ awayPitchers, homePitchers, awayTeam, homeTeam, awayScore, homeScore, keyPlays, isFinal });
 
   return (
     <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.08)', borderRadius:12, padding:14 }}>
-      <div style={{ fontSize:10, textTransform:'uppercase', letterSpacing:0.5, color:'rgba(255,255,255,0.3)', fontWeight:600, marginBottom:8 }}>AI analysis</div>
-      <div style={{ fontSize:13, lineHeight:1.7, color: loading ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.75)', fontStyle: loading ? 'italic' : 'normal' }}>
-        {loading ? 'Generating analysis...' : text}
+      <div style={{ fontSize:10, textTransform:'uppercase', letterSpacing:0.5, color:'rgba(255,255,255,0.3)', fontWeight:600, marginBottom:8 }}>Analysis</div>
+      <div style={{ fontSize:13, lineHeight:1.7, color:'rgba(255,255,255,0.75)' }}>
+        {text}
       </div>
     </div>
   );
 }
 
+function generateRecap({ awayTeam, homeTeam, awayScore, homeScore, awayPitchers, homePitchers, awayBatters, homeBatters, keyPlays, decisions }) {
+  const winner = awayScore > homeScore ? awayTeam : homeTeam;
+  const loser = awayScore > homeScore ? homeTeam : awayTeam;
+  const winScore = Math.max(awayScore, homeScore);
+  const loseScore = Math.min(awayScore, homeScore);
+  const margin = winScore - loseScore;
+
+  const sp1 = awayPitchers.find(p => p.isStarter);
+  const sp2 = homePitchers.find(p => p.isStarter);
+  const winnerSP = winner === awayTeam ? sp1 : sp2;
+  const loserSP = winner === awayTeam ? sp2 : sp1;
+
+  const hrs = keyPlays.filter(p => p.event === 'home_run');
+  const allBatters = [...awayBatters, ...homeBatters];
+  const topBatter = allBatters
+    .filter(b => b.h >= 2 || b.rbi >= 2 || b.hr > 0)
+    .sort((a, b) => (b.hr * 3 + b.rbi * 2 + b.h) - (a.hr * 3 + a.rbi * 2 + a.h))[0];
+  const topBatterTeam = topBatter && awayBatters.includes(topBatter) ? awayTeam : homeTeam;
+
+  const parts = [];
+
+  // Opening — lead with the most interesting story
+  if (winnerSP && parseIP(winnerSP.ip) >= 6 && winnerSP.er <= 2) {
+    const outs = Math.round(parseIP(winnerSP.ip) * 3);
+    const ppo = outs > 0 ? (winnerSP.pitchCount / outs).toFixed(1) : null;
+    const kNote = winnerSP.k >= 7 ? ` and punching out ${winnerSP.k}` : winnerSP.k >= 5 ? ` with ${winnerSP.k} strikeouts` : '';
+    parts.push(`${winnerSP.name} carried ${winner.name} to a ${winScore}-${loseScore} win, going ${winnerSP.ip} innings${kNote}${ppo ? ` on ${ppo} pitches per out` : ``} while allowing just ${winnerSP.er === 0 ? 'nothing' : winnerSP.er + ' earned'}.`);
+  } else if (hrs.length >= 2) {
+    const hrNames = hrs.slice(0, 2).map(h => h.batter).join(' and ');
+    parts.push(`${winner.name} won ${winScore}-${loseScore} on the long ball — ${hrNames} both went deep in a ${margin <= 2 ? 'tight' : 'decisive'} performance.`);
+  } else if (topBatter && topBatterTeam === winner && (topBatter.rbi >= 3 || topBatter.hr > 0)) {
+    parts.push(`${topBatter.name} was the difference in ${winner.name}'s ${winScore}-${loseScore} win — ${topBatter.rbi} RBI${topBatter.hr > 0 ? ' with a home run' : ''}${topBatter.h >= 2 ? ` and ${topBatter.h} hits` : ''}.`);
+  } else if (margin >= 5) {
+    parts.push(`${winner.name} were never seriously tested, rolling to a ${winScore}-${loseScore} win over ${loser.name}.`);
+  } else {
+    parts.push(`${winner.name} held on for a ${winScore}-${loseScore} decision against ${loser.name}.`);
+  }
+
+  // Loser's starter if they were the main story on that side
+  if (loserSP && loserSP.er >= 4 && parseIP(loserSP.ip) < 5) {
+    parts.push(`${loserSP.name} couldn't get out of trouble for ${loser.name}, giving up ${loserSP.er} earned in just ${loserSP.ip} innings.`);
+  } else if (loserSP && loserSP.bb >= 4) {
+    parts.push(`${loserSP.name}'s ${loserSP.bb} walks doomed ${loser.name} — free passes kept turning into runs.`);
+  }
+
+  // Top hitter if not already mentioned
+  if (topBatter && !parts.some(s => s.includes(topBatter.name))) {
+    const atBatStr = topBatter.ab > 0 ? `${topBatter.h}-for-${topBatter.ab}` : `${topBatter.h}H`;
+    parts.push(`${topBatter.name} (${topBatterTeam.abbr}) went ${atBatStr}${topBatter.rbi > 0 ? ` with ${topBatter.rbi} RBI` : ''}.`);
+  }
+
+  // Decisions line
+  if (decisions?.winner?.fullName && !parts.some(s => s.includes(decisions.winner.fullName))) {
+    const saveStr = decisions.save?.fullName ? ` ${decisions.save.fullName} closed it out.` : '';
+    parts.push(`${decisions.winner.fullName} picks up the win.${saveStr}`);
+  }
+
+  return parts.slice(0, 3).join(' ') || `${winner.name} defeated ${loser.name} ${winScore}-${loseScore}.`;
+}
+
 export function GameRecap({ awayTeam, homeTeam, awayScore, homeScore, awayPitchers, homePitchers, awayBatters, homeBatters, keyPlays, decisions }) {
-  const [text, setText] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    const winner = awayScore > homeScore ? awayTeam : homeTeam;
-    const loser = awayScore > homeScore ? homeTeam : awayTeam;
-    const winScore = Math.max(awayScore, homeScore);
-    const loseScore = Math.min(awayScore, homeScore);
-
-    const sp1 = awayPitchers.find(p => p.isStarter);
-    const sp2 = homePitchers.find(p => p.isStarter);
-    const allRelievers = [...awayPitchers.filter(p=>!p.isStarter), ...homePitchers.filter(p=>!p.isStarter)];
-    const hrs = keyPlays.filter(p => p.event === 'home_run');
-    const scoringPlays = keyPlays.filter(p => p.rbi > 0).slice(0, 5);
-
-    const allBatters = [...awayBatters, ...homeBatters];
-    const topHitters = allBatters
-      .filter(b => b.h >= 2 || b.hr > 0 || b.rbi >= 2)
-      .sort((a, b) => (b.hr * 3 + b.rbi * 2 + b.h) - (a.hr * 3 + a.rbi * 2 + a.h))
-      .slice(0, 4)
-      .map(b => `${b.name} (${awayBatters.includes(b) ? awayTeam.abbr : homeTeam.abbr}): ${b.h}H, ${b.rbi}RBI${b.hr > 0 ? ', ' + b.hr + 'HR' : ''}${b.bb > 0 ? ', ' + b.bb + 'BB' : ''}`)
-      .join('\n');
-
-    const lines = [`${awayTeam.name} ${awayScore}, ${homeTeam.name} ${homeScore}`];
-    if (decisions?.winner?.fullName) lines.push(`W: ${decisions.winner.fullName}${decisions.loser?.fullName ? '  L: ' + decisions.loser.fullName : ''}${decisions.save?.fullName ? '  SV: ' + decisions.save.fullName : ''}`);
-    if (sp1) {
-      const outs = parseFloat(sp1.ip) * 3;
-      const ppo = outs > 0 ? (sp1.pitchCount / outs).toFixed(1) : '?';
-      lines.push(`${sp1.name} (${awayTeam.abbr} SP): ${sp1.ip} IP, ${sp1.er} ER, ${sp1.k} K, ${sp1.bb} BB — ${ppo} pitches/out`);
-    }
-    if (sp2) {
-      const outs = parseFloat(sp2.ip) * 3;
-      const ppo = outs > 0 ? (sp2.pitchCount / outs).toFixed(1) : '?';
-      lines.push(`${sp2.name} (${homeTeam.abbr} SP): ${sp2.ip} IP, ${sp2.er} ER, ${sp2.k} K, ${sp2.bb} BB — ${ppo} pitches/out`);
-    }
-    if (allRelievers.length) lines.push(`Relievers: ${allRelievers.map(p=>`${p.name} ${p.ip}IP/${p.er}ER`).join(', ')}`);
-    if (hrs.length) lines.push(`HRs: ${hrs.map(h=>`${h.batter} (${h.half==='top'?awayTeam.abbr:homeTeam.abbr})`).join(', ')}`);
-    if (topHitters) lines.push(`Key performers:\n${topHitters}`);
-    if (scoringPlays.length) lines.push(`Scoring plays: ${scoringPlays.map(p=>`${p.batter} (${p.rbi} RBI)`).join(', ')}`);
-
-    if (!sp1 && !sp2 && !topHitters) {
-      setText(`${winner.name} defeated ${loser.name} ${winScore}-${loseScore}.`);
-      setLoading(false);
-      return;
-    }
-
-    const prompt = `You are writing a post-game recap for a baseball fan who just watched this game. Write 3-4 sentences in past tense. Be specific and analytical — reference actual players and stats. Do NOT start with the final score (they already know it). Lead with the most interesting story of the game: was it a dominant pitching performance? A comeback? A single player who drove everything?
-
-Avoid: clichés, phrases like "gutsy" "electric" "fired up", generic praise.
-Include: specific stat observations (pitch count efficiency, K/BB ratio, exit velos if notable), context for why something matters.
-
-Game data:
-${lines.join('\n')}`;
-
-    fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 350, messages: [{ role: 'user', content: prompt }] }),
-    })
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(d => {
-        const t = d?.content?.find(b => b.type === 'text')?.text;
-        if (t) setText(t);
-        else throw new Error('no text');
-      })
-      .catch(() => {
-        setError(true);
-        // Build a decent fallback from the data we have
-        const parts = [];
-        if (sp1 || sp2) {
-          const starter = sp1 && parseFloat(sp1.ip) >= parseFloat(sp2?.ip||0) ? sp1 : sp2;
-          const team = starter === sp1 ? awayTeam : homeTeam;
-          const outs = parseFloat(starter.ip) * 3;
-          const ppo = outs > 0 ? (starter.pitchCount / outs).toFixed(1) : null;
-          parts.push(`${starter.name} led ${team.name} with ${starter.ip} innings pitched, allowing ${starter.er} earned run${starter.er!==1?'s':''} on ${ppo ? ppo + ' pitches per out' : starter.pitchCount + ' pitches'}.`);
-        }
-        if (hrs.length) parts.push(`${hrs.map(h=>h.batter).join(' and ')} hit ${hrs.length > 1 ? 'home runs' : 'a home run'} in the game.`);
-        if (topHitters.split('\n')[0]) {
-          const top = allBatters.sort((a,b)=>(b.hr*3+b.rbi*2+b.h)-(a.hr*3+a.rbi*2+a.h))[0];
-          if (top && (top.h >= 2 || top.rbi >= 2)) parts.push(`${top.name} went ${top.h}-for-${top.ab} with ${top.rbi} RBI.`);
-        }
-        if (!parts.length) parts.push(`${winner.name} defeated ${loser.name} ${winScore}-${loseScore}.`);
-        setText(parts.join(' '));
-      })
-      .finally(() => setLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const text = generateRecap({ awayTeam, homeTeam, awayScore, homeScore, awayPitchers, homePitchers, awayBatters, homeBatters, keyPlays, decisions });
 
   return (
     <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
       <div style={{ fontSize:10, textTransform:'uppercase', letterSpacing:0.5, color:'rgba(255,255,255,0.3)', fontWeight:600, marginBottom:10 }}>
         Game recap
       </div>
-      <div style={{ fontSize:14, lineHeight:1.75, color: loading ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.85)', fontStyle: loading ? 'italic' : 'normal' }}>
-        {loading ? 'Writing recap...' : text}
+      <div style={{ fontSize:14, lineHeight:1.75, color:'rgba(255,255,255,0.85)' }}>
+        {text}
       </div>
     </div>
   );
@@ -1144,6 +1159,17 @@ export default function PitchingTab({ data }) {
 
   return (
     <div className="tab-panel">
+      {/* Only show AI analysis once there's something to analyse */}
+      {(() => {
+        const allPitchers = [...awayPitchers, ...homePitchers];
+        const totalPitches = allPitchers.reduce((sum, p) => sum + (p.pitchCount || 0), 0);
+        if (totalPitches < 20) return null;
+        return (
+          <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
+            <AIAnalysis awayPitchers={awayPitchers} homePitchers={homePitchers} awayTeam={awayTeam} homeTeam={homeTeam} awayScore={awayScore} homeScore={homeScore} awayBatters={awayBatters||[]} homeBatters={homeBatters||[]} keyPlays={keyPlays||[]} isFinal={isFinal} inning={inning} inningHalf={inningHalf} />
+          </div>
+        );
+      })()}
       {[['away', awayTeam, awayPitchers], ['home', homeTeam, homePitchers]].map(([side, team, pitchers]) => (
         <div key={side} style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, paddingBottom:10, borderBottom:'0.5px solid rgba(255,255,255,0.08)' }}>
@@ -1159,17 +1185,6 @@ export default function PitchingTab({ data }) {
           {!pitchers.length && <div style={{ fontSize:13, color:'rgba(255,255,255,0.3)', textAlign:'center', padding:'20px 0' }}>No pitching data yet</div>}
         </div>
       ))}
-      {/* Only show AI analysis once there's something to analyse */}
-      {(() => {
-        const allPitchers = [...awayPitchers, ...homePitchers];
-        const totalPitches = allPitchers.reduce((sum, p) => sum + (p.pitchCount || 0), 0);
-        if (totalPitches < 20) return null;
-        return (
-          <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
-            <AIAnalysis awayPitchers={awayPitchers} homePitchers={homePitchers} awayTeam={awayTeam} homeTeam={homeTeam} awayScore={awayScore} homeScore={homeScore} awayBatters={awayBatters||[]} homeBatters={homeBatters||[]} keyPlays={keyPlays||[]} isFinal={isFinal} inning={inning} inningHalf={inningHalf} />
-          </div>
-        );
-      })()}
     </div>
   );
 }
