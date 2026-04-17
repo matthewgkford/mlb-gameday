@@ -963,6 +963,13 @@ function parseIP(ip) {
   return parseInt(parts[0] || 0) + (parseInt(parts[1] || 0) / 3);
 }
 
+function formatIP(realInnings) {
+  const full = Math.floor(realInnings);
+  let outs = Math.round((realInnings - full) * 3);
+  if (outs >= 3) return `${full + 1}`;
+  return outs === 0 ? `${full}` : `${full}.${outs}`;
+}
+
 function analyzePitching({ awayPitchers, homePitchers, awayTeam, homeTeam, awayScore, homeScore, keyPlays, isFinal }) {
   const sp1 = awayPitchers.find(p => p.isStarter);
   const sp2 = homePitchers.find(p => p.isStarter);
@@ -992,7 +999,7 @@ function analyzePitching({ awayPitchers, homePitchers, awayTeam, homeTeam, awayS
     // Early exit with heavy bullpen burn (threshold: < 4 IP with 3+ relievers)
     if (ipNum < 4.1 && rels.length >= 3) {
       const totalRelIP = rels.reduce((s, p) => s + parseIP(p.ip), 0);
-      observations.push({ priority: 9, category: `bullpen_${team.abbr}`, pitcher: sp.name, text: `With ${sp.name} out after ${sp.ip} innings, the ${team.name} bullpen ${past ? 'was leaned on heavily' : 'is carrying the load'} — ${rels.length} relievers covering ${totalRelIP.toFixed(1)} frames.` });
+      observations.push({ priority: 9, category: `bullpen_${team.abbr}`, pitcher: sp.name, text: `With ${sp.name} out after ${sp.ip} innings, the ${team.name} bullpen ${past ? 'was leaned on heavily' : 'is carrying the load'} — ${rels.length} relievers covering ${formatIP(totalRelIP)} frames.` });
     }
 
     // Walk problems (4+ walks is a real issue)
