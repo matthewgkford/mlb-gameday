@@ -200,10 +200,82 @@ function TeamSection({ side, team, batters, stats }) {
   );
 }
 
+function TeamComparisonBar({ awayTeam, homeTeam, awayStats, homeStats, awayBatters, homeBatters, awayErrors, homeErrors }) {
+  const sum = (batters, field) => batters.reduce((a, b) => a + (b[field] || 0), 0);
+
+  const awayXBH = sum(awayBatters, 'doubles') + sum(awayBatters, 'triples') + sum(awayBatters, 'hr');
+  const homeXBH = sum(homeBatters, 'doubles') + sum(homeBatters, 'triples') + sum(homeBatters, 'hr');
+  const awayTB = sum(awayBatters, 'h') + sum(awayBatters, 'doubles') + sum(awayBatters, 'triples') * 2 + sum(awayBatters, 'hr') * 3;
+  const homeTB = sum(homeBatters, 'h') + sum(homeBatters, 'doubles') + sum(homeBatters, 'triples') * 2 + sum(homeBatters, 'hr') * 3;
+
+  const rows = [
+    { label: 'Hits',            a: awayStats.hits          ?? sum(awayBatters, 'h'),  h: homeStats.hits          ?? sum(homeBatters, 'h') },
+    { label: 'Home Runs',       a: awayStats.homeRuns      ?? sum(awayBatters, 'hr'), h: homeStats.homeRuns      ?? sum(homeBatters, 'hr') },
+    { label: 'Extra Base Hits', a: awayStats.extraBaseHits ?? awayXBH,               h: homeStats.extraBaseHits ?? homeXBH },
+    { label: 'Total Bases',     a: awayStats.totalBases    ?? awayTB,                h: homeStats.totalBases    ?? homeTB },
+    { label: 'Strikeouts',      a: awayStats.strikeOuts    ?? sum(awayBatters, 'k'), h: homeStats.strikeOuts    ?? sum(homeBatters, 'k') },
+    { label: 'Walks',           a: awayStats.baseOnBalls   ?? sum(awayBatters, 'bb'),h: homeStats.baseOnBalls   ?? sum(homeBatters, 'bb') },
+    { label: 'Left on Base',    a: awayStats.leftOnBase    ?? 0,                     h: homeStats.leftOnBase    ?? 0 },
+    { label: 'Stolen Bases',    a: awayStats.stolenBases   ?? 0,                     h: homeStats.stolenBases   ?? 0 },
+    { label: 'Double Plays',    a: awayStats.groundIntoDoublePlay ?? 0,              h: homeStats.groundIntoDoublePlay ?? 0 },
+    { label: 'Errors',          a: awayErrors ?? 0,                                  h: homeErrors ?? 0 },
+  ];
+
+  const AWAY_COLOR = 'rgba(96,165,250,0.7)';
+  const HOME_COLOR = 'rgba(251,146,60,0.6)';
+  const EMPTY_COLOR = 'rgba(255,255,255,0.07)';
+
+  return (
+    <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <TeamLogo abbr={awayTeam.abbr} size={20} />
+          <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.9)' }}>{awayTeam.abbr}</span>
+        </div>
+        <span style={{ fontSize:10, textTransform:'uppercase', letterSpacing:0.5, color:'rgba(255,255,255,0.25)' }}>Team stats</span>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.9)' }}>{homeTeam.abbr}</span>
+          <TeamLogo abbr={homeTeam.abbr} size={20} />
+        </div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+        {rows.map(({ label, a, h }) => {
+          const av = a ?? 0;
+          const hv = h ?? 0;
+          const total = av + hv;
+          const awayPct = total === 0 ? 50 : (av / total) * 100;
+          return (
+            <div key={label} style={{ display:'flex', alignItems:'center', gap:7 }}>
+              <span style={{ fontSize:13, fontWeight:600, color: av > hv ? '#fff' : 'rgba(255,255,255,0.55)', width:22, textAlign:'right', flexShrink:0 }}>{av}</span>
+              <div style={{ flex:1, display:'flex', flexDirection:'column', gap:3 }}>
+                <div style={{ height:5, borderRadius:3, overflow:'hidden', display:'flex' }}>
+                  <div style={{ width:`${awayPct}%`, background: total === 0 ? EMPTY_COLOR : AWAY_COLOR, transition:'width 0.4s ease' }} />
+                  <div style={{ flex:1, background: total === 0 ? EMPTY_COLOR : HOME_COLOR }} />
+                </div>
+                <div style={{ fontSize:9, textTransform:'uppercase', letterSpacing:0.4, color:'rgba(255,255,255,0.22)', textAlign:'center' }}>{label}</div>
+              </div>
+              <span style={{ fontSize:13, fontWeight:600, color: hv > av ? '#fff' : 'rgba(255,255,255,0.55)', width:22, textAlign:'left', flexShrink:0 }}>{hv}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function BattingTab({ data }) {
-  const { awayTeam, homeTeam, awayBatters, homeBatters, awayTeamStats, homeTeamStats } = data;
+  const { awayTeam, homeTeam, awayBatters, homeBatters, awayTeamStats, homeTeamStats, awayErrors, homeErrors } = data;
+  const totalPitches = [...(data.awayPitchers || []), ...(data.homePitchers || [])].reduce((s, p) => s + (p.pitchCount || 0), 0);
   return (
     <div className="tab-panel">
+      {totalPitches >= 20 && (
+        <TeamComparisonBar
+          awayTeam={awayTeam} homeTeam={homeTeam}
+          awayStats={awayTeamStats} homeStats={homeTeamStats}
+          awayBatters={awayBatters} homeBatters={homeBatters}
+          awayErrors={awayErrors} homeErrors={homeErrors}
+        />
+      )}
       <TeamSection side="away" team={awayTeam} batters={awayBatters} stats={awayTeamStats} />
       <TeamSection side="home" team={homeTeam} batters={homeBatters} stats={homeTeamStats} />
     </div>

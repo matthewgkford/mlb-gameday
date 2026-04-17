@@ -70,6 +70,8 @@ export function useGameData(gamePk, isLive) {
         homeTeamStats: boxscore?.teams?.home?.teamStats?.batting || {},
         awayTeamPitching: boxscore?.teams?.away?.teamStats?.pitching || {},
         homeTeamPitching: boxscore?.teams?.home?.teamStats?.pitching || {},
+        awayErrors: boxscore?.teams?.away?.teamStats?.fielding?.errors ?? 0,
+        homeErrors: boxscore?.teams?.home?.teamStats?.fielding?.errors ?? 0,
 
         keyPlays: parseKeyPlays(pbp),
         weather: gd.weather || null,
