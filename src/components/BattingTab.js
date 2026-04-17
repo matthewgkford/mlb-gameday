@@ -215,7 +215,6 @@ function TeamComparisonBar({ awayTeam, homeTeam, awayStats, homeStats, awayBatte
     { label: 'Total Bases',     a: awayStats.totalBases    ?? awayTB,                h: homeStats.totalBases    ?? homeTB },
     { label: 'Strikeouts',      a: awayStats.strikeOuts    ?? sum(awayBatters, 'k'), h: homeStats.strikeOuts    ?? sum(homeBatters, 'k') },
     { label: 'Walks',           a: awayStats.baseOnBalls   ?? sum(awayBatters, 'bb'),h: homeStats.baseOnBalls   ?? sum(homeBatters, 'bb') },
-    { label: 'Left on Base',    a: awayStats.leftOnBase    ?? 0,                     h: homeStats.leftOnBase    ?? 0 },
     { label: 'Stolen Bases',    a: awayStats.stolenBases   ?? 0,                     h: homeStats.stolenBases   ?? 0 },
     { label: 'Double Plays',    a: awayStats.groundIntoDoublePlay ?? 0,              h: homeStats.groundIntoDoublePlay ?? 0 },
     { label: 'Errors',          a: awayErrors ?? 0,                                  h: homeErrors ?? 0 },
@@ -238,23 +237,23 @@ function TeamComparisonBar({ awayTeam, homeTeam, awayStats, homeStats, awayBatte
           <TeamLogo abbr={homeTeam.abbr} size={20} />
         </div>
       </div>
-      <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
         {rows.map(({ label, a, h }) => {
           const av = a ?? 0;
           const hv = h ?? 0;
           const total = av + hv;
           const awayPct = total === 0 ? 50 : (av / total) * 100;
           return (
-            <div key={label} style={{ display:'flex', alignItems:'center', gap:7 }}>
-              <span style={{ fontSize:13, fontWeight:600, color: av > hv ? '#fff' : 'rgba(255,255,255,0.55)', width:22, textAlign:'right', flexShrink:0 }}>{av}</span>
-              <div style={{ flex:1, display:'flex', flexDirection:'column', gap:3 }}>
-                <div style={{ height:5, borderRadius:3, overflow:'hidden', display:'flex' }}>
-                  <div style={{ width:`${awayPct}%`, background: total === 0 ? EMPTY_COLOR : AWAY_COLOR, transition:'width 0.4s ease' }} />
-                  <div style={{ flex:1, background: total === 0 ? EMPTY_COLOR : HOME_COLOR }} />
-                </div>
-                <div style={{ fontSize:9, textTransform:'uppercase', letterSpacing:0.4, color:'rgba(255,255,255,0.22)', textAlign:'center' }}>{label}</div>
+            <div key={label}>
+              <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', marginBottom:4 }}>
+                <span style={{ fontSize:13, fontWeight:600, color: av > hv ? '#fff' : 'rgba(255,255,255,0.6)' }}>{av}</span>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)', letterSpacing:0.2 }}>{label}</span>
+                <span style={{ fontSize:13, fontWeight:600, color: hv > av ? '#fff' : 'rgba(255,255,255,0.6)' }}>{hv}</span>
               </div>
-              <span style={{ fontSize:13, fontWeight:600, color: hv > av ? '#fff' : 'rgba(255,255,255,0.55)', width:22, textAlign:'left', flexShrink:0 }}>{hv}</span>
+              <div style={{ height:5, borderRadius:3, overflow:'hidden', display:'flex' }}>
+                <div style={{ width:`${awayPct}%`, background: total === 0 ? EMPTY_COLOR : AWAY_COLOR, transition:'width 0.4s ease' }} />
+                <div style={{ flex:1, background: total === 0 ? EMPTY_COLOR : HOME_COLOR }} />
+              </div>
             </div>
           );
         })}
