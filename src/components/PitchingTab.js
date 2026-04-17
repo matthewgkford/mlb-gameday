@@ -992,44 +992,44 @@ function analyzePitching({ awayPitchers, homePitchers, awayTeam, homeTeam, awayS
     // Early exit with heavy bullpen burn (threshold: < 4 IP with 3+ relievers)
     if (ipNum < 4.1 && rels.length >= 3) {
       const totalRelIP = rels.reduce((s, p) => s + parseIP(p.ip), 0);
-      observations.push({ priority: 9, category: `bullpen_${team.abbr}`, text: `With ${sp.name} out after ${sp.ip} innings, the ${team.name} bullpen ${past ? 'was leaned on heavily' : 'is carrying the load'} — ${rels.length} relievers covering ${totalRelIP.toFixed(1)} frames.` });
+      observations.push({ priority: 9, category: `bullpen_${team.abbr}`, pitcher: sp.name, text: `With ${sp.name} out after ${sp.ip} innings, the ${team.name} bullpen ${past ? 'was leaned on heavily' : 'is carrying the load'} — ${rels.length} relievers covering ${totalRelIP.toFixed(1)} frames.` });
     }
 
     // Walk problems (4+ walks is a real issue)
     if (sp.bb >= 4) {
-      observations.push({ priority: 9, category: 'command', text: `${sp.name} ${past ? 'had' : 'has'} a command problem today: ${sp.bb} walks${sp.k > sp.bb ? ` against ${sp.k} strikeouts` : ` with only ${sp.k} Ks`}, putting runners on base constantly.` });
+      observations.push({ priority: 9, category: 'command', pitcher: sp.name, text: `${sp.name} ${past ? 'had' : 'has'} a command problem today: ${sp.bb} walks${sp.k > sp.bb ? ` against ${sp.k} strikeouts` : ` with only ${sp.k} Ks`}, putting runners on base constantly.` });
     }
 
     // Multiple HRs conceded
     if (hrsAllowed.length >= 2) {
-      observations.push({ priority: 8, category: 'hr', text: `${sp.name} ${past ? 'gave up' : 'has given up'} ${hrsAllowed.length} home runs — the long ball ${past ? 'was' : 'is'} the defining story of his day.` });
+      observations.push({ priority: 8, category: 'hr', pitcher: sp.name, text: `${sp.name} ${past ? 'gave up' : 'has given up'} ${hrsAllowed.length} home runs — the long ball ${past ? 'was' : 'is'} the defining story of his day.` });
     }
 
     // Performance vs season norm (needs meaningful gap: 4+ ERA difference, 3+ ER given up)
     if (seasonEraNum && gameEraEquiv !== null && ipNum >= 4) {
       const diff = gameEraEquiv - seasonEraNum;
       if (diff > 4.0 && sp.er >= 3) {
-        observations.push({ priority: 8, category: `season_${team.abbr}`, text: `${sp.name} came in with a ${sp.seasonEra} ERA but ${past ? 'had' : 'is having'} a rough one — ${sp.er} earned over ${sp.ip} innings is well below his standard.` });
+        observations.push({ priority: 8, category: `season_${team.abbr}`, pitcher: sp.name, text: `${sp.name} came in with a ${sp.seasonEra} ERA but ${past ? 'had' : 'is having'} a rough one — ${sp.er} earned over ${sp.ip} innings is well below his standard.` });
       } else if (diff < -3.0 && ipNum >= 5 && sp.er <= 1) {
-        observations.push({ priority: 6, category: `season_${team.abbr}`, text: `${sp.name} ${past ? 'outpitched' : 'is outpitching'} his ${sp.seasonEra} ERA today — ${sp.er === 0 ? 'nothing across the board' : `only ${sp.er} earned in ${sp.ip} innings`}.` });
+        observations.push({ priority: 6, category: `season_${team.abbr}`, pitcher: sp.name, text: `${sp.name} ${past ? 'outpitched' : 'is outpitching'} his ${sp.seasonEra} ERA today — ${sp.er === 0 ? 'nothing across the board' : `only ${sp.er} earned in ${sp.ip} innings`}.` });
       }
     }
 
     // Very high pitch burn (5.8+ is genuinely noteworthy — average is ~3.8)
     if (ppo !== null && ppo > 5.8 && sp.pitchCount >= 60) {
-      observations.push({ priority: 7, category: `efficiency_${team.abbr}`, text: `${sp.name} ${past ? 'burned through' : 'is burning through'} pitches at ${ppo.toFixed(1)} per out — ${sp.pitchCount} pitches in ${sp.ip} innings puts serious strain on the ${team.abbr} bullpen.` });
+      observations.push({ priority: 7, category: `efficiency_${team.abbr}`, pitcher: sp.name, text: `${sp.name} ${past ? 'burned through' : 'is burning through'} pitches at ${ppo.toFixed(1)} per out — ${sp.pitchCount} pitches in ${sp.ip} innings puts serious strain on the ${team.abbr} bullpen.` });
     }
 
     // Dominant command: no walks + high Ks
     if (sp.bb === 0 && sp.k >= 6) {
-      observations.push({ priority: 7, category: 'command', text: `${sp.name} ${past ? 'was' : 'is'} dialled in — ${sp.k} strikeouts, zero walks, the kind of command that shuts down a lineup before it starts.` });
+      observations.push({ priority: 7, category: 'command', pitcher: sp.name, text: `${sp.name} ${past ? 'was' : 'is'} dialled in — ${sp.k} strikeouts, zero walks, the kind of command that shuts down a lineup before it starts.` });
     } else if (sp.k >= 9) {
-      observations.push({ priority: 7, category: 'command', text: `${sp.name} ${past ? 'was dominant' : 'is dominating'} — ${sp.k} strikeouts through ${sp.ip} innings.` });
+      observations.push({ priority: 7, category: 'command', pitcher: sp.name, text: `${sp.name} ${past ? 'was dominant' : 'is dominating'} — ${sp.k} strikeouts through ${sp.ip} innings.` });
     }
 
     // High traffic, low damage (interesting when WHIP > 1.8 but ER ≤ 1)
     if (whip !== null && whip > 1.8 && ipNum >= 4 && sp.er <= 1) {
-      observations.push({ priority: 5, category: `whip_${team.abbr}`, text: `${sp.name} ${past ? 'allowed' : 'is allowing'} a lot of traffic — WHIP of ${whip.toFixed(2)} — but ${past ? 'stranded runners to keep it scoreless' : 'has kept the damage off the board so far'}.` });
+      observations.push({ priority: 5, category: `whip_${team.abbr}`, pitcher: sp.name, text: `${sp.name} ${past ? 'allowed' : 'is allowing'} a lot of traffic — WHIP of ${whip.toFixed(2)} — but ${past ? 'stranded runners to keep it scoreless' : 'has kept the damage off the board so far'}.` });
     }
   }
 
@@ -1063,6 +1063,18 @@ function analyzePitching({ awayPitchers, homePitchers, awayTeam, homeTeam, awayS
     if (sp1) parts.push(`${sp1.name} ${past ? 'went' : 'has gone'} ${sp1.ip} innings for ${awayTeam.abbr}${sp1.er === 0 ? ', allowing no earned runs' : `, giving up ${sp1.er} earned`}.`);
     if (sp2) parts.push(`${sp2.name} ${past ? 'went' : 'has gone'} ${sp2.ip} for ${homeTeam.abbr}${sp2.er === 0 ? ' and kept it scoreless' : `, yielding ${sp2.er} earned`}.`);
     return parts.join(' ') || 'No pitching data available yet.';
+  }
+
+  // If both observations are about the same pitcher, replace the name in the
+  // second sentence with "He" / "His" to avoid the awkward repetition.
+  if (picked.length === 2 && picked[0].pitcher && picked[0].pitcher === picked[1].pitcher) {
+    const name = picked[0].pitcher;
+    picked[1] = {
+      ...picked[1],
+      text: picked[1].text
+        .replace(new RegExp(`^${name}'s`), "His")
+        .replace(new RegExp(`^${name} `), "He "),
+    };
   }
 
   return picked.map(o => o.text).join(' ');
