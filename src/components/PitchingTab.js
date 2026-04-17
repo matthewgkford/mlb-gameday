@@ -970,11 +970,12 @@ function analyzePitching({ awayPitchers, homePitchers, awayTeam, homeTeam, awayS
   const rel2 = homePitchers.filter(p => !p.isStarter);
   const past = isFinal;
 
+  // category field prevents the same type of observation appearing twice (once per starter)
   const observations = [];
 
   const pairs = [
-    [sp1, awayTeam, rel1, awayScore],
-    [sp2, homeTeam, rel2, homeScore],
+    [sp1, awayTeam, rel1],
+    [sp2, homeTeam, rel2],
   ];
 
   for (const [sp, team, rels] of pairs) {
@@ -988,57 +989,51 @@ function analyzePitching({ awayPitchers, homePitchers, awayTeam, homeTeam, awayS
     const whip = ipNum > 0 ? (sp.h + sp.bb) / ipNum : null;
     const hrsAllowed = keyPlays.filter(p => p.event === 'home_run' && p.pitcher === sp.name);
 
-    // Pitch efficiency — high burn rate
-    if (ppo !== null && ppo > 4.8 && sp.pitchCount >= 50) {
-      if (ipNum < 5) {
-        observations.push({ priority: 9, text: `${sp.name} ${past ? 'lasted' : 'has lasted'} just ${sp.ip} innings while throwing ${sp.pitchCount} pitches — ${ppo.toFixed(1)} per out — ${past ? 'putting the' : 'leaving a taxed'} ${team.abbr} bullpen to absorb the rest.` });
-      } else {
-        observations.push({ priority: 7, text: `${sp.name} ${past ? 'worked' : 'is working'} at an expensive ${ppo.toFixed(1)} pitches per out — ${sp.pitchCount} total — which ${past ? 'shortened' : 'threatens to shorten'} his outing more than the innings line suggests.` });
-      }
-    } else if (ppo !== null && ppo < 3.3 && sp.pitchCount >= 50) {
-      const qsNote = ipNum >= 6 && sp.er <= 3 ? `, easily clearing a quality start` : '';
-      observations.push({ priority: 5, text: `${sp.name} ${past ? 'was' : 'is'} dialled in on efficiency — ${ppo.toFixed(1)} pitches per out${qsNote}.` });
-    }
-
-    // Walk problems
-    if (sp.bb >= 4) {
-      observations.push({ priority: 9, text: `${sp.name} ${past ? 'had' : 'has'} a command problem: ${sp.bb} walks${sp.k > sp.bb ? ` against ${sp.k} strikeouts` : ` with only ${sp.k} Ks`}, running up pitch counts and ${past ? 'keeping' : 'keeping'} opponents on base all day.` });
-    } else if (sp.bb === 0 && sp.k >= 5) {
-      observations.push({ priority: 7, text: `${sp.name} ${past ? 'didn\'t issue' : 'hasn\'t issued'} a single walk and ${past ? 'struck out' : 'has struck out'} ${sp.k} — that kind of command means you almost never need to fear the big inning.` });
-    } else if (sp.bb === 0 && sp.k >= 3) {
-      observations.push({ priority: 5, text: `${sp.name} ${past ? 'kept it clean' : 'is keeping it clean'} with zero walks allowed.` });
-    } else if (sp.k >= 8) {
-      observations.push({ priority: 7, text: `${sp.name} ${past ? 'was' : 'is'} in strikeout mode — ${sp.k} Ks through ${sp.ip} innings, which at that pace makes hitters look helpless.` });
-    }
-
-    // Performance vs season norm
-    if (seasonEraNum && gameEraEquiv !== null && ipNum >= 4) {
-      const diff = gameEraEquiv - seasonEraNum;
-      if (diff > 3.5 && sp.er >= 3) {
-        observations.push({ priority: 8, text: `${sp.name} came in with a ${sp.seasonEra} ERA but ${past ? 'had' : 'is having'} a rough one — ${sp.er} earned over ${sp.ip} innings is well below his standard.` });
-      } else if (diff < -2.5 && ipNum >= 5 && sp.er <= 2) {
-        observations.push({ priority: 6, text: `${sp.name}'s ${sp.seasonEra} ERA doesn't tell the full story today — ${sp.er === 0 ? 'he\'s been spotless' : `only ${sp.er} earned in ${sp.ip} innings`}, one of his stronger outings.` });
-      }
-    }
-
-    // Home runs allowed — multiple
-    if (hrsAllowed.length >= 2) {
-      observations.push({ priority: 8, text: `${sp.name} ${past ? 'gave up' : 'has given up'} ${hrsAllowed.length} home runs — the long ball ${past ? 'was' : 'is'} the defining story of his day.` });
-    }
-
-    // High WHIP — traffic without necessarily a blowup
-    if (whip !== null && whip > 1.75 && ipNum >= 4 && sp.er <= 2) {
-      observations.push({ priority: 5, text: `${sp.name} ${past ? 'pitched around' : 'is pitching around'} heavy traffic — a game WHIP over ${whip.toFixed(2)} — but ${past ? 'kept' : 'is keeping'} the damage limited.` });
-    }
-
-    // Bullpen overuse after early starter exit
+    // Early exit with heavy bullpen burn (threshold: < 4 IP with 3+ relievers)
     if (ipNum < 4.1 && rels.length >= 3) {
       const totalRelIP = rels.reduce((s, p) => s + parseIP(p.ip), 0);
-      observations.push({ priority: 7, text: `With ${sp.name} out after ${sp.ip} innings, the ${team.name} bullpen ${past ? 'was leaned on heavily' : 'is carrying the load'} — ${rels.length} relievers covering ${totalRelIP.toFixed(1)} frames.` });
+      observations.push({ priority: 9, category: `bullpen_${team.abbr}`, text: `With ${sp.name} out after ${sp.ip} innings, the ${team.name} bullpen ${past ? 'was leaned on heavily' : 'is carrying the load'} — ${rels.length} relievers covering ${totalRelIP.toFixed(1)} frames.` });
+    }
+
+    // Walk problems (4+ walks is a real issue)
+    if (sp.bb >= 4) {
+      observations.push({ priority: 9, category: 'command', text: `${sp.name} ${past ? 'had' : 'has'} a command problem today: ${sp.bb} walks${sp.k > sp.bb ? ` against ${sp.k} strikeouts` : ` with only ${sp.k} Ks`}, putting runners on base constantly.` });
+    }
+
+    // Multiple HRs conceded
+    if (hrsAllowed.length >= 2) {
+      observations.push({ priority: 8, category: 'hr', text: `${sp.name} ${past ? 'gave up' : 'has given up'} ${hrsAllowed.length} home runs — the long ball ${past ? 'was' : 'is'} the defining story of his day.` });
+    }
+
+    // Performance vs season norm (needs meaningful gap: 4+ ERA difference, 3+ ER given up)
+    if (seasonEraNum && gameEraEquiv !== null && ipNum >= 4) {
+      const diff = gameEraEquiv - seasonEraNum;
+      if (diff > 4.0 && sp.er >= 3) {
+        observations.push({ priority: 8, category: `season_${team.abbr}`, text: `${sp.name} came in with a ${sp.seasonEra} ERA but ${past ? 'had' : 'is having'} a rough one — ${sp.er} earned over ${sp.ip} innings is well below his standard.` });
+      } else if (diff < -3.0 && ipNum >= 5 && sp.er <= 1) {
+        observations.push({ priority: 6, category: `season_${team.abbr}`, text: `${sp.name} ${past ? 'outpitched' : 'is outpitching'} his ${sp.seasonEra} ERA today — ${sp.er === 0 ? 'nothing across the board' : `only ${sp.er} earned in ${sp.ip} innings`}.` });
+      }
+    }
+
+    // Very high pitch burn (5.8+ is genuinely noteworthy — average is ~3.8)
+    if (ppo !== null && ppo > 5.8 && sp.pitchCount >= 60) {
+      observations.push({ priority: 7, category: `efficiency_${team.abbr}`, text: `${sp.name} ${past ? 'burned through' : 'is burning through'} pitches at ${ppo.toFixed(1)} per out — ${sp.pitchCount} pitches in ${sp.ip} innings puts serious strain on the ${team.abbr} bullpen.` });
+    }
+
+    // Dominant command: no walks + high Ks
+    if (sp.bb === 0 && sp.k >= 6) {
+      observations.push({ priority: 7, category: 'command', text: `${sp.name} ${past ? 'was' : 'is'} dialled in — ${sp.k} strikeouts, zero walks, the kind of command that shuts down a lineup before it starts.` });
+    } else if (sp.k >= 9) {
+      observations.push({ priority: 7, category: 'command', text: `${sp.name} ${past ? 'was dominant' : 'is dominating'} — ${sp.k} strikeouts through ${sp.ip} innings.` });
+    }
+
+    // High traffic, low damage (interesting when WHIP > 1.8 but ER ≤ 1)
+    if (whip !== null && whip > 1.8 && ipNum >= 4 && sp.er <= 1) {
+      observations.push({ priority: 5, category: `whip_${team.abbr}`, text: `${sp.name} ${past ? 'allowed' : 'is allowing'} a lot of traffic — WHIP of ${whip.toFixed(2)} — but ${past ? 'stranded runners to keep it scoreless' : 'has kept the damage off the board so far'}.` });
     }
   }
 
-  // Contrast between the two starters
+  // Starter depth contrast (only when gap is significant: 2+ innings)
   if (sp1 && sp2) {
     const ip1 = parseIP(sp1.ip);
     const ip2 = parseIP(sp2.ip);
@@ -1047,12 +1042,21 @@ function analyzePitching({ awayPitchers, homePitchers, awayTeam, homeTeam, awayS
       const longer = ip1 > ip2 ? sp1 : sp2;
       const shorter = ip1 > ip2 ? sp2 : sp1;
       const longerTeam = longer === sp1 ? awayTeam : homeTeam;
-      observations.push({ priority: 4, text: `${longer.name} went ${longer.ip} innings while ${shorter.name} lasted just ${shorter.ip} — a clear rotation edge for ${longerTeam.abbr} on the day.` });
+      observations.push({ priority: 4, category: 'depth', text: `${longer.name} went ${longer.ip} innings while ${shorter.name} lasted just ${shorter.ip} — a clear rotation edge for ${longerTeam.abbr} on the day.` });
     }
   }
 
-  observations.sort((a, b) => b.priority - a.priority);
-  const picked = observations.slice(0, 3);
+  // Deduplicate by category (keep highest priority per category), then pick top 2
+  const seen = new Set();
+  const deduped = observations
+    .sort((a, b) => b.priority - a.priority)
+    .filter(o => {
+      if (seen.has(o.category)) return false;
+      seen.add(o.category);
+      return true;
+    });
+
+  const picked = deduped.slice(0, 2);
 
   if (!picked.length) {
     const parts = [];
