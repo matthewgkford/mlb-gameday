@@ -166,9 +166,7 @@ function WinProbChart({ winProb, awayAbbr, homeAbbr }) {
       >
         <Line ref={chartRef} data={chartData} options={options} />
       </div>
-      <div style={{ fontSize:10, color:'rgba(255,255,255,0.2)', textAlign:'center', marginTop:4 }}>
-        Hold and drag to scrub
-      </div>
+
     </div>
   );
 }
