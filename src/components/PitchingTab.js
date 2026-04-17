@@ -911,7 +911,8 @@ function PitchBars({ pitches }) {
 
 function PitcherCard({ pitcher, isWinner, isLoser, isFinal }) {
   const raw = PITCH_ARSENALS[pitcher.name] || null;
-  const arsenal = raw ? raw.filter(p => p.type !== 'PO') : null;
+  const HIDDEN_PITCH_TYPES = new Set(['PO', 'FA', 'EP', 'CS']);
+  const arsenal = raw ? raw.filter(p => !HIDDEN_PITCH_TYPES.has(p.type)) : null;
   const roleLabel = pitcher.isStarter ? 'Starting Pitcher' : 'Relief Pitcher';
   const showPitching = pitcher.isCurrentPitcher && !isFinal;
   const [playerPage, setPlayerPage] = useState(null);
