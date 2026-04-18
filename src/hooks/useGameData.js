@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getGameFeed, getBoxScore, getPlayByPlay, parseBatterStats, parsePitcherStats, parseKeyPlays, buildWinProbability, fixCity } from '../utils/mlbApi';
+import { getWinExpectancy } from '../utils/winExpectancy';
 
 const REFRESH_MS = 45000;
 
@@ -59,6 +60,17 @@ export function useGameData(gamePk, isLive) {
 
         innings,
         winProb: buildWinProbability(innings),
+        liveWE: getWinExpectancy({
+          inning:     live.linescore?.currentInning,
+          inningHalf: live.linescore?.inningHalf,
+          outs:       live.linescore?.outs,
+          onFirst:    !!live.linescore?.offense?.first,
+          onSecond:   !!live.linescore?.offense?.second,
+          onThird:    !!live.linescore?.offense?.third,
+          homeScore:  live.linescore?.teams?.home?.runs ?? 0,
+          awayScore:  live.linescore?.teams?.away?.runs ?? 0,
+          status:     gd.status?.abstractGameState,
+        }),
         decisions: live.decisions || {},
 
         awayBatters: parseBatterStats(boxscore, 'away'),

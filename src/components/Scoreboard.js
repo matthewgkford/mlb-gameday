@@ -173,7 +173,7 @@ function WinProbChart({ winProb, awayAbbr, homeAbbr }) {
 
 export default function Scoreboard({ data, lastUpdated, onBack, isLive }) {
   if (!data) return null;
-  const { awayTeam, homeTeam, awayScore, homeScore, innings, awayHits, homeHits, awayErrors, homeErrors, status, inning, inningHalf, outs, balls, strikes, onFirst, onSecond, onThird, decisions, weather, venue, winProb } = data;
+  const { awayTeam, homeTeam, awayScore, homeScore, innings, awayHits, homeHits, awayErrors, homeErrors, status, inning, inningHalf, outs, balls, strikes, onFirst, onSecond, onThird, decisions, weather, venue, winProb, liveWE } = data;
   const isFinal = status === 'Final';
   const awayWins = isFinal && awayScore > homeScore;
   const homeWins = isFinal && homeScore > awayScore;
@@ -214,18 +214,33 @@ export default function Scoreboard({ data, lastUpdated, onBack, isLive }) {
             {decisions.winner && <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:6 }}>W: {decisions.winner.fullName} · L: {decisions.loser?.fullName}{decisions.save?` · SV: ${decisions.save.fullName}`:''}</div>}
           </div>
         ) : isLive ? (
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, flexWrap:'wrap' }}>
-            <span style={{ background:'#dc2626', borderRadius:6, padding:'2px 8px', fontSize:11, fontWeight:700, color:'#fff', letterSpacing:0.5 }}>
-              <span style={{ display:'inline-block', width:6,height:6,borderRadius:'50%',background:'#fff',marginRight:4,animation:'pulse 1.5s infinite' }}></span>LIVE
-            </span>
-            <span style={{ fontSize:13, color:'rgba(255,255,255,0.7)', fontWeight:500 }}>{inningHalf} {inning}</span>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <BaseDiamond onFirst={onFirst} onSecond={onSecond} onThird={onThird} />
-              <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)' }}>
-                <div>{outs} out{outs!==1?'s':''}</div>
-                <div>{balls}–{strikes}</div>
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, flexWrap:'wrap' }}>
+              <span style={{ background:'#dc2626', borderRadius:6, padding:'2px 8px', fontSize:11, fontWeight:700, color:'#fff', letterSpacing:0.5 }}>
+                <span style={{ display:'inline-block', width:6,height:6,borderRadius:'50%',background:'#fff',marginRight:4,animation:'pulse 1.5s infinite' }}></span>LIVE
+              </span>
+              <span style={{ fontSize:13, color:'rgba(255,255,255,0.7)', fontWeight:500 }}>{inningHalf} {inning}</span>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <BaseDiamond onFirst={onFirst} onSecond={onSecond} onThird={onThird} />
+                <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)' }}>
+                  <div>{outs} out{outs!==1?'s':''}</div>
+                  <div>{balls}–{strikes}</div>
+                </div>
               </div>
             </div>
+            {liveWE != null && (
+              <div style={{ display:'flex', alignItems:'center', gap:12, background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.08)', borderRadius:20, padding:'4px 14px' }}>
+                <div style={{ textAlign:'center' }}>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>{awayTeam.abbr} </span>
+                  <span style={{ fontSize:14, fontWeight:700, color: liveWE < 50 ? '#60a5fa' : 'rgba(255,255,255,0.45)' }}>{100 - liveWE}%</span>
+                </div>
+                <div style={{ fontSize:10, color:'rgba(255,255,255,0.2)', letterSpacing:0.3 }}>WIN PROB</div>
+                <div style={{ textAlign:'center' }}>
+                  <span style={{ fontSize:14, fontWeight:700, color: liveWE > 50 ? '#60a5fa' : 'rgba(255,255,255,0.45)' }}>{liveWE}%</span>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}> {homeTeam.abbr}</span>
+                </div>
+              </div>
+            )}
           </div>
         ) : <span style={{ fontSize:13, color:'rgba(255,255,255,0.35)' }}>Scheduled</span>}
       </div>
