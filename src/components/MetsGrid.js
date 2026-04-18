@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CATEGORIES, validatePlayer, getValidPlayers,
-  getTodaysPuzzle, loadTodayState, saveTodayState,
+  getTodaysPuzzle, getTodayKey, loadTodayState, saveTodayState,
   loadStats, updateStats, searchPlayers,
 } from '../utils/metsGridLogic';
 
@@ -11,8 +11,8 @@ const METS_ORANGE = '#FF5910';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function getSuggestedAnswer(rowCat, colCat) {
-  const valid = getValidPlayers(rowCat, colCat);
+function getSuggestedAnswer(rowCat, colCat, excludeNames = new Set()) {
+  const valid = getValidPlayers(rowCat, colCat).filter(p => !excludeNames.has(p.name));
   if (!valid.length) return null;
   return valid.sort((a, b) => {
     const score = p => p.awards.length * 2 + p.metsMilestones.length + p.metsYears.length;
@@ -102,7 +102,7 @@ function InfoModal({ onClose }) {
             { label:'Decade',   color:'#8b5cf6' },
             { label:'Team',     color:'#10b981' },
             { label:'Award',    color:METS_ORANGE },
-            { label:'Stat',     color:METS_BLUE },
+            { label:'Stat',     color:'#60a5fa' },
           ].map(({label,color}) => (
             <div key={label} style={{ background:`${color}22`, border:`0.5px solid ${color}55`, borderRadius:6, padding:'2px 7px', fontSize:10, color, fontWeight:600 }}>{label}</div>
           ))}
@@ -123,14 +123,17 @@ function ResultsModal({ cells, guessesUsed, won, onClose, stats, rowCats, colCat
   const filled = Object.values(cells).filter(v=>v?.player).length;
   const shareText = `Mets Grid\n${grid}\n${filled}/9 · ${guessesUsed} guess${guessesUsed!==1?'es':''} used`;
 
-  // Collect unsolved cells with suggestions
+  // Collect unsolved cells with suggestions, excluding players already placed
+  const usedNames = new Set(Object.values(cells).map(v => v?.player?.name).filter(Boolean));
   const unsolvedSuggestions = [];
+  const suggestedSoFar = new Set(usedNames);
   [0,1,2].forEach(ri => {
     [0,1,2].forEach(ci => {
       const key = `r${ri}c${ci}`;
       if (!cells[key]?.player) {
-        const suggestion = getSuggestedAnswer(rowCats[ri], colCats[ci]);
+        const suggestion = getSuggestedAnswer(rowCats[ri], colCats[ci], suggestedSoFar);
         if (suggestion) {
+          suggestedSoFar.add(suggestion.name);
           unsolvedSuggestions.push({ key, ri, ci, suggestion });
         }
       }
@@ -378,12 +381,22 @@ export default function MetsGrid() {
           <div style={{ fontSize:20, fontWeight:700, color:'#fff', letterSpacing:-0.3 }}>Mets Grid</div>
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>Daily Mets puzzle</div>
         </div>
-        <button
-          onClick={() => setShowInfo(true)}
-          style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:20, padding:'6px 14px', color:'rgba(255,255,255,0.6)', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}
-        >
-          How to play
-        </button>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          {done && (
+            <button
+              onClick={() => { localStorage.removeItem(getTodayKey()); window.location.reload(); }}
+              style={{ background:'none', border:'none', color:'rgba(255,255,255,0.25)', fontSize:11, cursor:'pointer', fontFamily:'inherit', padding:'4px 8px' }}
+            >
+              Reset
+            </button>
+          )}
+          <button
+            onClick={() => setShowInfo(true)}
+            style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:20, padding:'6px 14px', color:'rgba(255,255,255,0.6)', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}
+          >
+            How to play
+          </button>
+        </div>
       </div>
 
       <GuessTracker total={TOTAL_GUESSES} used={TOTAL_GUESSES - guessesLeft} />

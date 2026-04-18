@@ -45,10 +45,10 @@ export const CATEGORIES = {
   award_ROY:      { label: 'Rookie of the Year',     color: '#FF5910', type: 'award' },
 
   // Milestones as a Met
-  ms_30HR:  { label: '30+ HR season as a Met',   color: '#002D72', type: 'milestone' },
-  ms_200K:  { label: '200+ K season as a Met',   color: '#002D72', type: 'milestone' },
-  ms_100RBI:{ label: '100+ RBI season as a Met', color: '#002D72', type: 'milestone' },
-  ms_300avg:{ label: '.300 avg season as a Met', color: '#002D72', type: 'milestone' },
+  ms_30HR:  { label: '30+ HR season as a Met',   color: '#60a5fa', type: 'milestone' },
+  ms_200K:  { label: '200+ K season as a Met',   color: '#60a5fa', type: 'milestone' },
+  ms_100RBI:{ label: '100+ RBI season as a Met', color: '#60a5fa', type: 'milestone' },
+  ms_300avg:{ label: '.300 avg season as a Met', color: '#60a5fa', type: 'milestone' },
 
   // Handedness
   hand_LHP:    { label: 'Left-handed pitcher', color: '#64748b', type: 'hand' },

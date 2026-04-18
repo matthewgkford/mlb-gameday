@@ -775,7 +775,7 @@ const METS_PLAYERS = [
     positions: ['OF'],
     metsYears: [2021,2022,2023,2024,2025],
     otherTeams: ['Pirates','Diamondbacks','Athletics','Marlins'],
-    awards: ['Gold Glove','All-Star'],
+    awards: ['Gold Glove'],
     metsMilestones: [],
     era: [],
     bats: 'R', throws: 'R',
