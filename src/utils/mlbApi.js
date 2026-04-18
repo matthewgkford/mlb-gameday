@@ -1,3 +1,5 @@
+import WE from '../data/winExpectancy.json';
+
 const BASE = 'https://statsapi.mlb.com/api/v1';
 
 const CITY_OVERRIDES = {
@@ -438,47 +440,12 @@ export function parseKeyPlays(playByPlay) {
     .reverse();
 }
 
-// Win expectancy — Tango Tiger 2010-2015
-// Empty bases, 0 outs, start of half-inning
-// Values = home team win probability
-// Array index: 0=-5, 1=-4, 2=-3, 3=-2, 4=-1, 5=Tie, 6=+1, 7=+2, 8=+3, 9=+4, 10=+5
-// run diff = home - away (positive = home leading)
-// Parsed directly from WE_-_Sheet1.csv
-const WE_SIMPLE = {
-  '1T': [0.112,0.162,0.226,0.306,0.399,0.5,null,null,null,null,null],
-  '1B': [0.128,0.184,0.255,0.342,0.442,0.547,0.649,0.739,0.814,0.871,0.914],
-  '2T': [0.099,0.147,0.212,0.294,0.392,0.5,0.608,0.706,0.788,0.853,0.901],
-  '2B': [0.114,0.169,0.241,0.331,0.437,0.55,0.66,0.754,0.83,0.886,0.926],
-  '3T': [0.086,0.132,0.195,0.279,0.383,0.5,0.617,0.721,0.805,0.868,0.914],
-  '3B': [0.099,0.152,0.224,0.317,0.43,0.554,0.673,0.772,0.848,0.902,0.939],
-  '4T': [0.071,0.114,0.176,0.262,0.371,0.5,0.629,0.738,0.824,0.886,0.929],
-  '4B': [0.083,0.133,0.203,0.3,0.421,0.559,0.69,0.793,0.868,0.919,0.952],
-  '5T': [0.057,0.095,0.154,0.239,0.356,0.5,0.644,0.761,0.846,0.905,0.943],
-  '5B': [0.067,0.111,0.179,0.277,0.407,0.565,0.713,0.82,0.892,0.937,0.965],
-  '6T': [0.042,0.074,0.128,0.211,0.333,0.5,0.667,0.789,0.872,0.926,0.958],
-  '6B': [0.05,0.088,0.151,0.248,0.387,0.574,0.746,0.852,0.918,0.956,0.977],
-  '7T': [0.028,0.053,0.098,0.176,0.3,0.5,0.7,0.824,0.902,0.947,0.972],
-  '7B': [0.033,0.064,0.118,0.209,0.354,0.586,0.794,0.893,0.946,0.974,0.988],
-  '8T': [0.015,0.032,0.065,0.13,0.247,0.5,0.753,0.87,0.935,0.968,0.985],
-  '8B': [0.018,0.039,0.079,0.156,0.297,0.605,0.871,0.942,0.975,0.989,0.996],
-  '9T': [0.005,0.013,0.031,0.071,0.158,0.5,0.842,0.929,0.969,0.987,0.995],
-  '9B': [0.007,0.016,0.038,0.087,0.194,0.634,null,null,null,null,null],
-};
-
-function lookupWP(inn, half, homeMinusAway) {
-  const i = Math.min(9, Math.max(1, inn || 1));
-  const h = half === 'B' ? 'B' : 'T';
-  const rd = Math.min(5, Math.max(-5, Math.round(homeMinusAway)));
-  const idx = rd + 5;
-  const row = WE_SIMPLE[`${i}${h}`];
-  if (!row) return 0.5;
-  const val = row[idx];
-  return (val !== null && val !== undefined) ? val : 0.5;
+function halfInningWP(inning, half, runDiff) {
+  const inn = Math.min(9, inning);
+  const d = Math.max(-6, Math.min(6, runDiff));
+  return WE[`${inn}_${half}_0_000_${d}`] ?? 0.5;
 }
 
-// Build win probability series from completed innings linescore
-// Plots once per completed full inning to avoid half-inning oscillation
-// (the Tango table alternates slightly between T and B halves due to last-licks advantage)
 export function buildWinProbability(innings) {
   if (!innings || !innings.length) return { labels: [], vals: [] };
   const labels = [];
@@ -486,13 +453,16 @@ export function buildWinProbability(innings) {
   let cumAway = 0, cumHome = 0;
 
   innings.forEach(inn => {
-    cumAway += inn.away?.runs ?? 0;
-    cumHome += inn.home?.runs ?? 0;
-    const diff = cumHome - cumAway;
-    const nextInn = Math.min(9, inn.num + 1);
-    const wp = lookupWP(nextInn, 'T', diff);
-    vals.push(Math.round(wp * 100));
-    labels.push(`End ${inn.num}`);
+    if (inn.away?.runs != null) {
+      cumAway += inn.away.runs;
+      vals.push(Math.round(halfInningWP(inn.num, 'bottom', cumHome - cumAway) * 100));
+      labels.push(`T${inn.num}`);
+    }
+    if (inn.home?.runs != null) {
+      cumHome += inn.home.runs;
+      vals.push(Math.round(halfInningWP(Math.min(9, inn.num + 1), 'top', cumHome - cumAway) * 100));
+      labels.push(`B${inn.num}`);
+    }
   });
 
   return { labels, vals };

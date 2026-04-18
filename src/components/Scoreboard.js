@@ -92,7 +92,7 @@ function getTeamColours(homeAbbr, awayAbbr) {
 }
 
 function WinProbChart({ winProb, awayAbbr, homeAbbr }) {
-  if (!winProb || winProb.vals.length < 2) return null;
+  if (!winProb || winProb.vals.length < 1) return null;
   const { homeColour, awayColour } = getTeamColours(homeAbbr, awayAbbr);
   const chartRef = useRef(null);
 
@@ -272,7 +272,7 @@ export default function Scoreboard({ data, lastUpdated, onBack, isLive }) {
         </div>
       )}
 
-      {winProb && winProb.vals.length > 2 && <WinProbChart winProb={winProb} awayAbbr={awayTeam.abbr} homeAbbr={homeTeam.abbr} />}
+      {winProb && winProb.vals.length > 0 && <WinProbChart winProb={winProb} awayAbbr={awayTeam.abbr} homeAbbr={homeTeam.abbr} />}
       {isLive && lastUpdated && <div style={{ fontSize:10, color:'rgba(255,255,255,0.2)', textAlign:'right', marginTop:8 }}>Updated {lastUpdated.toLocaleTimeString()} · auto-refreshes every 45s</div>}
     </div>
   );
