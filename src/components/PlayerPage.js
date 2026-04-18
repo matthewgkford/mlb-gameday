@@ -98,8 +98,11 @@ export default function PlayerPage({ playerId, playerName, teamAbbr, onClose }) 
   const careerHitting = allStats.find(s => s.type?.displayName === 'career' && s.group?.displayName === 'hitting')?.splits?.[0]?.stat;
   const careerPitching = allStats.find(s => s.type?.displayName === 'career' && s.group?.displayName === 'pitching')?.splits?.[0]?.stat;
 
-  // Build previous teams list from yearByYear splits — one entry per team per year
-  const yearByYear = allStats.find(s => s.type?.displayName === 'yearByYear')?.splits || [];
+  // Build previous teams list from yearByYear splits — merge all groups (hitting + pitching)
+  // so pitchers don't lose seasons that only appear in the pitching group
+  const yearByYear = allStats
+    .filter(s => s.type?.displayName === 'yearByYear')
+    .flatMap(s => s.splits || []);
   const teamHistory = [];
   const seen = new Set();
   yearByYear.forEach(split => {
