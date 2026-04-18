@@ -115,17 +115,27 @@ export function getValidPlayers(rowCat, colCat) {
 
 const START_DATE = new Date('2025-04-17');
 
+// Filter to puzzles where every cell has at least 1 valid answer
+const VALID_PUZZLES = PUZZLES.filter(puzzle => {
+  for (let ri = 0; ri < 3; ri++) {
+    for (let ci = 0; ci < 3; ci++) {
+      if (getValidPlayers(puzzle.rows[ri], puzzle.cols[ci]).length === 0) return false;
+    }
+  }
+  return true;
+});
+
 export function getPuzzleIndex() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const start = new Date(START_DATE);
   start.setHours(0, 0, 0, 0);
   const days = Math.floor((today - start) / 86400000);
-  return ((days % PUZZLES.length) + PUZZLES.length) % PUZZLES.length;
+  return ((days % VALID_PUZZLES.length) + VALID_PUZZLES.length) % VALID_PUZZLES.length;
 }
 
 export function getTodaysPuzzle() {
-  return PUZZLES[getPuzzleIndex()];
+  return VALID_PUZZLES[getPuzzleIndex()];
 }
 
 export function getTodayKey() {

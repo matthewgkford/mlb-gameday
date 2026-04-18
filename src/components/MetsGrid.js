@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   CATEGORIES, validatePlayer, getValidPlayers,
   getTodaysPuzzle, loadTodayState, saveTodayState,
@@ -201,10 +201,21 @@ function PlayerSearch({ rowCat, colCat, usedNames, onConfirm, onClose }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [shake, setShake] = useState(false);
   const inputRef = useRef(null);
 
-  useEffect(() => { setTimeout(() => inputRef.current?.focus(), 100); }, []);
+  // Lock body scroll while sheet is open; focus input after keyboard settles
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    const t = setTimeout(() => inputRef.current?.focus(), 50);
+    return () => {
+      clearTimeout(t);
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, []);
 
   useEffect(() => {
     const matches = searchPlayers(query).filter(p => !usedNames.has(p.name));
@@ -220,54 +231,69 @@ function PlayerSearch({ rowCat, colCat, usedNames, onConfirm, onClose }) {
   const validAnswers = getValidPlayers(rowCat, colCat);
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:200, display:'flex', alignItems:'flex-end', justifyContent:'center' }} onClick={onClose}>
-      <div style={{ background:'#1a1f2e', borderRadius:'20px 20px 0 0', padding:20, width:'100%', maxWidth:480 }} onClick={e=>e.stopPropagation()}>
-        <div style={{ display:'flex', gap:8, marginBottom:12 }}>
-          <div style={{ flex:1 }}>
-            <CategoryTag catKey={rowCat} />
-          </div>
+    <div
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:200, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background:'#1a1f2e', borderRadius:'20px 20px 0 0', padding:'16px 16px 0', width:'100%', maxWidth:480, paddingBottom:'env(safe-area-inset-bottom, 16px)', display:'flex', flexDirection:'column' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Drag handle */}
+        <div style={{ width:36, height:4, borderRadius:2, background:'rgba(255,255,255,0.15)', margin:'0 auto 14px' }} />
+
+        {/* Category tags */}
+        <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+          <div style={{ flex:1 }}><CategoryTag catKey={rowCat} /></div>
           <div style={{ color:'rgba(255,255,255,0.3)', alignSelf:'center', fontSize:12 }}>×</div>
-          <div style={{ flex:1 }}>
-            <CategoryTag catKey={colCat} />
-          </div>
+          <div style={{ flex:1 }}><CategoryTag catKey={colCat} /></div>
         </div>
+
         <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginBottom:10, textAlign:'center' }}>
           {validAnswers.length} valid answer{validAnswers.length !== 1 ? 's' : ''} for this cell
         </div>
+
+        {/* Input — 16px prevents iOS auto-zoom */}
         <input
           ref={inputRef}
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search Mets players…"
-          style={{ width:'100%', boxSizing:'border-box', padding:'10px 14px', borderRadius:12, border:`1px solid ${METS_BLUE}`, background:'rgba(255,255,255,0.05)', color:'#fff', fontSize:14, outline:'none', fontFamily:'inherit' }}
+          style={{ width:'100%', boxSizing:'border-box', padding:'11px 14px', borderRadius:12, border:`1px solid ${METS_BLUE}`, background:'rgba(255,255,255,0.05)', color:'#fff', fontSize:16, outline:'none', fontFamily:'inherit', WebkitAppearance:'none' }}
         />
-        {results.length > 0 && (
-          <div style={{ marginTop:8, display:'flex', flexDirection:'column', gap:4, maxHeight:220, overflowY:'auto' }}>
-            {results.map(p => {
-              const isSelected = selected?.name === p.name;
-              return (
-                <div
-                  key={p.name}
-                  onClick={() => setSelected(isSelected ? null : p)}
-                  style={{ padding:'9px 12px', borderRadius:10, background: isSelected ? `${METS_BLUE}aa` : 'rgba(255,255,255,0.05)', border: isSelected ? `1px solid ${METS_BLUE}` : '1px solid transparent', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center' }}
-                >
-                  <span style={{ fontSize:14, color:'#fff', fontWeight: isSelected ? 600 : 400 }}>{p.name}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {query.length >= 2 && results.length === 0 && (
-          <div style={{ marginTop:8, fontSize:13, color:'rgba(255,255,255,0.3)', textAlign:'center', padding:'10px 0' }}>No players found</div>
-        )}
-        <div style={{ display:'flex', gap:8, marginTop:12 }}>
-          <button onClick={onClose} style={{ flex:1, padding:'11px', background:'rgba(255,255,255,0.07)', border:'none', borderRadius:12, color:'rgba(255,255,255,0.6)', fontSize:14, cursor:'pointer' }}>
+
+        {/* Results */}
+        <div style={{ overflowY:'auto', WebkitOverflowScrolling:'touch', maxHeight:190, marginTop:8 }}>
+          {results.length > 0 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+              {results.map(p => {
+                const isSelected = selected?.name === p.name;
+                return (
+                  <div
+                    key={p.name}
+                    onPointerDown={e => { e.preventDefault(); setSelected(isSelected ? null : p); }}
+                    style={{ padding:'11px 12px', borderRadius:10, background: isSelected ? `${METS_BLUE}aa` : 'rgba(255,255,255,0.05)', border: isSelected ? `1px solid ${METS_BLUE}` : '1px solid transparent', cursor:'pointer', touchAction:'manipulation' }}
+                  >
+                    <span style={{ fontSize:15, color:'#fff', fontWeight: isSelected ? 600 : 400 }}>{p.name}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {query.length >= 2 && results.length === 0 && (
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.3)', textAlign:'center', padding:'12px 0' }}>No players found</div>
+          )}
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display:'flex', gap:8, marginTop:12, paddingBottom:16 }}>
+          <button onPointerDown={e => { e.preventDefault(); onClose(); }} style={{ flex:1, padding:'13px', background:'rgba(255,255,255,0.07)', border:'none', borderRadius:12, color:'rgba(255,255,255,0.6)', fontSize:15, cursor:'pointer', touchAction:'manipulation', fontFamily:'inherit' }}>
             Cancel
           </button>
           <button
-            onClick={handleConfirm}
+            onPointerDown={e => { e.preventDefault(); handleConfirm(); }}
             disabled={!selected}
-            style={{ flex:2, padding:'11px', background: selected ? METS_ORANGE : 'rgba(255,255,255,0.08)', border:'none', borderRadius:12, color: selected ? '#fff' : 'rgba(255,255,255,0.3)', fontSize:14, fontWeight:600, cursor: selected ? 'pointer' : 'default', transition:'background 0.15s' }}
+            style={{ flex:2, padding:'13px', background: selected ? METS_ORANGE : 'rgba(255,255,255,0.08)', border:'none', borderRadius:12, color: selected ? '#fff' : 'rgba(255,255,255,0.3)', fontSize:15, fontWeight:600, cursor: selected ? 'pointer' : 'default', touchAction:'manipulation', fontFamily:'inherit', transition:'background 0.15s' }}
           >
             Confirm guess
           </button>
