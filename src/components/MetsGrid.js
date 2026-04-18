@@ -11,19 +11,13 @@ const METS_ORANGE = '#FF5910';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function metsYearRange(player) {
-  const yrs = player.metsYears.sort((a,b)=>a-b);
-  if (!yrs.length) return '';
-  if (yrs.length === 1) return String(yrs[0]);
-  // Compress to ranges, e.g. [2014,2015,2016,2019] → "2014–16, 2019"
-  const ranges = [];
-  let start = yrs[0], end = yrs[0];
-  for (let i = 1; i < yrs.length; i++) {
-    if (yrs[i] === end + 1) { end = yrs[i]; }
-    else { ranges.push([start, end]); start = end = yrs[i]; }
-  }
-  ranges.push([start, end]);
-  return ranges.map(([s,e]) => s === e ? String(s) : `${s}–${String(e).slice(-2)}`).join(', ');
+function getSuggestedAnswer(rowCat, colCat) {
+  const valid = getValidPlayers(rowCat, colCat);
+  if (!valid.length) return null;
+  return valid.sort((a, b) => {
+    const score = p => p.awards.length * 2 + p.metsMilestones.length + p.metsYears.length;
+    return score(b) - score(a);
+  })[0];
 }
 
 function buildShareText(puzzle, cells, guessesLeft) {
@@ -121,7 +115,7 @@ function InfoModal({ onClose }) {
   );
 }
 
-function ResultsModal({ cells, guessesUsed, won, onClose, stats }) {
+function ResultsModal({ cells, guessesUsed, won, onClose, stats, rowCats, colCats }) {
   const [copied, setCopied] = useState(false);
   const rows = ['r0','r1','r2'], cols = ['c0','c1','c2'];
   let grid = '';
@@ -129,13 +123,27 @@ function ResultsModal({ cells, guessesUsed, won, onClose, stats }) {
   const filled = Object.values(cells).filter(v=>v?.player).length;
   const shareText = `Mets Grid\n${grid}\n${filled}/9 · ${guessesUsed} guess${guessesUsed!==1?'es':''} used`;
 
+  // Collect unsolved cells with suggestions
+  const unsolvedSuggestions = [];
+  [0,1,2].forEach(ri => {
+    [0,1,2].forEach(ci => {
+      const key = `r${ri}c${ci}`;
+      if (!cells[key]?.player) {
+        const suggestion = getSuggestedAnswer(rowCats[ri], colCats[ci]);
+        if (suggestion) {
+          unsolvedSuggestions.push({ key, ri, ci, suggestion });
+        }
+      }
+    });
+  });
+
   function copy() {
     navigator.clipboard.writeText(shareText).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false),2000); });
   }
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div style={{ background:'#1a1f2e', border:`1px solid ${won ? METS_BLUE : '#444'}`, borderRadius:20, padding:24, maxWidth:340, width:'100%' }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:20, overflowY:'auto' }}>
+      <div style={{ background:'#1a1f2e', border:`1px solid ${won ? METS_BLUE : '#444'}`, borderRadius:20, padding:24, maxWidth:340, width:'100%', margin:'auto' }}>
         <div style={{ fontSize:22, fontWeight:700, color:'#fff', marginBottom:4, textAlign:'center' }}>
           {won ? '🟦 Solved!' : 'Out of guesses'}
         </div>
@@ -153,6 +161,29 @@ function ResultsModal({ cells, guessesUsed, won, onClose, stats }) {
                 <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5 }}>{l}</div>
               </div>
             ))}
+          </div>
+        )}
+        {unsolvedSuggestions.length > 0 && (
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:8 }}>
+              Unsolved cells
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              {unsolvedSuggestions.map(({ key, ri, ci, suggestion }) => (
+                <div key={key} style={{ background:'rgba(255,255,255,0.04)', borderRadius:10, padding:'8px 12px' }}>
+                  <div style={{ display:'flex', gap:6, marginBottom:4 }}>
+                    <span style={{ fontSize:9, background:`${CATEGORIES[rowCats[ri]].color}22`, border:`0.5px solid ${CATEGORIES[rowCats[ri]].color}55`, borderRadius:5, padding:'2px 5px', color:CATEGORIES[rowCats[ri]].color, fontWeight:600 }}>
+                      {CATEGORIES[rowCats[ri]].label}
+                    </span>
+                    <span style={{ fontSize:9, color:'rgba(255,255,255,0.3)', alignSelf:'center' }}>×</span>
+                    <span style={{ fontSize:9, background:`${CATEGORIES[colCats[ci]].color}22`, border:`0.5px solid ${CATEGORIES[colCats[ci]].color}55`, borderRadius:5, padding:'2px 5px', color:CATEGORIES[colCats[ci]].color, fontWeight:600 }}>
+                      {CATEGORIES[colCats[ci]].label}
+                    </span>
+                  </div>
+                  <div style={{ fontSize:13, color:'#fff', fontWeight:600 }}>{suggestion.name}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
         <button onClick={copy} style={{ width:'100%', padding:'11px', background: copied ? '#10b981' : METS_ORANGE, border:'none', borderRadius:12, color:'#fff', fontSize:14, fontWeight:600, cursor:'pointer', transition:'background 0.2s' }}>
@@ -183,8 +214,7 @@ function PlayerSearch({ rowCat, colCat, usedNames, onConfirm, onClose }) {
 
   function handleConfirm() {
     if (!selected) return;
-    const valid = validatePlayer(selected, rowCat) && validatePlayer(selected, colCat);
-    onConfirm(selected, valid);
+    onConfirm(selected);
   }
 
   const validAnswers = getValidPlayers(rowCat, colCat);
@@ -222,7 +252,6 @@ function PlayerSearch({ rowCat, colCat, usedNames, onConfirm, onClose }) {
                   style={{ padding:'9px 12px', borderRadius:10, background: isSelected ? `${METS_BLUE}aa` : 'rgba(255,255,255,0.05)', border: isSelected ? `1px solid ${METS_BLUE}` : '1px solid transparent', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center' }}
                 >
                   <span style={{ fontSize:14, color:'#fff', fontWeight: isSelected ? 600 : 400 }}>{p.name}</span>
-                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{metsYearRange(p)}</span>
                 </div>
               );
             })}
@@ -283,9 +312,12 @@ export default function MetsGrid() {
     setActiveCell(cellKey);
   }
 
-  function handleGuess(player, correct) {
-    setActiveCell(null);
+  function handleGuess(player) {
     const cellKey = activeCell;
+    setActiveCell(null);
+    const ri = parseInt(cellKey[1]);
+    const ci = parseInt(cellKey[3]);
+    const correct = validatePlayer(player, rowCats[ri]) && validatePlayer(player, colCats[ci]);
     const newGuessesLeft = guessesLeft - 1;
 
     setFlashCell({ key: cellKey, ok: correct });
@@ -388,14 +420,9 @@ export default function MetsGrid() {
                   }}
                 >
                   {correct ? (
-                    <>
-                      <div style={{ fontSize: 9, fontWeight:600, color:'rgba(255,255,255,0.9)', lineHeight:1.2, wordBreak:'break-word' }}>
-                        {cell.player.name.split(' ').slice(-1)[0]}
-                      </div>
-                      <div style={{ fontSize: 9, color:'rgba(255,255,255,0.5)', marginTop:2 }}>
-                        {metsYearRange(cell.player)}
-                      </div>
-                    </>
+                    <div style={{ fontSize: 10, fontWeight:600, color:'rgba(255,255,255,0.9)', lineHeight:1.2, wordBreak:'break-word' }}>
+                      {cell.player.name.split(' ').slice(-1)[0]}
+                    </div>
                   ) : (
                     <div style={{ fontSize:22, color:'rgba(255,255,255,0.12)' }}>+</div>
                   )}
@@ -427,6 +454,8 @@ export default function MetsGrid() {
           won={won}
           onClose={() => setShowResults(false)}
           stats={stats || loadStats()}
+          rowCats={rowCats}
+          colCats={colCats}
         />
       )}
 
