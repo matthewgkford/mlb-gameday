@@ -456,12 +456,12 @@ export function buildWinProbability(innings) {
     if (inn.away?.runs != null) {
       cumAway += inn.away.runs;
       vals.push(Math.round(halfInningWP(inn.num, 'bottom', cumHome - cumAway) * 100));
-      labels.push(`T${inn.num}`);
+      labels.push(`↑T${inn.num}`);
     }
     if (inn.home?.runs != null) {
       cumHome += inn.home.runs;
       vals.push(Math.round(halfInningWP(Math.min(9, inn.num + 1), 'top', cumHome - cumAway) * 100));
-      labels.push(`B${inn.num}`);
+      labels.push(`↓B${inn.num}`);
     }
   });
 
