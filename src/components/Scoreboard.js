@@ -149,6 +149,26 @@ function WinProbChart({ winProb, awayAbbr, homeAbbr }) {
     }
   };
 
+  const crosshairPlugin = {
+    id: 'crosshair',
+    afterDraw(chart) {
+      const active = chart.tooltip?.getActiveElements();
+      if (!active || active.length === 0) return;
+      const x = active[0].element.x;
+      const { top, bottom } = chart.chartArea;
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, bottom);
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.restore();
+    },
+  };
+
   return (
     <div style={{ marginTop:14, paddingTop:12, borderTop:'0.5px solid rgba(255,255,255,0.08)' }}>
       <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginBottom:6, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -164,7 +184,7 @@ function WinProbChart({ winProb, awayAbbr, homeAbbr }) {
         onTouchMove={handleTouch}
         onTouchEnd={handleTouchEnd}
       >
-        <Line ref={chartRef} data={chartData} options={options} />
+        <Line ref={chartRef} data={chartData} options={options} plugins={[crosshairPlugin]} />
       </div>
 
     </div>
