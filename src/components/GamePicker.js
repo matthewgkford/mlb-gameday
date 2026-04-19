@@ -87,9 +87,17 @@ function GameCard({ game, onClick }) {
         </div>
         <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)' }}>{game.venue}</span>
       </div>
-      {game.probableAwayPitcher && !isLive && !isFinal && (
-        <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:8, borderTop:'0.5px solid rgba(255,255,255,0.06)', paddingTop:8 }}>
-          {game.probableAwayPitcher} vs {game.probableHomePitcher}
+      {(game.probableAwayPitcher || game.probableHomePitcher) && !isLive && !isFinal && (
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:8, borderTop:'0.5px solid rgba(255,255,255,0.06)', paddingTop:8 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6, flex:1 }}>
+            <PlayerPhoto playerId={game.probableAwayPitcherId} name={game.probableAwayPitcher||'TBD'} size={22} />
+            <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>{game.probableAwayPitcher||'TBD'}</span>
+          </div>
+          <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)', padding:'0 6px' }}>vs</span>
+          <div style={{ display:'flex', alignItems:'center', gap:6, flex:1, flexDirection:'row-reverse' }}>
+            <PlayerPhoto playerId={game.probableHomePitcherId} name={game.probableHomePitcher||'TBD'} size={22} />
+            <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)', textAlign:'right' }}>{game.probableHomePitcher||'TBD'}</span>
+          </div>
         </div>
       )}
     </button>
