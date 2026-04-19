@@ -60,6 +60,45 @@ export function calcISO(stats) {
   return'.'+String(Math.round((slg-avg)*1000)).padStart(3,'0');
 }
 
+// Batting K% and BB% — use AB+BB+SF as PA approximation
+export function calcKpct(batting) {
+  const k=parseInt(batting.strikeOuts)||0, ab=parseInt(batting.atBats)||0, bb=parseInt(batting.baseOnBalls)||0, sf=parseInt(batting.sacFlies)||0;
+  const pa=ab+bb+sf;
+  if(!pa)return'—';
+  return(k/pa*100).toFixed(1)+'%';
+}
+export function calcBBpct(batting) {
+  const bb=parseInt(batting.baseOnBalls)||0, ab=parseInt(batting.atBats)||0, sf=parseInt(batting.sacFlies)||0;
+  const pa=ab+bb+sf;
+  if(!pa)return'—';
+  return(bb/pa*100).toFixed(1)+'%';
+}
+
+// K/9 — handles MLB API's "23.2" (meaning 23⅔) innings format
+function parseIP(ip) {
+  if(!ip)return 0;
+  const [whole,frac='0']=String(ip).split('.');
+  return parseInt(whole)+(parseInt(frac)/3);
+}
+export function calcKper9(pitching) {
+  const k=parseInt(pitching.strikeOuts)||0, ip=parseIP(pitching.inningsPitched);
+  if(!ip)return'—';
+  return(k/ip*9).toFixed(1);
+}
+
+// K/BB ratio
+export function calcKBB(pitching) {
+  const k=parseInt(pitching.strikeOuts)||0, bb=parseInt(pitching.baseOnBalls)||0;
+  if(!bb)return k>0?'∞':'—';
+  return(k/bb).toFixed(2);
+}
+
+// Rating functions for new stats
+export function rateKpct(v)  { const n=parseFloat(v)||0; if(!n)return'avg'; return n<=14?'elite':n<=18?'good':n<=24?'avg':'poor'; }
+export function rateBBpct(v) { const n=parseFloat(v)||0; if(!n)return'avg'; return n>=12?'elite':n>=9?'good':n>=6?'avg':'poor'; }
+export function rateKper9(v) { const n=parseFloat(v)||0; if(!n)return'avg'; return n>=10?'elite':n>=8.5?'good':n>=7?'avg':'poor'; }
+export function rateKBB(v)   { if(v==='∞')return'elite'; const n=parseFloat(v)||0; if(!n)return'avg'; return n>=4?'elite':n>=3?'good':n>=2?'avg':'poor'; }
+
 // All 30 MLB teams with their primary colours for inline SVG badges
 const TEAM_STYLES = {
   ARI: { bg:'#A71930', text:'#E3D4AD', label:'ARI' },

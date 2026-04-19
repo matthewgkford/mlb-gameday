@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TeamLogo, TrendArrow, rateBABIP, rateISO, rateOPS, rateWHIP, calcBABIP, calcISO } from './SharedUI';
+import { TeamLogo, TrendArrow, rateBABIP, rateISO, rateOPS, rateWHIP, rateOBP, rateERA, rateKpct, rateBBpct, rateKper9, rateKBB, calcBABIP, calcISO, calcKpct, calcBBpct, calcKper9, calcKBB } from './SharedUI';
 import { getHeadToHead } from '../utils/mlbApi';
 
 // Tap-to-show tooltip for mobile
@@ -136,24 +136,40 @@ export default function AdvancedTab({ data }) {
 
   return (
     <div className="tab-panel">
-      {/* Team comparison — 2x2 grid per team */}
+      {/* Season stats — batting + pitching per team */}
       <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
-        <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:14 }}>Team comparison</div>
-        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5 }}>Season stats</div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.2)', marginTop:2 }}>Season-to-date team averages</div>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
           {teams.map(({ team, batting, pitching }) => {
-            const babip=calcBABIP(batting), iso=calcISO(batting), ops=batting.ops||'.---', whip=pitching.whip||'-';
+            const babip=calcBABIP(batting), iso=calcISO(batting), ops=batting.ops||'.---';
+            const obp=batting.obp||'.---', kpct=calcKpct(batting), bbpct=calcBBpct(batting);
+            const era=pitching.era||'-', whip=pitching.whip||'-', kper9=calcKper9(pitching), kbb=calcKBB(pitching);
             return (
               <div key={team.abbr}>
                 <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
                   <TeamLogo abbr={team.abbr} size={22} />
                   <span style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.7)' }}>{team.city} {team.name}</span>
                 </div>
-                {/* 2x2 grid */}
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-                  <MetricCard label="BABIP" val={babip} rating={rateBABIP(babip)} tip="Batting Avg on Balls In Play. Reflects luck and defence. League avg ~.300." />
-                  <MetricCard label="ISO" val={iso} rating={rateISO(iso)} tip="Isolated Power (SLG − AVG). Measures raw power. Above .200 is excellent." />
+                {/* Batting */}
+                <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:6 }}>Batting</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:10 }}>
                   <MetricCard label="OPS" val={ops} rating={rateOPS(ops)} tip="On-Base Plus Slugging. Above .900 is elite, above .800 is good." />
-                  <MetricCard label="WHIP" val={whip==='-'?'-':parseFloat(whip).toFixed(2)} rating={rateWHIP(whip)} tip="Walks + Hits per Inning Pitched. Below 1.00 is excellent, below 1.20 is good." />
+                  <MetricCard label="OBP" val={obp} rating={rateOBP(obp)} tip="On-Base Percentage. How often a batter reaches base. Above .370 is elite." />
+                  <MetricCard label="BABIP" val={babip} rating={rateBABIP(babip)} tip="Batting Avg on Balls In Play. Removes HRs and Ks — reflects luck and defence. League avg ~.300." />
+                  <MetricCard label="ISO" val={iso} rating={rateISO(iso)} tip="Isolated Power (SLG − AVG). Pure extra-base power, independent of singles. Above .200 is excellent." />
+                  <MetricCard label="K%" val={kpct} rating={rateKpct(kpct)} tip="Strikeout rate. Lower is better for hitters. Below 14% is elite contact; above 24% is concerning." />
+                  <MetricCard label="BB%" val={bbpct} rating={rateBBpct(bbpct)} tip="Walk rate. Higher is better — reflects plate discipline. Above 12% is elite; below 6% is poor." />
+                </div>
+                {/* Pitching */}
+                <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:6 }}>Pitching</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                  <MetricCard label="ERA" val={era==='-'?'-':parseFloat(era).toFixed(2)} rating={rateERA(era)} tip="Earned Run Average. Runs allowed per 9 innings. Below 2.50 is elite; below 3.50 is good." />
+                  <MetricCard label="WHIP" val={whip==='-'?'-':parseFloat(whip).toFixed(2)} rating={rateWHIP(whip)} tip="Walks + Hits per Inning Pitched. Measures base-runner prevention. Below 1.00 is excellent." />
+                  <MetricCard label="K/9" val={kper9} rating={rateKper9(kper9)} tip="Strikeouts per 9 innings. Measures a staff's swing-and-miss ability. Above 10 is elite." />
+                  <MetricCard label="K/BB" val={kbb} rating={rateKBB(kbb)} tip="Strikeout-to-walk ratio. The purest measure of a pitcher's command. Above 4.0 is elite; below 2.0 is poor." />
                 </div>
               </div>
             );
