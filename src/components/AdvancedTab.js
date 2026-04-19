@@ -23,7 +23,7 @@ function Tooltip({ text, children }) {
             position:'absolute', bottom:'calc(100% + 6px)', left:'50%', transform:'translateX(-50%)',
             background:'#1e293b', border:'0.5px solid rgba(255,255,255,0.2)', borderRadius:8,
             padding:'6px 10px', fontSize:11, color:'rgba(255,255,255,0.8)', whiteSpace:'nowrap',
-            zIndex:101, pointerEvents:'none', maxWidth:200, whiteSpace:'normal', textAlign:'center',
+            zIndex:101, pointerEvents:'none', maxWidth:240, whiteSpace:'normal', textAlign:'center',
             lineHeight:1.4,
           }}>
             {text}
@@ -156,20 +156,20 @@ export default function AdvancedTab({ data }) {
                 {/* Batting */}
                 <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:6 }}>Batting</div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:10 }}>
-                  <MetricCard label="OPS" val={ops} rating={rateOPS(ops)} tip="On-Base Plus Slugging. Above .900 is elite, above .800 is good." />
-                  <MetricCard label="OBP" val={obp} rating={rateOBP(obp)} tip="On-Base Percentage. How often a batter reaches base. Above .370 is elite." />
-                  <MetricCard label="BABIP" val={babip} rating={rateBABIP(babip)} tip="Batting Avg on Balls In Play. Removes HRs and Ks — reflects luck and defence. League avg ~.300." />
-                  <MetricCard label="ISO" val={iso} rating={rateISO(iso)} tip="Isolated Power (SLG − AVG). Pure extra-base power, independent of singles. Above .200 is excellent." />
-                  <MetricCard label="K%" val={kpct} rating={rateKpct(kpct)} tip="Strikeout rate. Lower is better for hitters. Below 14% is elite contact; above 24% is concerning." />
-                  <MetricCard label="BB%" val={bbpct} rating={rateBBpct(bbpct)} tip="Walk rate. Higher is better — reflects plate discipline. Above 12% is elite; below 6% is poor." />
+                  <MetricCard label="OPS" val={ops} rating={rateOPS(ops)} tip="On-Base + Slugging combined. The go-to offensive rate stat. Below .700 = poor · .700–.800 = avg · .800–.900 = good · .900+ = elite" />
+                  <MetricCard label="OBP" val={obp} rating={rateOBP(obp)} tip="How often a batter reaches base via hit, walk or HBP. Below .300 = poor · .300–.330 = avg · .330–.370 = good · .370+ = elite" />
+                  <MetricCard label="BABIP" val={babip} rating={rateBABIP(babip)} tip="Batting avg on balls put in play (excludes HRs and Ks). High = lucky or fast; low = unlucky or weak contact. Below .260 = poor · .260–.295 = avg · .295–.340 = good · .340+ = elite" />
+                  <MetricCard label="ISO" val={iso} rating={rateISO(iso)} tip="Isolated Power = SLG − AVG. Measures extra-base ability stripped of singles. Below .120 = poor · .120–.160 = avg · .160–.220 = good · .220+ = elite" />
+                  <MetricCard label="K%" val={kpct} rating={rateKpct(kpct)} tip="Strikeout rate. Lower is better — high K% means weak contact. Below 14% = elite · 14–18% = good · 18–24% = avg · 24%+ = poor" />
+                  <MetricCard label="BB%" val={bbpct} rating={rateBBpct(bbpct)} tip="Walk rate. Higher is better — reflects plate discipline and pitch recognition. Below 6% = poor · 6–9% = avg · 9–12% = good · 12%+ = elite" />
                 </div>
                 {/* Pitching */}
                 <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:6 }}>Pitching</div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-                  <MetricCard label="ERA" val={era==='-'?'-':parseFloat(era).toFixed(2)} rating={rateERA(era)} tip="Earned Run Average. Runs allowed per 9 innings. Below 2.50 is elite; below 3.50 is good." />
-                  <MetricCard label="WHIP" val={whip==='-'?'-':parseFloat(whip).toFixed(2)} rating={rateWHIP(whip)} tip="Walks + Hits per Inning Pitched. Measures base-runner prevention. Below 1.00 is excellent." />
-                  <MetricCard label="K/9" val={kper9} rating={rateKper9(kper9)} tip="Strikeouts per 9 innings. Measures a staff's swing-and-miss ability. Above 10 is elite." />
-                  <MetricCard label="K/BB" val={kbb} rating={rateKBB(kbb)} tip="Strikeout-to-walk ratio. The purest measure of a pitcher's command. Above 4.0 is elite; below 2.0 is poor." />
+                  <MetricCard label="ERA" val={era==='-'?'-':parseFloat(era).toFixed(2)} rating={rateERA(era)} tip="Earned runs allowed per 9 innings. The primary pitching rate stat. Below 2.50 = elite · 2.50–3.50 = good · 3.50–4.50 = avg · 4.50+ = poor" />
+                  <MetricCard label="WHIP" val={whip==='-'?'-':parseFloat(whip).toFixed(2)} rating={rateWHIP(whip)} tip="Walks + hits allowed per inning pitched. Measures base-runner prevention. Below 1.00 = elite · 1.00–1.20 = good · 1.20–1.35 = avg · 1.35+ = poor" />
+                  <MetricCard label="K/9" val={kper9} rating={rateKper9(kper9)} tip="Strikeouts per 9 innings. Measures a staff's swing-and-miss ability. Below 7 = poor · 7–8.5 = avg · 8.5–10 = good · 10+ = elite" />
+                  <MetricCard label="K/BB" val={kbb} rating={rateKBB(kbb)} tip="Strikeout-to-walk ratio. High Ks and low BBs = true command. Below 2.0 = poor · 2.0–3.0 = avg · 3.0–4.0 = good · 4.0+ = elite" />
                 </div>
               </div>
             );
