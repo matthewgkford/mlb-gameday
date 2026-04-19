@@ -332,7 +332,9 @@ export default function MetsGrid() {
 
   const { cells, guessesLeft, done, won } = state;
 
-  useEffect(() => { saveTodayState(state); }, [state]);
+  useEffect(() => {
+    if (Object.keys(state.cells).length > 0 || state.done) saveTodayState(state);
+  }, [state]);
 
   const usedNames = new Set(Object.values(cells).map(v => v?.player?.name).filter(Boolean));
 
