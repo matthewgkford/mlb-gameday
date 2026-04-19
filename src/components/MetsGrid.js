@@ -46,12 +46,18 @@ function CategoryTag({ catKey }) {
       background: `${cat.color}22`,
       border: `0.5px solid ${cat.color}55`,
       borderRadius: 8,
-      padding: '4px 8px',
+      padding: '0 8px',
       fontSize: 10,
       fontWeight: 600,
       color: cat.color,
       textAlign: 'center',
       lineHeight: 1.3,
+      height: 44,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      boxSizing: 'border-box',
     }}>
       {cat.label}
     </div>
@@ -413,7 +419,7 @@ export default function MetsGrid() {
         <div style={{ display:'grid', gridTemplateColumns:`64px repeat(3, 1fr)`, gap:5, marginBottom:5 }}>
           <div />
           {colCats.map(cat => (
-            <div key={cat} style={{ minHeight:50, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div key={cat} style={{ display:'flex', alignItems:'stretch' }}>
               <CategoryTag catKey={cat} />
             </div>
           ))}
@@ -423,7 +429,7 @@ export default function MetsGrid() {
         {rowCats.map((rowCat, ri) => (
           <div key={rowCat} style={{ display:'grid', gridTemplateColumns:`64px repeat(3, 1fr)`, gap:5, marginBottom:5 }}>
             {/* Row header */}
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ display:'flex', alignItems:'stretch' }}>
               <CategoryTag catKey={rowCat} />
             </div>
 
