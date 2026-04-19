@@ -20,11 +20,11 @@ function Tooltip({ text, children }) {
             style={{ position:'fixed', inset:0, zIndex:100 }}
           />
           <span style={{
-            position:'absolute', bottom:'calc(100% + 6px)', left:'50%', transform:'translateX(-50%)',
-            background:'#1e293b', border:'0.5px solid rgba(255,255,255,0.2)', borderRadius:8,
-            padding:'6px 10px', fontSize:11, color:'rgba(255,255,255,0.8)', whiteSpace:'nowrap',
-            zIndex:101, pointerEvents:'none', maxWidth:240, whiteSpace:'normal', textAlign:'center',
-            lineHeight:1.4,
+            position:'fixed', top:'28%', left:'50%', transform:'translateX(-50%)',
+            background:'#1e293b', border:'0.5px solid rgba(255,255,255,0.2)', borderRadius:10,
+            padding:'10px 14px', fontSize:12, color:'rgba(255,255,255,0.85)', whiteSpace:'normal',
+            zIndex:101, pointerEvents:'none', width:'calc(100vw - 48px)', maxWidth:320, textAlign:'center',
+            lineHeight:1.5,
           }}>
             {text}
           </span>
