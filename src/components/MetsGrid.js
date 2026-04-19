@@ -38,7 +38,7 @@ function buildShareText(puzzle, cells, guessesLeft) {
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
-function CategoryTag({ catKey }) {
+function CategoryTag({ catKey, height = 44 }) {
   const cat = CATEGORIES[catKey];
   if (!cat) return null;
   return (
@@ -52,7 +52,7 @@ function CategoryTag({ catKey }) {
       color: cat.color,
       textAlign: 'center',
       lineHeight: 1.3,
-      height: 44,
+      height,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -430,7 +430,7 @@ export default function MetsGrid() {
           <div key={rowCat} style={{ display:'grid', gridTemplateColumns:`64px repeat(3, 1fr)`, gap:5, marginBottom:5 }}>
             {/* Row header */}
             <div style={{ display:'flex', alignItems:'stretch' }}>
-              <CategoryTag catKey={rowCat} />
+              <CategoryTag catKey={rowCat} height={CELL_SIZE} />
             </div>
 
             {/* Cells */}
