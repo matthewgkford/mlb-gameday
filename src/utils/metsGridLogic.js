@@ -53,6 +53,14 @@ export const CATEGORIES = {
   // Handedness
   hand_LHP:    { label: 'Left-handed pitcher', color: '#64748b', type: 'hand' },
   hand_switch: { label: 'Switch hitter',       color: '#64748b', type: 'hand' },
+
+  // Nationality
+  nat_DR: { label: 'Born in the Dominican Republic', color: '#14b8a6', type: 'nationality' },
+  nat_PR: { label: 'Born in Puerto Rico',            color: '#14b8a6', type: 'nationality' },
+  nat_VE: { label: 'Born in Venezuela',              color: '#14b8a6', type: 'nationality' },
+
+  // Hall of Fame
+  award_HOF: { label: 'Hall of Fame inductee', color: '#eab308', type: 'award' },
 };
 
 // ── Validator ──────────────────────────────────────────────────────────────
@@ -101,6 +109,12 @@ export function validatePlayer(player, categoryKey) {
 
     case 'hand_LHP':    return player.positions.some(p => ['SP','RP'].includes(p)) && player.throws === 'L';
     case 'hand_switch': return player.bats === 'S';
+
+    case 'nat_DR': return player.nationality === 'Dominican Republic';
+    case 'nat_PR': return player.nationality === 'Puerto Rico';
+    case 'nat_VE': return player.nationality === 'Venezuela';
+
+    case 'award_HOF': return player.hallOfFame === true;
 
     default: return false;
   }

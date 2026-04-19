@@ -124,6 +124,20 @@ const PUZZLES = [
   { rows: ['pos_OF','pos_C','pos_1B'],  cols: ['award_ROY','dec_2020s','award_GoldGlove'] },
   // 59
   { rows: ['pos_SP','pos_2B','pos_OF'], cols: ['team_RedSox','award_CyYoung','ms_300avg'] },
+  // 60
+  { rows: ['pos_SP','pos_C','pos_OF'],  cols: ['award_HOF','era_1986','award_AllStar'] },
+  // 61
+  { rows: ['pos_SP','pos_C','pos_2B'],  cols: ['award_HOF','dec_1990s','award_AllStar'] },
+  // 62
+  { rows: ['pos_RP','pos_2B','pos_SS'], cols: ['nat_DR','nat_PR','nat_VE'] },
+  // 63
+  { rows: ['pos_SP','pos_RP','pos_OF'], cols: ['nat_DR','nat_VE','award_AllStar'] },
+  // 64
+  { rows: ['pos_SS','pos_2B','pos_RP'], cols: ['nat_PR','nat_DR','award_AllStar'] },
+  // 65
+  { rows: ['pos_SP','pos_C','pos_2B'],  cols: ['award_HOF','nat_VE','dec_2020s'] },
+  // 66
+  { rows: ['pos_1B','pos_OF','pos_SS'], cols: ['nat_PR','award_AllStar','dec_2010s'] },
 ];
 
 export default PUZZLES;
