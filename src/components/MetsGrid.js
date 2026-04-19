@@ -384,7 +384,11 @@ export default function MetsGrid() {
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           {done && (
             <button
-              onClick={() => { localStorage.removeItem(getTodayKey()); window.location.reload(); }}
+              onClick={() => {
+                localStorage.removeItem(getTodayKey());
+                setState({ cells: {}, guessesLeft: TOTAL_GUESSES, done: false, won: false });
+                setShowResults(false);
+              }}
               style={{ background:'none', border:'none', color:'rgba(255,255,255,0.25)', fontSize:11, cursor:'pointer', fontFamily:'inherit', padding:'4px 8px' }}
             >
               Reset
