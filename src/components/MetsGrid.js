@@ -488,15 +488,14 @@ export default function MetsGrid() {
                   onClick={() => handleCellTap(key)}
                   style={{
                     height: CELL_SIZE,
+                    position: 'relative',
                     borderRadius: 12,
                     background: bg,
                     border,
                     cursor: correct || done ? 'default' : 'pointer',
                     display: 'flex',
-                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: correct ? 0 : '4px 5px',
                     overflow: 'hidden',
                     textAlign: 'center',
                     transition: 'background 0.2s, border 0.2s',
@@ -506,13 +505,11 @@ export default function MetsGrid() {
                   }}
                 >
                   {correct ? (
-                    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                      <img
-                        src={LOCAL_HEADSHOTS[cell.player.name] || `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${cell.player.mlbId}/headshot/67/current`}
-                        alt={cell.player.name}
-                        style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }}
-                      />
-                    </div>
+                    <img
+                      src={LOCAL_HEADSHOTS[cell.player.name] || `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${cell.player.mlbId}/headshot/67/current`}
+                      alt={cell.player.name}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }}
+                    />
                   ) : (
                     <div style={{ fontSize:22, color:'rgba(255,255,255,0.12)' }}>+</div>
                   )}
