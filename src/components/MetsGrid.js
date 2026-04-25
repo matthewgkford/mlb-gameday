@@ -426,18 +426,16 @@ export default function MetsGrid() {
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>Daily Mets puzzle</div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-          {done && (
-            <button
-              onClick={() => {
-                localStorage.removeItem(getTodayKey());
-                setState({ cells: {}, guessesLeft: TOTAL_GUESSES, done: false, won: false });
-                setShowResults(false);
-              }}
-              style={{ background:'none', border:'none', color:'rgba(255,255,255,0.25)', fontSize:11, cursor:'pointer', fontFamily:'inherit', padding:'4px 8px' }}
-            >
-              Reset
-            </button>
-          )}
+          <button
+            onClick={() => {
+              localStorage.removeItem(getTodayKey());
+              setState({ cells: {}, guessesLeft: TOTAL_GUESSES, done: false, won: false });
+              setShowResults(false);
+            }}
+            style={{ background:'none', border:'none', color:'rgba(255,255,255,0.25)', fontSize:11, cursor:'pointer', fontFamily:'inherit', padding:'4px 8px' }}
+          >
+            Reset
+          </button>
           <button
             onClick={() => setShowInfo(true)}
             style={{ background:'rgba(255,255,255,0.07)', border:'none', borderRadius:20, padding:'6px 14px', color:'rgba(255,255,255,0.6)', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}
