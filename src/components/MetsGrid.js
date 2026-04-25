@@ -217,6 +217,7 @@ function PlayerSearch({ rowCat, colCat, usedNames, onConfirm, onClose }) {
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(null);
   const inputRef = useRef(null);
+  const sheetRef = useRef(null);
 
   // Lock body scroll while sheet is open; focus input after keyboard settles.
   // Save scrollY before locking so we can restore it on close — otherwise iOS
@@ -238,6 +239,26 @@ function PlayerSearch({ rowCat, colCat, usedNames, onConfirm, onClose }) {
     };
   }, []);
 
+  // Keep the sheet above the keyboard on iOS — visualViewport shrinks when
+  // the keyboard appears, but position:fixed stays anchored to the layout
+  // viewport. Translate the sheet up by however many px the keyboard occupies.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    function reposition() {
+      if (!sheetRef.current) return;
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      sheetRef.current.style.transform = `translateY(-${offset}px)`;
+    }
+    reposition();
+    vv.addEventListener('resize', reposition);
+    vv.addEventListener('scroll', reposition);
+    return () => {
+      vv.removeEventListener('resize', reposition);
+      vv.removeEventListener('scroll', reposition);
+    };
+  }, []);
+
   useEffect(() => {
     const matches = searchPlayers(query).filter(p => !usedNames.has(p.name));
     setResults(matches);
@@ -253,10 +274,11 @@ function PlayerSearch({ rowCat, colCat, usedNames, onConfirm, onClose }) {
 
   return (
     <div
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:200, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
+      style={{ position:'fixed', top:0, right:0, bottom:0, left:0, background:'rgba(0,0,0,0.85)', zIndex:200, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
       onClick={onClose}
     >
       <div
+        ref={sheetRef}
         style={{ background:'#1a1f2e', borderRadius:'20px 20px 0 0', padding:'16px 16px 0', width:'100%', maxWidth:480, paddingBottom:'env(safe-area-inset-bottom, 16px)', display:'flex', flexDirection:'column' }}
         onClick={e => e.stopPropagation()}
       >
@@ -490,7 +512,7 @@ export default function MetsGrid() {
                       <img
                         src={LOCAL_HEADSHOTS[cell.player.name] || `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${cell.player.mlbId}/headshot/67/current`}
                         alt={cell.player.name}
-                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }}
+                        style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }}
                       />
                     </div>
                   ) : (
