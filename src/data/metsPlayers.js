@@ -5,11 +5,13 @@
 // era: "1986 champs", "2015 pennant", "2000 WS"
 // nationality: (non-USA players only) country of birth
 // hallOfFame: true (Hall of Fame inductees only)
+// mlbId: MLB Stats API person ID — used to load headshot from img.mlbstatic.com
 
 const METS_PLAYERS = [
   // ── STARTING PITCHERS ─────────────────────────────────────────────────────
   {
     name: 'Tom Seaver',
+    mlbId: 121961,
     positions: ['SP'],
     metsYears: [1967,1968,1969,1970,1971,1972,1973,1974,1975,1976,1977,1983],
     otherTeams: ['Reds','White Sox','Red Sox'],
@@ -21,6 +23,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Dwight Gooden',
+    mlbId: 114947,
     positions: ['SP'],
     metsYears: [1984,1985,1986,1987,1988,1989,1990,1991,1992,1993,1994],
     otherTeams: ['Yankees','Indians','Astros','Devil Rays'],
@@ -31,6 +34,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Jacob deGrom',
+    mlbId: 594798,
     positions: ['SP'],
     metsYears: [2014,2015,2016,2017,2018,2019,2020,2021,2022],
     otherTeams: ['Rangers'],
@@ -41,6 +45,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Noah Syndergaard',
+    mlbId: 592789,
     positions: ['SP'],
     metsYears: [2015,2016,2017,2018,2019,2021],
     otherTeams: ['Angels','Dodgers','Phillies'],
@@ -51,6 +56,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Matt Harvey',
+    mlbId: 518774,
     positions: ['SP'],
     metsYears: [2012,2013,2015,2016,2017,2018],
     otherTeams: ['Reds','Angels','Athletics','Orioles','Tigers'],
@@ -61,6 +67,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Zack Wheeler',
+    mlbId: 554430,
     positions: ['SP'],
     metsYears: [2013,2014,2015,2016,2017,2018,2019],
     otherTeams: ['Phillies'],
@@ -71,6 +78,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Johan Santana',
+    mlbId: 276371,
     positions: ['SP'],
     metsYears: [2008,2009,2010,2011,2012],
     otherTeams: ['Twins'],
@@ -82,6 +90,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'R.A. Dickey',
+    mlbId: 285079,
     positions: ['SP'],
     metsYears: [2010,2011,2012],
     otherTeams: ['Rangers','Blue Jays','Braves','Mariners'],
@@ -92,6 +101,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Al Leiter',
+    mlbId: 117652,
     positions: ['SP'],
     metsYears: [1998,1999,2000,2001,2002,2003,2004],
     otherTeams: ['Yankees','Blue Jays','Marlins'],
@@ -102,6 +112,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Ron Darling',
+    mlbId: 113054,
     positions: ['SP'],
     metsYears: [1983,1984,1985,1986,1987,1988,1989,1990,1991],
     otherTeams: ['Expos','Athletics'],
@@ -112,6 +123,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Bob Ojeda',
+    mlbId: 119964,
     positions: ['SP'],
     metsYears: [1986,1987,1988,1989,1990],
     otherTeams: ['Red Sox','Dodgers','Indians'],
@@ -122,6 +134,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Sid Fernandez',
+    mlbId: 114074,
     positions: ['SP'],
     metsYears: [1983,1984,1985,1986,1987,1988,1989,1990,1991,1992,1993],
     otherTeams: ['Orioles','Phillies','Astros'],
@@ -132,6 +145,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Marcus Stroman',
+    mlbId: 573186,
     positions: ['SP'],
     metsYears: [2019,2020,2021],
     otherTeams: ['Blue Jays','Cubs','Yankees'],
@@ -142,6 +156,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Jon Niese',
+    mlbId: 477003,
     positions: ['SP'],
     metsYears: [2008,2009,2010,2011,2012,2013,2014,2015,2016],
     otherTeams: ['Pirates'],
@@ -152,6 +167,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Bartolo Colón',
+    mlbId: 112526,
     positions: ['SP'],
     metsYears: [2014,2015,2016],
     otherTeams: ['Indians','Expos','White Sox','Red Sox','Yankees','Athletics','Braves','Rangers','Twins','Padres'],
@@ -163,6 +179,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Steven Matz',
+    mlbId: 571927,
     positions: ['SP'],
     metsYears: [2015,2016,2017,2018,2019,2020],
     otherTeams: ['Blue Jays','Cardinals','Giants'],
@@ -173,6 +190,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'David Peterson',
+    mlbId: 656849,
     positions: ['SP'],
     metsYears: [2020,2021,2022,2023,2024,2025],
     otherTeams: [],
@@ -183,6 +201,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Tylor Megill',
+    mlbId: 656731,
     positions: ['SP'],
     metsYears: [2021,2022,2023,2024,2025],
     otherTeams: [],
@@ -193,6 +212,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Taijuan Walker',
+    mlbId: 592836,
     positions: ['SP'],
     metsYears: [2021,2022],
     otherTeams: ['Mariners','Diamondbacks','Blue Jays','Cubs'],
@@ -203,6 +223,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Carlos Carrasco',
+    mlbId: 471911,
     positions: ['SP'],
     metsYears: [2021,2022,2023],
     otherTeams: ['Indians','Guardians','Phillies'],
@@ -214,6 +235,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Max Scherzer',
+    mlbId: 453286,
     positions: ['SP'],
     metsYears: [2022,2023],
     otherTeams: ['Tigers','Nationals','Dodgers','Rangers'],
@@ -224,6 +246,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Justin Verlander',
+    mlbId: 434378,
     positions: ['SP'],
     metsYears: [2023],
     otherTeams: ['Tigers','Astros'],
@@ -234,6 +257,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Chris Bassitt',
+    mlbId: 605135,
     positions: ['SP'],
     metsYears: [2022],
     otherTeams: ['White Sox','Athletics','Blue Jays'],
@@ -244,6 +268,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Kodai Senga',
+    mlbId: 673540,
     positions: ['SP'],
     metsYears: [2023,2024,2025],
     otherTeams: ['SoftBank Hawks'],
@@ -255,6 +280,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Christian Scott',
+    mlbId: 681035,
     positions: ['SP'],
     metsYears: [2024,2025],
     otherTeams: [],
@@ -265,6 +291,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Jameson Taillon',
+    mlbId: 592791,
     positions: ['SP'],
     metsYears: [2024,2025],
     otherTeams: ['Pirates','Yankees','Cubs'],
@@ -275,6 +302,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Sean Manaea',
+    mlbId: 640455,
     positions: ['SP'],
     metsYears: [2024,2025],
     otherTeams: ['Athletics','Padres','Giants'],
@@ -285,6 +313,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'José Quintana',
+    mlbId: 500779,
     positions: ['SP'],
     metsYears: [2023,2024,2025],
     otherTeams: ['White Sox','Cubs','Pirates','Angels','Cardinals','Giants'],
@@ -296,6 +325,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'David Cone',
+    mlbId: 112552,
     positions: ['SP'],
     metsYears: [1987,1988,1989,1990,1991,1992],
     otherTeams: ['Royals','Blue Jays','Yankees','Red Sox'],
@@ -306,6 +336,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Bobby Jones',
+    mlbId: 116717,
     positions: ['SP'],
     metsYears: [1993,1994,1995,1996,1997,1998,1999,2000],
     otherTeams: ['Padres','Rockies','Red Sox'],
@@ -316,6 +347,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Mike Pelfrey',
+    mlbId: 460059,
     positions: ['SP'],
     metsYears: [2006,2007,2008,2009,2010,2011,2012],
     otherTeams: ['Twins','Tigers'],
@@ -326,6 +358,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'John Maine',
+    mlbId: 429720,
     positions: ['SP'],
     metsYears: [2006,2007,2008,2009,2010],
     otherTeams: ['Orioles','Rockies'],
@@ -336,6 +369,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Pedro Martinez',
+    mlbId: 680932,
     positions: ['SP'],
     metsYears: [2005,2006,2007,2008],
     otherTeams: ['Expos','Red Sox','Dodgers','Phillies'],
@@ -348,6 +382,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Tom Glavine',
+    mlbId: 114849,
     positions: ['SP'],
     metsYears: [2003,2004,2005,2006,2007],
     otherTeams: ['Braves'],
@@ -361,6 +396,7 @@ const METS_PLAYERS = [
   // ── RELIEF PITCHERS ───────────────────────────────────────────────────────
   {
     name: 'Edwin Díaz',
+    mlbId: 621242,
     positions: ['RP'],
     metsYears: [2019,2020,2021,2022,2023,2024,2025],
     otherTeams: ['Mariners'],
@@ -372,6 +408,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Jeurys Familia',
+    mlbId: 544727,
     positions: ['RP'],
     metsYears: [2012,2013,2014,2015,2016,2017,2018,2019,2020,2021],
     otherTeams: ['Athletics','Giants'],
@@ -383,6 +420,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'John Franco',
+    mlbId: 114374,
     positions: ['RP'],
     metsYears: [1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004],
     otherTeams: ['Reds'],
@@ -393,6 +431,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Jesse Orosco',
+    mlbId: 120051,
     positions: ['RP'],
     metsYears: [1979,1981,1982,1983,1984,1985,1986,1987],
     otherTeams: ['Dodgers','Indians','Brewers','Orioles','Cardinals','Yankees','Padres','Twins'],
@@ -403,6 +442,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Roger McDowell',
+    mlbId: 118658,
     positions: ['RP'],
     metsYears: [1985,1986,1987,1988,1989],
     otherTeams: ['Phillies','Dodgers','Rangers','Orioles','Pirates'],
@@ -413,6 +453,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Tyler Clippard',
+    mlbId: 461325,
     positions: ['RP'],
     metsYears: [2015],
     otherTeams: ['Yankees','Nationals','Athletics','Twins','Astros','White Sox'],
@@ -423,6 +464,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Addison Reed',
+    mlbId: 592665,
     positions: ['RP'],
     metsYears: [2015,2016,2017],
     otherTeams: ['White Sox','Diamondbacks','Indians','Red Sox','Twins'],
@@ -433,6 +475,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Jerry Blevins',
+    mlbId: 460283,
     positions: ['RP'],
     metsYears: [2015,2016,2017,2018],
     otherTeams: ['Athletics','Nationals','Yankees','Braves'],
@@ -443,6 +486,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Hansel Robles',
+    mlbId: 570663,
     positions: ['RP'],
     metsYears: [2015,2016,2017,2018],
     otherTeams: ['Angels','Twins'],
@@ -454,6 +498,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Seth Lugo',
+    mlbId: 607625,
     positions: ['RP','SP'],
     metsYears: [2016,2017,2018,2019,2020,2021,2022],
     otherTeams: ['Padres','Royals'],
@@ -464,6 +509,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Drew Smith',
+    mlbId: 622098,
     positions: ['RP'],
     metsYears: [2018,2019,2020,2021,2022,2023,2024,2025],
     otherTeams: [],
@@ -474,6 +520,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Dellin Betances',
+    mlbId: 476454,
     positions: ['RP'],
     metsYears: [2020],
     otherTeams: ['Yankees','Red Sox'],
@@ -484,6 +531,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Trevor May',
+    mlbId: 543507,
     positions: ['RP'],
     metsYears: [2021,2022],
     otherTeams: ['Twins','Phillies','Blue Jays'],
@@ -494,6 +542,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Aaron Loup',
+    mlbId: 571901,
     positions: ['RP'],
     metsYears: [2021,2022],
     otherTeams: ['Blue Jays','Phillies','Padres','Angels'],
@@ -504,6 +553,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Adam Ottavino',
+    mlbId: 493603,
     positions: ['RP'],
     metsYears: [2022,2023],
     otherTeams: ['Cardinals','Rockies','Yankees','Red Sox'],
@@ -514,6 +564,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Brooks Raley',
+    mlbId: 548384,
     positions: ['RP'],
     metsYears: [2023,2024,2025],
     otherTeams: ['Cubs','Astros','Rays'],
@@ -524,6 +575,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Reed Garrett',
+    mlbId: 657585,
     positions: ['RP'],
     metsYears: [2023,2024,2025],
     otherTeams: ['Tigers'],
@@ -534,6 +586,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Armando Benítez',
+    mlbId: 110859,
     positions: ['RP'],
     metsYears: [1999,2000,2001,2002,2003],
     otherTeams: ['Orioles','Yankees','Marlins','Giants','Mariners'],
@@ -545,6 +598,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Francisco Rodríguez',
+    mlbId: 408061,
     positions: ['RP'],
     metsYears: [2009,2010,2011],
     otherTeams: ['Angels','Brewers','Tigers','Orioles'],
@@ -556,6 +610,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Neil Allen',
+    mlbId: 110156,
     positions: ['RP'],
     metsYears: [1979,1980,1981,1982,1983],
     otherTeams: ['Cardinals','Yankees','White Sox','Indians'],
@@ -568,6 +623,7 @@ const METS_PLAYERS = [
   // ── CATCHERS ──────────────────────────────────────────────────────────────
   {
     name: 'Mike Piazza',
+    mlbId: 120536,
     positions: ['C'],
     metsYears: [1998,1999,2000,2001,2002,2003,2004,2005],
     otherTeams: ['Dodgers','Marlins','Padres','Athletics'],
@@ -579,6 +635,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Gary Carter',
+    mlbId: 112061,
     positions: ['C'],
     metsYears: [1985,1986,1987,1988,1989],
     otherTeams: ['Expos','Giants','Dodgers'],
@@ -590,6 +647,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Todd Hundley',
+    mlbId: 116316,
     positions: ['C'],
     metsYears: [1990,1991,1992,1993,1994,1995,1996,1997,1998],
     otherTeams: ['Dodgers','Cubs'],
@@ -600,6 +658,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Travis d\'Arnaud',
+    mlbId: 518595,
     positions: ['C'],
     metsYears: [2013,2014,2015,2016,2017,2018,2019],
     otherTeams: ['Blue Jays','Rays','Braves'],
@@ -610,6 +669,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Wilson Ramos',
+    mlbId: 467092,
     positions: ['C'],
     metsYears: [2019,2020],
     otherTeams: ['Twins','Nationals','Rays','Phillies','Tigers'],
@@ -621,6 +681,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'James McCann',
+    mlbId: 543510,
     positions: ['C'],
     metsYears: [2021,2022],
     otherTeams: ['Tigers','White Sox','Orioles'],
@@ -631,6 +692,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Francisco Alvarez',
+    mlbId: 682626,
     positions: ['C'],
     metsYears: [2022,2023,2024,2025],
     otherTeams: [],
@@ -642,6 +704,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Tomás Nido',
+    mlbId: 621512,
     positions: ['C'],
     metsYears: [2017,2018,2019,2020,2021,2022,2023],
     otherTeams: ['Red Sox'],
@@ -652,6 +715,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Mackey Sasser',
+    mlbId: 121705,
     positions: ['C'],
     metsYears: [1988,1989,1990,1991,1992],
     otherTeams: ['Giants','Pirates','Mariners'],
@@ -664,6 +728,7 @@ const METS_PLAYERS = [
   // ── FIRST BASEMEN ─────────────────────────────────────────────────────────
   {
     name: 'Keith Hernandez',
+    mlbId: 115826,
     positions: ['1B'],
     metsYears: [1983,1984,1985,1986,1987,1988,1989],
     otherTeams: ['Cardinals','Indians'],
@@ -674,6 +739,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Pete Alonso',
+    mlbId: 624413,
     positions: ['1B'],
     metsYears: [2019,2020,2021,2022,2023,2024,2025],
     otherTeams: [],
@@ -684,6 +750,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Carlos Delgado',
+    mlbId: 113232,
     positions: ['1B'],
     metsYears: [2006,2007,2008,2009],
     otherTeams: ['Blue Jays','Marlins'],
@@ -695,6 +762,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Lucas Duda',
+    mlbId: 446263,
     positions: ['1B'],
     metsYears: [2010,2011,2012,2013,2014,2015,2016,2017],
     otherTeams: ['Rays','Royals','Athletics'],
@@ -705,6 +773,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Ike Davis',
+    mlbId: 477195,
     positions: ['1B'],
     metsYears: [2010,2011,2012,2013,2014],
     otherTeams: ['Pirates','Athletics','Yankees','Cubs'],
@@ -715,6 +784,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'James Loney',
+    mlbId: 425766,
     positions: ['1B'],
     metsYears: [2015],
     otherTeams: ['Dodgers','Red Sox','Rays','Braves'],
@@ -726,6 +796,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Dominic Smith',
+    mlbId: 642086,
     positions: ['1B','OF'],
     metsYears: [2017,2018,2019,2020,2021,2022],
     otherTeams: ['Cubs'],
@@ -736,6 +807,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Mo Vaughn',
+    mlbId: 123678,
     positions: ['1B'],
     metsYears: [2002,2003],
     otherTeams: ['Red Sox','Angels'],
@@ -748,6 +820,7 @@ const METS_PLAYERS = [
   // ── SECOND BASEMEN ────────────────────────────────────────────────────────
   {
     name: 'Jeff McNeil',
+    mlbId: 643446,
     positions: ['2B','OF'],
     metsYears: [2018,2019,2020,2021,2022,2023,2024,2025],
     otherTeams: [],
@@ -758,6 +831,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Daniel Murphy',
+    mlbId: 502517,
     positions: ['2B'],
     metsYears: [2008,2009,2010,2011,2012,2013,2014,2015],
     otherTeams: ['Nationals','Cubs','Rockies','Phillies'],
@@ -768,6 +842,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Robinson Canó',
+    mlbId: 429664,
     positions: ['2B'],
     metsYears: [2019,2020,2021],
     otherTeams: ['Yankees','Mariners'],
@@ -779,6 +854,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Neil Walker',
+    mlbId: 435522,
     positions: ['2B'],
     metsYears: [2016,2017],
     otherTeams: ['Pirates','Brewers','Yankees','Marlins'],
@@ -789,6 +865,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Wilmer Flores',
+    mlbId: 527038,
     positions: ['2B','SS','3B'],
     metsYears: [2013,2014,2015,2016,2017,2018],
     otherTeams: ['Giants','Reds','Diamondbacks'],
@@ -800,6 +877,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Luis Guillorme',
+    mlbId: 641645,
     positions: ['2B','3B'],
     metsYears: [2017,2018,2019,2020,2021,2022,2023],
     otherTeams: ['Angels'],
@@ -810,6 +888,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Edgardo Alfonzo',
+    mlbId: 110135,
     positions: ['2B','3B'],
     metsYears: [1995,1996,1997,1998,1999,2000,2001,2002],
     otherTeams: ['Giants','Angels','Blue Jays'],
@@ -821,6 +900,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Wally Backman',
+    mlbId: 110419,
     positions: ['2B'],
     metsYears: [1980,1981,1982,1983,1984,1985,1986,1987,1988],
     otherTeams: ['Twins','Pirates','Phillies','Mariners'],
@@ -831,6 +911,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Tim Teufel',
+    mlbId: 123212,
     positions: ['2B'],
     metsYears: [1986,1987,1988,1989,1990,1991],
     otherTeams: ['Twins','Padres'],
@@ -841,6 +922,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Roberto Alomar',
+    mlbId: 110183,
     positions: ['2B'],
     metsYears: [2002],
     otherTeams: ['Blue Jays','Indians','Orioles','Yankees','White Sox','Diamondbacks'],
@@ -855,6 +937,7 @@ const METS_PLAYERS = [
   // ── SHORTSTOPS ────────────────────────────────────────────────────────────
   {
     name: 'Francisco Lindor',
+    mlbId: 596019,
     positions: ['SS'],
     metsYears: [2021,2022,2023,2024,2025],
     otherTeams: ['Indians','Guardians'],
@@ -866,6 +949,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'José Reyes',
+    mlbId: 408314,
     positions: ['SS'],
     metsYears: [2003,2004,2005,2006,2007,2008,2009,2010,2011,2016,2017,2018],
     otherTeams: ['Marlins','Blue Jays','Rockies','Cardinals'],
@@ -877,6 +961,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Javier Báez',
+    mlbId: 595879,
     positions: ['SS'],
     metsYears: [2021],
     otherTeams: ['Cubs','Tigers'],
@@ -888,6 +973,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Amed Rosario',
+    mlbId: 642708,
     positions: ['SS'],
     metsYears: [2017,2018,2019,2020],
     otherTeams: ['Indians','Guardians','Dodgers'],
@@ -899,6 +985,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Rey Ordóñez',
+    mlbId: 120045,
     positions: ['SS'],
     metsYears: [1996,1997,1998,1999,2000,2001,2002],
     otherTeams: ['Cubs','Rays'],
@@ -910,6 +997,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Bud Harrelson',
+    mlbId: 115502,
     positions: ['SS'],
     metsYears: [1965,1966,1967,1968,1969,1970,1971,1972,1973,1974,1975,1976,1977],
     otherTeams: ['Phillies','Rangers'],
@@ -922,6 +1010,7 @@ const METS_PLAYERS = [
   // ── THIRD BASEMEN ─────────────────────────────────────────────────────────
   {
     name: 'David Wright',
+    mlbId: 431151,
     positions: ['3B'],
     metsYears: [2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018],
     otherTeams: [],
@@ -932,6 +1021,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Brett Baty',
+    mlbId: 683146,
     positions: ['3B'],
     metsYears: [2022,2023,2024,2025],
     otherTeams: [],
@@ -942,6 +1032,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Mark Vientos',
+    mlbId: 668901,
     positions: ['3B'],
     metsYears: [2022,2023,2024,2025],
     otherTeams: [],
@@ -952,6 +1043,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Howard Johnson',
+    mlbId: 116593,
     positions: ['3B','SS'],
     metsYears: [1985,1986,1987,1988,1989,1990,1991,1992,1993],
     otherTeams: ['Tigers','Rockies','Cubs'],
@@ -962,6 +1054,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Robin Ventura',
+    mlbId: 123697,
     positions: ['3B'],
     metsYears: [1999,2000,2001],
     otherTeams: ['White Sox','Yankees','Dodgers'],
@@ -972,6 +1065,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Ray Knight',
+    mlbId: 117191,
     positions: ['3B'],
     metsYears: [1984,1985,1986],
     otherTeams: ['Reds','Astros','Orioles','Tigers'],
@@ -982,6 +1076,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Bobby Bonilla',
+    mlbId: 111199,
     positions: ['3B','OF'],
     metsYears: [1992,1993,1994,1995,1999],
     otherTeams: ['Pirates','Orioles','Marlins','Dodgers','Cardinals','Braves'],
@@ -994,6 +1089,7 @@ const METS_PLAYERS = [
   // ── OUTFIELDERS ───────────────────────────────────────────────────────────
   {
     name: 'Darryl Strawberry',
+    mlbId: 122864,
     positions: ['OF'],
     metsYears: [1983,1984,1985,1986,1987,1988,1989,1990],
     otherTeams: ['Dodgers','Giants','Yankees'],
@@ -1004,6 +1100,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Mookie Wilson',
+    mlbId: 124434,
     positions: ['OF'],
     metsYears: [1980,1981,1982,1983,1984,1985,1986,1987,1988,1989],
     otherTeams: ['Blue Jays'],
@@ -1014,6 +1111,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Lenny Dykstra',
+    mlbId: 113686,
     positions: ['OF'],
     metsYears: [1985,1986,1987,1988,1989],
     otherTeams: ['Phillies'],
@@ -1024,6 +1122,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Carlos Beltrán',
+    mlbId: 136860,
     positions: ['OF'],
     metsYears: [2005,2006,2007,2008,2009,2010,2011],
     otherTeams: ['Royals','Astros','Giants','Cardinals','Yankees'],
@@ -1035,6 +1134,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Yoenis Céspedes',
+    mlbId: 493316,
     positions: ['OF'],
     metsYears: [2015,2016,2017,2018,2019],
     otherTeams: ['Athletics','Red Sox','Tigers'],
@@ -1046,6 +1146,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Starling Marte',
+    mlbId: 516782,
     positions: ['OF'],
     metsYears: [2021,2022,2023,2024,2025],
     otherTeams: ['Pirates','Diamondbacks','Athletics','Marlins'],
@@ -1057,6 +1158,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Brandon Nimmo',
+    mlbId: 607043,
     positions: ['OF'],
     metsYears: [2016,2017,2018,2019,2020,2021,2022,2023,2024,2025],
     otherTeams: [],
@@ -1067,6 +1169,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Michael Conforto',
+    mlbId: 624424,
     positions: ['OF'],
     metsYears: [2015,2016,2017,2018,2019,2020,2021],
     otherTeams: ['Giants'],
@@ -1077,6 +1180,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Jay Bruce',
+    mlbId: 457803,
     positions: ['OF'],
     metsYears: [2016,2017,2018,2019],
     otherTeams: ['Reds','Indians','Mariners','Phillies'],
@@ -1087,6 +1191,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Jesse Winker',
+    mlbId: 608385,
     positions: ['OF'],
     metsYears: [2024,2025],
     otherTeams: ['Reds','Mariners','Brewers'],
@@ -1097,6 +1202,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Harrison Bader',
+    mlbId: 664056,
     positions: ['OF'],
     metsYears: [2024,2025],
     otherTeams: ['Cardinals','Yankees','Reds'],
@@ -1107,6 +1213,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Tyrone Taylor',
+    mlbId: 621438,
     positions: ['OF'],
     metsYears: [2023,2024],
     otherTeams: ['Brewers'],
@@ -1117,6 +1224,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Kevin McReynolds',
+    mlbId: 118875,
     positions: ['OF'],
     metsYears: [1987,1988,1989,1990,1991,1992,1994],
     otherTeams: ['Padres','Royals'],
@@ -1127,6 +1235,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Rickey Henderson',
+    mlbId: 115749,
     positions: ['OF'],
     metsYears: [1999,2000],
     otherTeams: ['Yankees','Athletics','Blue Jays','Padres','Angels','Dodgers','Red Sox','Mariners'],
@@ -1138,6 +1247,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Cliff Floyd',
+    mlbId: 114260,
     positions: ['OF'],
     metsYears: [2003,2004,2005,2006],
     otherTeams: ['Expos','Marlins','Red Sox','Cubs','Rays'],
@@ -1148,6 +1258,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Jason Bay',
+    mlbId: 424726,
     positions: ['OF'],
     metsYears: [2010,2011,2012],
     otherTeams: ['Pirates','Red Sox','Mariners'],
@@ -1159,6 +1270,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Curtis Granderson',
+    mlbId: 434158,
     positions: ['OF'],
     metsYears: [2014,2015,2016,2017],
     otherTeams: ['Tigers','Yankees','Dodgers','Blue Jays','Brewers'],
@@ -1169,6 +1281,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Juan Lagares',
+    mlbId: 501571,
     positions: ['OF'],
     metsYears: [2013,2014,2015,2016,2017,2018,2019],
     otherTeams: ['Dodgers','Cubs','Angels'],
@@ -1180,6 +1293,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Lee Mazzilli',
+    mlbId: 118499,
     positions: ['OF','1B'],
     metsYears: [1976,1977,1978,1979,1980,1981,1982,1986],
     otherTeams: ['Yankees','Pirates','Blue Jays'],
@@ -1190,6 +1304,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Kevin Mitchell',
+    mlbId: 119195,
     positions: ['OF','3B'],
     metsYears: [1986],
     otherTeams: ['Padres','Giants','Reds','Red Sox','Indians','Marlins','Brewers','Yakult Swallows'],
@@ -1200,6 +1315,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Jeff Francoeur',
+    mlbId: 425796,
     positions: ['OF'],
     metsYears: [2009,2010],
     otherTeams: ['Braves','Rangers','Giants','Royals','Phillies','Padres'],
@@ -1210,6 +1326,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Shawn Green',
+    mlbId: 115094,
     positions: ['OF','1B'],
     metsYears: [2006],
     otherTeams: ['Blue Jays','Dodgers','Diamondbacks','Yankees'],
@@ -1220,6 +1337,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Marlon Anderson',
+    mlbId: 136724,
     positions: ['OF','2B'],
     metsYears: [2005,2007],
     otherTeams: ['Phillies','Rays','Cardinals','Nationals','Dodgers'],
@@ -1230,6 +1348,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Melvin Mora',
+    mlbId: 206551,
     positions: ['SS','OF','3B'],
     metsYears: [1999,2000],
     otherTeams: ['Orioles','Rockies','Brewers'],

@@ -85,6 +85,7 @@ export function useGameData(gamePk, isLive) {
         awayErrors: boxscore?.teams?.away?.teamStats?.fielding?.errors ?? 0,
         homeErrors: boxscore?.teams?.home?.teamStats?.fielding?.errors ?? 0,
 
+        allPlays: pbp?.allPlays ?? [],
         keyPlays: parseKeyPlays(pbp),
         weather: gd.weather || null,
         venue: gd.venue?.name || '',
