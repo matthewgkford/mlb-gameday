@@ -3,15 +3,139 @@ import ReactDOM from 'react-dom';
 import { TeamLogo, PlayerPhoto, TrendArrow, rateBAT, rateOBP, rateSLG, rateOPS } from './SharedUI';
 import PlayerPage from './PlayerPage';
 
-function SeasonStatsModal({ batter, onClose }) {
-  const gameAvg = batter.ab > 0 ? '.' + String(Math.round(batter.h / batter.ab * 1000)).padStart(3,'0') : '.---';
-  const gameOBP = (batter.ab + batter.bb) > 0
-    ? '.' + String(Math.round((batter.h + batter.bb) / (batter.ab + batter.bb) * 1000)).padStart(3,'0')
-    : '.---';
-  const gameTB = (batter.h - batter.hr - (batter.doubles||0)) + (batter.doubles||0)*2 + (batter.triples||0)*3 + batter.hr*4;
-  const gameSLG = batter.ab > 0 ? '.' + String(Math.round(gameTB / batter.ab * 1000)).padStart(3,'0') : '.---';
-  const gameOPS = batter.ab > 0 ? ((parseFloat(gameOBP)||0) + (parseFloat(gameSLG)||0)).toFixed(3) : '.---';
+function TrajectoryArc({ launchAngle, color }) {
+  const W = 240, H = 44, floor = H - 6, sx = 12, ex = W - 12;
+  const angleRad = (launchAngle * Math.PI) / 180;
+  const isGroundBall = launchAngle <= 5;
+  const midX = (sx + ex) / 2;
 
+  let path, fill;
+  if (isGroundBall) {
+    path = null;
+  } else {
+    const rawPeak = Math.sin(2 * angleRad) * 1.3;
+    const peakH = Math.min(floor - 4, (floor - 4) * rawPeak);
+    const cy = floor - peakH;
+    path = `M ${sx} ${floor} Q ${midX} ${cy} ${ex} ${floor}`;
+    fill = 'none';
+  }
+
+  return (
+    <svg
+      width="100%" height={H} viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      style={{ display:'block', marginTop:6 }}
+    >
+      {/* ground baseline */}
+      <line x1={sx} y1={floor} x2={ex} y2={floor} stroke="rgba(255,255,255,0.07)" strokeWidth={1} />
+      {isGroundBall ? (
+        <line x1={sx} y1={floor} x2={ex} y2={floor} stroke={color} strokeWidth={1.5} strokeDasharray="4 3" opacity={0.6} />
+      ) : (
+        <path d={path} stroke={color} strokeWidth={1.5} fill={fill} opacity={0.7} />
+      )}
+      {/* home plate dot */}
+      <circle cx={sx} cy={floor} r={2.5} fill={color} opacity={0.8} />
+      {/* landing dot */}
+      <circle cx={ex} cy={floor} r={2.5} fill={color} opacity={0.8} />
+    </svg>
+  );
+}
+
+function ordinal(n) {
+  const s = ['th','st','nd','rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function outcomeStyle(event) {
+  if (!event) return { color: 'rgba(255,255,255,0.4)', bg: 'rgba(255,255,255,0.08)' };
+  if (event === 'Home Run') return { color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' };
+  if (['Single','Double','Triple','Walk','Intentional Walk','Hit By Pitch'].includes(event))
+    return { color: '#10b981', bg: 'rgba(16,185,129,0.15)' };
+  if (event.includes('Strikeout'))
+    return { color: '#ef4444', bg: 'rgba(239,68,68,0.15)' };
+  return { color: 'rgba(255,255,255,0.45)', bg: 'rgba(255,255,255,0.08)' };
+}
+
+function ABRecap({ batterName, batterId, allPlays }) {
+  const abs = (allPlays ?? []).filter(p =>
+    p.about?.isComplete && p.matchup?.batter?.id === batterId
+  );
+
+  if (!abs.length) {
+    return (
+      <div style={{ fontSize:12, color:'rgba(255,255,255,0.3)', textAlign:'center', padding:'14px 0' }}>
+        No at-bats yet
+      </div>
+    );
+  }
+
+  const namePattern = new RegExp('^' + batterName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'i');
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:7, maxHeight:320, overflowY:'auto' }}>
+      {abs.map((play, i) => {
+        const event   = play.result?.event;
+        const style   = outcomeStyle(event);
+        const rawDesc = play.result?.description || '';
+        const desc    = rawDesc.replace(namePattern, '');
+        const trimmed = desc.charAt(0).toUpperCase() + desc.slice(1);
+        const half    = play.about?.halfInning === 'top' ? '▲' : '▼';
+        const inning  = ordinal(play.about?.inning ?? 0);
+        const pitcher = play.matchup?.pitcher?.fullName || '';
+        const rbi     = play.result?.rbi || 0;
+        const isHit      = ['Single','Double','Triple','Home Run'].includes(event);
+        const inPlayEvt  = isHit ? play.playEvents?.find(e => e.hitData) : null;
+        const ev      = inPlayEvt?.hitData?.launchSpeed   ?? null;
+        const la      = inPlayEvt?.hitData?.launchAngle   ?? null;
+        const dist    = inPlayEvt?.hitData?.totalDistance ?? null;
+        const hasChips = ev != null || la != null || dist != null;
+        // Chips share the outcome colour so they feel part of the same visual unit
+        const chipColor = style.color;
+        const chipBg    = style.bg;
+
+        return (
+          <div key={i} style={{ background:'rgba(255,255,255,0.05)', border:'0.5px solid rgba(255,255,255,0.08)', borderRadius:10, padding:'9px 11px' }}>
+            {/* Top line: inning · pitcher · outcome badge · RBI badge */}
+            <div style={{ display:'flex', alignItems:'center', gap:5, flexWrap:'wrap', marginBottom: trimmed ? 4 : 0 }}>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)', flexShrink:0 }}>{half}{inning}</span>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)', flexShrink:0 }}>·</span>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)', flex:1, minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                vs {pitcher}
+              </span>
+              <span style={{ fontSize:10, fontWeight:700, color:style.color, background:style.bg, borderRadius:5, padding:'2px 6px', flexShrink:0 }}>
+                {event || '?'}
+              </span>
+              {rbi > 0 && (
+                <span style={{ fontSize:10, fontWeight:700, color:'#f59e0b', background:'rgba(245,158,11,0.12)', borderRadius:5, padding:'2px 6px', flexShrink:0 }}>
+                  {rbi} RBI
+                </span>
+              )}
+            </div>
+            {/* Description */}
+            {trimmed && (
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', lineHeight:1.45, marginBottom: hasChips ? 6 : 0 }}>
+                {trimmed}
+              </div>
+            )}
+            {/* Statcast chips — hits only, coloured to match outcome badge */}
+            {hasChips && (
+              <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                {ev   != null && <span style={{ fontSize:10, fontFamily:'monospace', color:chipColor, background:chipBg, borderRadius:4, padding:'2px 6px' }}>EV {ev} mph</span>}
+                {la   != null && <span style={{ fontSize:10, fontFamily:'monospace', color:chipColor, background:chipBg, borderRadius:4, padding:'2px 6px' }}>LA {la}°</span>}
+                {dist != null && <span style={{ fontSize:10, fontFamily:'monospace', color:chipColor, background:chipBg, borderRadius:4, padding:'2px 6px' }}>{dist} ft</span>}
+              </div>
+            )}
+            {/* Trajectory arc — only when launch angle is available */}
+            {la != null && <TrajectoryArc launchAngle={la} color={chipColor} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SeasonStatsModal({ batter, allPlays, onClose }) {
   // Lock body scroll while modal is open
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -48,15 +172,12 @@ function SeasonStatsModal({ batter, onClose }) {
           </div>
           <button onClick={onClose} style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:8, padding:'4px 10px', color:'rgba(255,255,255,0.6)', cursor:'pointer', fontSize:13, fontFamily:'inherit' }}>✕</button>
         </div>
-        <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:8 }}>This game</div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:6, marginBottom:14 }}>
-          {[['AVG',gameAvg],['OBP',gameOBP],['SLG',gameSLG],['OPS',gameOPS]].map(([label,val])=>(
-            <div key={label} style={{ background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'10px 8px', textAlign:'center' }}>
-              <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginBottom:4 }}>{label}</div>
-              <div style={{ fontSize:16, fontWeight:600, color:'#fff' }}>{val}</div>
-            </div>
-          ))}
+
+        <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:8 }}>At-bats this game</div>
+        <div style={{ marginBottom:14 }}>
+          <ABRecap batterName={batter.name} batterId={batter.id} allPlays={allPlays} />
         </div>
+
         <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:0.5, marginBottom:8 }}>2025 season</div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:6 }}>
           {[['AVG',batter.seasonAvg||'–'],['OPS',batter.seasonOps||'–'],['HR',batter.seasonHr??'–'],['RBI',batter.seasonRbi??'–']].map(([label,val])=>(
@@ -71,7 +192,6 @@ function SeasonStatsModal({ batter, onClose }) {
     </div>
   );
 
-  // Portal renders directly on body — completely outside scroll context
   return ReactDOM.createPortal(modal, document.body);
 }
 
@@ -157,12 +277,12 @@ function BatterRow({ b, onRowClick, onNameClick, delay, idx }) {
   );
 }
 
-function TeamSection({ side, team, batters, stats }) {
+function TeamSection({ side, team, batters, stats, allPlays }) {
   const [modal, setModal] = useState(null);
   const [playerPage, setPlayerPage] = useState(null);
   return (
     <div style={{ background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:16, padding:16, marginBottom:10 }}>
-      {modal && <SeasonStatsModal batter={modal} onClose={() => setModal(null)} />}
+      {modal && <SeasonStatsModal batter={modal} allPlays={allPlays} onClose={() => setModal(null)} />}
       {playerPage && <PlayerPage playerId={playerPage.id} playerName={playerPage.name} teamAbbr={team.abbr} onClose={() => setPlayerPage(null)} />}
       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, paddingBottom:10, borderBottom:'0.5px solid rgba(255,255,255,0.08)' }}>
         <TeamLogo abbr={team.abbr} size={24} />
@@ -263,7 +383,7 @@ function TeamComparisonBar({ awayTeam, homeTeam, awayStats, homeStats, awayBatte
 }
 
 export default function BattingTab({ data }) {
-  const { awayTeam, homeTeam, awayBatters, homeBatters, awayTeamStats, homeTeamStats, awayErrors, homeErrors } = data;
+  const { awayTeam, homeTeam, awayBatters, homeBatters, awayTeamStats, homeTeamStats, awayErrors, homeErrors, allPlays } = data;
   const totalPitches = [...(data.awayPitchers || []), ...(data.homePitchers || [])].reduce((s, p) => s + (p.pitchCount || 0), 0);
   return (
     <div className="tab-panel">
@@ -275,8 +395,8 @@ export default function BattingTab({ data }) {
           awayErrors={awayErrors} homeErrors={homeErrors}
         />
       )}
-      <TeamSection side="away" team={awayTeam} batters={awayBatters} stats={awayTeamStats} />
-      <TeamSection side="home" team={homeTeam} batters={homeBatters} stats={homeTeamStats} />
+      <TeamSection side="away" team={awayTeam} batters={awayBatters} stats={awayTeamStats} allPlays={allPlays} />
+      <TeamSection side="home" team={homeTeam} batters={homeBatters} stats={homeTeamStats} allPlays={allPlays} />
     </div>
   );
 }

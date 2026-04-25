@@ -1,34 +1,36 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { TeamLogo, TrendArrow, rateBABIP, rateISO, rateOPS, rateWHIP, rateOBP, rateERA, rateKpct, rateBBpct, rateKper9, rateKBB, calcBABIP, calcISO, calcKpct, calcBBpct, calcKper9, calcKBB } from './SharedUI';
 import { getHeadToHead } from '../utils/mlbApi';
 
-// Tap-to-show tooltip for mobile
+// Tap-to-show tooltip — rendered via portal so parent transforms don't break fixed positioning
 function Tooltip({ text, children }) {
   const [visible, setVisible] = useState(false);
   return (
-    <span style={{ position:'relative', display:'inline-flex', alignItems:'center' }}>
+    <span style={{ display:'inline-flex', alignItems:'center' }}>
       <span
         onClick={e => { e.stopPropagation(); setVisible(v => !v); }}
         style={{ cursor:'pointer' }}
       >
         {children}
       </span>
-      {visible && (
+      {visible && ReactDOM.createPortal(
         <>
           <span
             onClick={() => setVisible(false)}
-            style={{ position:'fixed', inset:0, zIndex:100 }}
+            style={{ position:'fixed', inset:0, zIndex:9000 }}
           />
           <span style={{
-            position:'fixed', top:'28%', left:'50%', transform:'translateX(-50%)',
+            position:'fixed', top:'50%', left:'50%', transform:'translate(-50%, -50%)',
             background:'#1e293b', border:'0.5px solid rgba(255,255,255,0.2)', borderRadius:10,
             padding:'10px 14px', fontSize:12, color:'rgba(255,255,255,0.85)', whiteSpace:'normal',
-            zIndex:101, pointerEvents:'none', width:'calc(100vw - 48px)', maxWidth:320, textAlign:'center',
+            zIndex:9001, pointerEvents:'none', width:'calc(100vw - 48px)', maxWidth:320, textAlign:'center',
             lineHeight:1.5,
           }}>
             {text}
           </span>
-        </>
+        </>,
+        document.body
       )}
     </span>
   );

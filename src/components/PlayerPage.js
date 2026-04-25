@@ -38,14 +38,31 @@ const TEAM_NAME_TO_ABBR = {
   'Cincinnati Reds':'CIN','Anaheim Angels':'LAA','California Angels':'LAA',
 };
 
+const AWARD_DEFS = [
+  { ids: ['ALMVP','NLMVP'],   label: 'MVP',           color: '#f59e0b', bg: 'rgba(245,158,11,0.15)'  },
+  { ids: ['ALGG','NLGG'],     label: 'Gold Glove',    color: '#fbbf24', bg: 'rgba(251,191,36,0.12)'  },
+  { ids: ['ALSS','NLSS'],     label: 'Silver Slugger',color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' },
+  { ids: ['ALAS','NLAS'],     label: 'All-Star',      color: '#60a5fa', bg: 'rgba(96,165,250,0.12)'  },
+];
+
 async function fetchPlayerData(playerId) {
   const year = new Date().getFullYear();
-  const [infoRes, statsRes] = await Promise.all([
+  const [infoRes, statsRes, awardsRes] = await Promise.all([
     fetch(`${BASE}/people/${playerId}?hydrate=currentTeam`),
     fetch(`${BASE}/people/${playerId}/stats?stats=season,career,yearByYear&group=hitting,pitching&season=${year}`),
+    fetch(`${BASE}/people/${playerId}/awards`),
   ]);
-  const [info, stats] = await Promise.all([infoRes.json(), statsRes.json()]);
-  return { info: info.people?.[0], stats: stats.stats || [] };
+  const [info, stats, awardsData] = await Promise.all([infoRes.json(), statsRes.json(), awardsRes.json()]);
+  const rawAwards = awardsData.awards || [];
+  const awards = AWARD_DEFS.map(def => {
+    const years = rawAwards
+      .filter(a => def.ids.includes(a.id))
+      .map(a => parseInt(a.season))
+      .filter((y, i, arr) => arr.indexOf(y) === i)
+      .sort((a, b) => a - b);
+    return years.length ? { ...def, years } : null;
+  }).filter(Boolean);
+  return { info: info.people?.[0], stats: stats.stats || [], awards };
 }
 
 function StatBox({ label, val, rating }) {
@@ -91,6 +108,7 @@ export default function PlayerPage({ playerId, playerName, teamAbbr, onClose }) 
 
   const person = data?.info;
   const allStats = data?.stats || [];
+  const awards = data?.awards || [];
 
   // Find season hitting and pitching
   const seasonHitting = allStats.find(s => s.type?.displayName === 'season' && s.group?.displayName === 'hitting')?.splits?.[0]?.stat;
@@ -277,6 +295,29 @@ export default function PlayerPage({ playerId, playerName, teamAbbr, onClose }) 
                         {i === 0 ? `${t.from}–present` : t.from === t.to ? t.from : `${t.from}–${t.to}`}
                       </div>
                       {i === 0 && <span style={{ fontSize:10, background:'rgba(96,165,250,0.15)', color:'#60a5fa', borderRadius:6, padding:'2px 7px', fontWeight:600 }}>Current</span>}
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {/* Awards */}
+            {awards.length > 0 && (
+              <Section title="Awards">
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {awards.map(award => (
+                    <div key={award.label} style={{ background: award.bg, border:`0.5px solid ${award.color}22`, borderRadius:10, padding:'10px 12px' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+                        <span style={{ fontSize:13, fontWeight:700, color: award.color, flex:1 }}>{award.label}</span>
+                        <span style={{ fontSize:12, color: award.color, opacity:0.8, fontWeight:600 }}>
+                          {award.years.length}×
+                        </span>
+                      </div>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                        {award.years.map(y => (
+                          <span key={y} style={{ fontSize:11, color: award.color, background:`${award.color}18`, borderRadius:5, padding:'2px 7px', fontWeight:500 }}>{y}</span>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>

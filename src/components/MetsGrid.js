@@ -6,6 +6,12 @@ import {
 } from '../utils/metsGridLogic';
 
 const TOTAL_GUESSES = 9;
+
+// Local headshot overrides — used when MLB's CDN has no photo for a player.
+// Drop images into public/headshots/ and add an entry here.
+const LOCAL_HEADSHOTS = {
+  'Mookie Wilson': '/headshots/mookie-wilson.jpg',
+};
 const METS_BLUE   = '#002D72';
 const METS_ORANGE = '#FF5910';
 
@@ -212,17 +218,23 @@ function PlayerSearch({ rowCat, colCat, usedNames, onConfirm, onClose }) {
   const [selected, setSelected] = useState(null);
   const inputRef = useRef(null);
 
-  // Lock body scroll while sheet is open; focus input after keyboard settles
+  // Lock body scroll while sheet is open; focus input after keyboard settles.
+  // Save scrollY before locking so we can restore it on close — otherwise iOS
+  // snaps the page back to the top when position:fixed is removed.
   useEffect(() => {
+    const scrollY = window.scrollY;
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
     document.body.style.width = '100%';
     const t = setTimeout(() => inputRef.current?.focus(), 50);
     return () => {
       clearTimeout(t);
       document.body.style.overflow = '';
       document.body.style.position = '';
+      document.body.style.top = '';
       document.body.style.width = '';
+      window.scrollTo(0, scrollY);
     };
   }, []);
 
@@ -379,7 +391,9 @@ export default function MetsGrid() {
     }
   }
 
-  const CELL_SIZE = Math.min(86, (Math.min(window.innerWidth, 420) - 80) / 3);
+  // 32px horizontal padding, 64px row-header col, 3 × 5px gaps → portrait cells (1.3× width)
+  const cellWidth = Math.floor((Math.min(window.innerWidth, 480) - 32 - 64 - 15) / 3);
+  const CELL_SIZE = Math.min(Math.round(cellWidth * 1.5), 140);
 
   return (
     <div style={{ padding:'16px 16px 40px', maxWidth:480, margin:'0 auto' }}>
@@ -462,7 +476,8 @@ export default function MetsGrid() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '4px 5px',
+                    padding: correct ? 0 : '4px 5px',
+                    overflow: 'hidden',
                     textAlign: 'center',
                     transition: 'background 0.2s, border 0.2s',
                     transform: correct && isFlash ? 'scale(1.05)' : 'scale(1)',
@@ -471,8 +486,12 @@ export default function MetsGrid() {
                   }}
                 >
                   {correct ? (
-                    <div style={{ fontSize: 10, fontWeight:600, color:'rgba(255,255,255,0.9)', lineHeight:1.2, wordBreak:'break-word' }}>
-                      {cell.player.name.split(' ').slice(-1)[0]}
+                    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                      <img
+                        src={LOCAL_HEADSHOTS[cell.player.name] || `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${cell.player.mlbId}/headshot/67/current`}
+                        alt={cell.player.name}
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }}
+                      />
                     </div>
                   ) : (
                     <div style={{ fontSize:22, color:'rgba(255,255,255,0.12)' }}>+</div>
