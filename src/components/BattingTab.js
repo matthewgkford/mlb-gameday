@@ -3,40 +3,47 @@ import ReactDOM from 'react-dom';
 import { TeamLogo, PlayerPhoto, TrendArrow, rateBAT, rateOBP, rateSLG, rateOPS } from './SharedUI';
 import PlayerPage from './PlayerPage';
 
-function TrajectoryArc({ launchAngle, color }) {
-  const W = 240, H = 44, floor = H - 6, sx = 12, ex = W - 12;
-  const angleRad = (launchAngle * Math.PI) / 180;
-  const isGroundBall = launchAngle <= 5;
-  const midX = (sx + ex) / 2;
+function LaunchAngleViz({ launchAngle, color }) {
+  const W = 120, H = 58;
+  const ox = 18, oy = H - 12;   // corner (origin)
+  const rayLen = 46;
+  const arcR = 20;
+  const a = (Math.max(0, launchAngle) * Math.PI) / 180;
 
-  let path, fill;
-  if (isGroundBall) {
-    path = null;
-  } else {
-    const rawPeak = Math.sin(2 * angleRad) * 1.3;
-    const peakH = Math.min(floor - 4, (floor - 4) * rawPeak);
-    const cy = floor - peakH;
-    path = `M ${sx} ${floor} Q ${midX} ${cy} ${ex} ${floor}`;
-    fill = 'none';
-  }
+  // Ray end point
+  const rx = ox + rayLen * Math.cos(a);
+  const ry = oy - rayLen * Math.sin(a);
+
+  // Arc end point (on the angle arc)
+  const arcEx = ox + arcR * Math.cos(a);
+  const arcEy = oy - arcR * Math.sin(a);
+
+  // Angle label position — bisect the angle, placed just outside arc
+  const labelR = arcR + 10;
+  const lx = ox + labelR * Math.cos(a / 2);
+  const ly = oy - labelR * Math.sin(a / 2);
 
   return (
-    <svg
-      width="100%" height={H} viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="none"
-      style={{ display:'block', marginTop:6 }}
-    >
-      {/* ground baseline */}
-      <line x1={sx} y1={floor} x2={ex} y2={floor} stroke="rgba(255,255,255,0.07)" strokeWidth={1} />
-      {isGroundBall ? (
-        <line x1={sx} y1={floor} x2={ex} y2={floor} stroke={color} strokeWidth={1.5} strokeDasharray="4 3" opacity={0.6} />
-      ) : (
-        <path d={path} stroke={color} strokeWidth={1.5} fill={fill} opacity={0.7} />
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display:'block', marginTop:6 }}>
+      {/* Horizontal baseline */}
+      <line x1={ox} y1={oy} x2={W - 4} y2={oy} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
+      {/* Short vertical tick for right-angle marker */}
+      <line x1={ox} y1={oy} x2={ox} y2={oy - 14} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
+      {/* Right-angle square */}
+      <path d={`M ${ox} ${oy - 6} L ${ox + 6} ${oy - 6} L ${ox + 6} ${oy}`}
+            stroke="rgba(255,255,255,0.2)" strokeWidth={0.8} fill="none" />
+      {/* Angle arc */}
+      {launchAngle > 1 && (
+        <path d={`M ${ox + arcR} ${oy} A ${arcR} ${arcR} 0 0 0 ${arcEx} ${arcEy}`}
+              stroke={color} strokeWidth={1} fill="none" opacity={0.45} />
       )}
-      {/* home plate dot */}
-      <circle cx={sx} cy={floor} r={2.5} fill={color} opacity={0.8} />
-      {/* landing dot */}
-      <circle cx={ex} cy={floor} r={2.5} fill={color} opacity={0.8} />
+      {/* Launch angle ray */}
+      <line x1={ox} y1={oy} x2={rx} y2={ry} stroke={color} strokeWidth={1.8} opacity={0.85} strokeLinecap="round" />
+      {/* Dot at origin */}
+      <circle cx={ox} cy={oy} r={2.5} fill={color} opacity={0.75} />
+      {/* Angle label */}
+      <text x={lx} y={ly} fontSize={9} fill={color} opacity={0.75}
+            dominantBaseline="middle" textAnchor="middle">{launchAngle}°</text>
     </svg>
   );
 }
@@ -127,7 +134,7 @@ function ABRecap({ batterName, batterId, allPlays }) {
               </div>
             )}
             {/* Trajectory arc — only when launch angle is available */}
-            {la != null && <TrajectoryArc launchAngle={la} color={chipColor} />}
+            {la != null && <LaunchAngleViz launchAngle={la} color={chipColor} />}
           </div>
         );
       })}
