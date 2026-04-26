@@ -952,7 +952,7 @@ const METS_PLAYERS = [
     mlbId: 408314,
     positions: ['SS'],
     metsYears: [2003,2004,2005,2006,2007,2008,2009,2010,2011,2016,2017,2018],
-    otherTeams: ['Marlins','Blue Jays','Rockies','Cardinals'],
+    otherTeams: ['Marlins','Blue Jays','Rockies'],
     awards: ['All-Star','Silver Slugger'],
     metsMilestones: ['.300 avg'],
     era: [],
