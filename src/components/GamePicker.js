@@ -4,6 +4,7 @@ import { todayString, formatDateLabel, getStandings, getLeagueLeaders, fetchCurr
 import { TeamLogo, PlayerPhoto } from './SharedUI';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import MetsGrid from './MetsGrid';
+import TriviaTab from './Trivia/TriviaTab';
 import PlayerPage from './PlayerPage';
 
 function LeaderPhoto({ playerId, name }) {
@@ -610,7 +611,7 @@ export default function GamePicker({ onSelectGame }) {
 
       {/* Main nav */}
       <div style={{ display:'flex', gap:4, padding:'14px 16px 0', flexWrap:'wrap' }}>
-        {[['games','Games'],['schedule','Schedule'],['standings','Standings'],['leaders','Leaders'],['bullpen','Bullpen'],['grid','Mets Grid']].map(([id,label])=>(
+        {[['games','Games'],['schedule','Schedule'],['standings','Standings'],['leaders','Leaders'],['bullpen','Bullpen'],['grid','Mets Grid'],['trivia','Trivia']].map(([id,label])=>(
           <button key={id} onClick={()=>setMainTab(id)} style={{ padding:'7px 16px', fontSize:13, borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', background:mainTab===id?'#fff':'rgba(255,255,255,0.07)', color:mainTab===id?'#0f1117':'rgba(255,255,255,0.5)', fontWeight:mainTab===id?600:400, transition:'all 0.15s' }}>{label}</button>
         ))}
       </div>
@@ -636,6 +637,7 @@ export default function GamePicker({ onSelectGame }) {
       {mainTab === 'schedule' && <div style={{ padding:'16px 16px 0' }}><ScheduleView /></div>}
       {mainTab === 'bullpen' && <div style={{ padding:'16px 16px 0' }}><BullpenView /></div>}
       {mainTab === 'grid' && <MetsGrid />}
+      {mainTab === 'trivia' && <div style={{ padding:'16px 16px 0' }}><TriviaTab /></div>}
     </div>
   );
 }

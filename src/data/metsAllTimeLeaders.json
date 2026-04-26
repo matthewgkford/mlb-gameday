@@ -1,0 +1,18 @@
+{
+  "career_hr": {
+    "label": "Career Home Runs as a Met",
+    "statLabel": "HR",
+    "leaders": [
+      { "rank": 1, "name": "Darryl Strawberry", "value": 252, "years": "1983–1990" },
+      { "rank": 2, "name": "David Wright",      "value": 242, "years": "2004–2018" },
+      { "rank": 3, "name": "Mike Piazza",        "value": 220, "years": "1998–2005" },
+      { "rank": 4, "name": "Howard Johnson",     "value": 192, "years": "1985–1993" },
+      { "rank": 5, "name": "Pete Alonso",        "value": 226, "years": "2019–present" },
+      { "rank": 6, "name": "Carlos Beltran",     "value": 149, "years": "2005–2011" },
+      { "rank": 7, "name": "Ed Kranepool",       "value": 118, "years": "1962–1979" },
+      { "rank": 8, "name": "Lucas Duda",         "value": 125, "years": "2010–2017" },
+      { "rank": 9, "name": "Kevin McReynolds",   "value": 122, "years": "1987–1994" },
+      { "rank": 10, "name": "Cleon Jones",       "value": 93,  "years": "1963–1975" }
+    ]
+  }
+}
