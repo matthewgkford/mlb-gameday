@@ -54,6 +54,32 @@ function ordinal(n) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
+// Statcast chip colours — rated on their own scale, independent of outcome
+const SC_GOOD = { color: '#10b981', bg: 'rgba(16,185,129,0.15)' };
+const SC_AVG  = { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)'  };
+const SC_POOR = { color: '#ef4444', bg: 'rgba(239,68,68,0.10)'   };
+
+function rateEV(mph) {
+  if (mph == null) return SC_AVG;
+  if (mph >= 95) return SC_GOOD;   // hard contact (MLB hard-hit threshold)
+  if (mph >= 80) return SC_AVG;    // average contact
+  return SC_POOR;                  // weak contact
+}
+
+function rateLA(deg) {
+  if (deg == null) return SC_AVG;
+  if (deg >= 8 && deg <= 32) return SC_GOOD;  // line drive / optimal fly ball
+  if (deg > 32 && deg <= 50) return SC_AVG;   // steep fly ball
+  return SC_POOR;                              // ground ball (<8°) or pop-up (>50°)
+}
+
+function rateDist(ft) {
+  if (ft == null) return SC_AVG;
+  if (ft >= 390) return SC_GOOD;
+  if (ft >= 330) return SC_AVG;
+  return SC_POOR;
+}
+
 function outcomeStyle(event) {
   if (!event) return { color: 'rgba(255,255,255,0.4)', bg: 'rgba(255,255,255,0.08)' };
   if (event === 'Home Run') return { color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' };
@@ -97,9 +123,9 @@ function ABRecap({ batterName, batterId, allPlays }) {
         const la      = inPlayEvt?.hitData?.launchAngle   ?? null;
         const dist    = inPlayEvt?.hitData?.totalDistance ?? null;
         const hasChips = ev != null || la != null || dist != null;
-        // Chips share the outcome colour so they feel part of the same visual unit
-        const chipColor = style.color;
-        const chipBg    = style.bg;
+        const evStyle   = rateEV(ev);
+        const laStyle   = rateLA(la);
+        const distStyle = rateDist(dist);
 
         return (
           <div key={i} style={{ background:'rgba(255,255,255,0.05)', border:'0.5px solid rgba(255,255,255,0.08)', borderRadius:10, padding:'9px 11px' }}>
@@ -125,16 +151,15 @@ function ABRecap({ batterName, batterId, allPlays }) {
                 {trimmed}
               </div>
             )}
-            {/* Statcast chips — hits only, coloured to match outcome badge */}
+            {/* Statcast chips — each rated on its own scale */}
             {hasChips && (
               <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-                {ev   != null && <span style={{ fontSize:10, fontFamily:'monospace', color:chipColor, background:chipBg, borderRadius:4, padding:'2px 6px' }}>EV {ev} mph</span>}
-                {la   != null && <span style={{ fontSize:10, fontFamily:'monospace', color:chipColor, background:chipBg, borderRadius:4, padding:'2px 6px' }}>LA {la}°</span>}
-                {dist != null && <span style={{ fontSize:10, fontFamily:'monospace', color:chipColor, background:chipBg, borderRadius:4, padding:'2px 6px' }}>{dist} ft</span>}
+                {ev   != null && <span style={{ fontSize:10, fontFamily:'monospace', color:evStyle.color,   background:evStyle.bg,   borderRadius:4, padding:'2px 6px' }}>EV {ev} mph</span>}
+                {la   != null && <span style={{ fontSize:10, fontFamily:'monospace', color:laStyle.color,   background:laStyle.bg,   borderRadius:4, padding:'2px 6px' }}>LA {la}°</span>}
+                {dist != null && <span style={{ fontSize:10, fontFamily:'monospace', color:distStyle.color, background:distStyle.bg, borderRadius:4, padding:'2px 6px' }}>{dist} ft</span>}
               </div>
             )}
-            {/* Trajectory arc — only when launch angle is available */}
-            {la != null && <LaunchAngleViz launchAngle={la} color={chipColor} />}
+            {la != null && <LaunchAngleViz launchAngle={la} color={laStyle.color} />}
           </div>
         );
       })}
