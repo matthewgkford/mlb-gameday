@@ -25,8 +25,8 @@ function LaunchAngleViz({ launchAngle, color }) {
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display:'block', marginTop:6 }}>
-      {/* Horizontal baseline */}
-      <line x1={ox} y1={oy} x2={W - 4} y2={oy} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
+      {/* Horizontal baseline — ends at ray's x so they meet at the tip */}
+      <line x1={ox} y1={oy} x2={rx} y2={oy} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
       {/* Short vertical tick for right-angle marker */}
       <line x1={ox} y1={oy} x2={ox} y2={oy - 14} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
       {/* Right-angle square */}
