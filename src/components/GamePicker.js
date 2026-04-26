@@ -30,10 +30,11 @@ function getPastDays(n) {
 }
 
 function GameCard({ game, onClick }) {
-  const isLive = game.status === 'Live';
-  const isFinal = game.status === 'Final';
+  const isPostponed = game.detailedState === 'Postponed';
+  const isLive = game.status === 'Live' && !isPostponed;
+  const isFinal = game.status === 'Final' && !isPostponed;
   const isFav = game.awayTeam.id === FAV_TEAM_ID || game.homeTeam.id === FAV_TEAM_ID;
-  const venueTimeLabel = game.gameDate && game.venueTimeZone && !isLive && !isFinal
+  const venueTimeLabel = game.gameDate && game.venueTimeZone && !isLive && !isFinal && !isPostponed
     ? new Date(game.gameDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: game.venueTimeZone, timeZoneName: 'short' })
     : null;
 
@@ -60,7 +61,9 @@ function GameCard({ game, onClick }) {
           </div>
         </div>
         <div style={{ textAlign:'center', padding:'0 10px' }}>
-          {(isLive||isFinal) ? (
+          {isPostponed ? (
+            <div style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.4)', letterSpacing:1 }}>PPD</div>
+          ) : (isLive||isFinal) ? (
             <div style={{ display:'flex', alignItems:'center', gap:6 }}>
               <span style={{ fontSize:26, fontWeight:700, color:isFinal&&game.awayTeam.isWinner?'#60a5fa':'#fff' }}>{game.awayTeam.score}</span>
               <span style={{ fontSize:16, color:'rgba(255,255,255,0.2)' }}>–</span>
@@ -83,6 +86,7 @@ function GameCard({ game, onClick }) {
           {isLive && <span style={{ fontSize:10, fontWeight:700, background:'#dc2626', color:'#fff', borderRadius:6, padding:'2px 8px' }}>● LIVE {game.statusLabel}</span>}
           {isCloseGame && <span style={{ fontSize:10, fontWeight:700, background:'rgba(251,191,36,0.15)', color:'#fbbf24', borderRadius:6, padding:'2px 8px', border:'0.5px solid rgba(251,191,36,0.3)' }}>🔥 Close game</span>}
           {isFinal && <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>Final</span>}
+          {isPostponed && <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>Postponed</span>}
           {venueTimeLabel && <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{venueTimeLabel}</span>}
         </div>
         <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)' }}>{game.venue}</span>
