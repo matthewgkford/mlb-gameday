@@ -4,7 +4,7 @@ import { TeamLogo, PlayerPhoto, TrendArrow, rateBAT, rateOBP, rateSLG, rateOPS }
 import PlayerPage from './PlayerPage';
 
 function LaunchAngleViz({ launchAngle, color }) {
-  const W = 120, H = 58;
+  const W = 80, H = 58;
   const ox = 18, oy = H - 12;   // corner (origin)
   const rayLen = 46;
   const arcR = 20;
