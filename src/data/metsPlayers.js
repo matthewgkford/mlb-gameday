@@ -369,7 +369,7 @@ const METS_PLAYERS = [
   },
   {
     name: 'Pedro Martinez',
-    mlbId: 680932,
+    mlbId: 118377,
     positions: ['SP'],
     metsYears: [2005,2006,2007,2008],
     otherTeams: ['Expos','Red Sox','Dodgers','Phillies'],
@@ -1205,7 +1205,7 @@ const METS_PLAYERS = [
     mlbId: 664056,
     positions: ['OF'],
     metsYears: [2024,2025],
-    otherTeams: ['Cardinals','Yankees','Reds'],
+    otherTeams: ['Cardinals','Yankees','Reds','Twins','Phillies','Giants'],
     awards: ['Gold Glove'],
     metsMilestones: [],
     era: [],
