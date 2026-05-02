@@ -155,7 +155,7 @@ export async function getMetsBullpenStatus() {
   const METS_STARTERS = new Set([
     'Clay Holmes', 'David Peterson', 'Freddy Peralta', 'Kodai Senga',
     'Tylor Megill', 'Jose Quintana', 'Griffin Canning',
-    'Nolan McLean',
+    'Nolan McLean', 'Christian Scott',
   ]);
 
   const rosterRes = await fetch(`${BASE}/teams/${METS_ID}/roster?rosterType=active&season=${year}&hydrate=person`);
