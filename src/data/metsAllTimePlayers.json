@@ -29,6 +29,8 @@
   { "name": "Bobby Ojeda",        "nicknames": [] },
   { "name": "Bobby Jones",        "nicknames": [] },
   { "name": "Jonathon Niese",     "nicknames": ["Jon Niese", "Niese"] },
+  { "name": "R.A. Dickey",        "nicknames": ["RA Dickey", "Dickey"] },
+  { "name": "Frank Viola",        "nicknames": ["Sweet Music"] },
 
   { "name": "Gary Carter",        "nicknames": ["The Kid", "Kid"] },
   { "name": "Todd Hundley",       "nicknames": [] },
@@ -72,5 +74,8 @@
   { "name": "Daniel Vogelbach",   "nicknames": [] },
   { "name": "Luis Guillorme",     "nicknames": [] },
   { "name": "James McCann",       "nicknames": [] },
-  { "name": "Endy Chavez",        "nicknames": [] }
+  { "name": "Endy Chavez",        "nicknames": [] },
+  { "name": "Juan Soto",          "nicknames": ["Soto"] },
+  { "name": "John Olerud",        "nicknames": ["Olerud"] },
+  { "name": "Felix Millan",       "nicknames": ["Millan"] }
 ]

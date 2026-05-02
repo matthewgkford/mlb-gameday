@@ -83,5 +83,90 @@
       { "rank": 9,  "name": "Jon Matlack",      "value": 1023, "years": "1971–1977" },
       { "rank": 10, "name": "Jonathon Niese",   "value": 838,  "years": "2008–2016" }
     ]
+  },
+  "season_hr": {
+    "label": "Single-Season Home Runs as a Met",
+    "shortLabel": "Season HR",
+    "statLabel": "HR",
+    "leaders": [
+      { "rank": 1,  "name": "Pete Alonso",       "value": 53, "years": "2019" },
+      { "rank": 2,  "name": "Pete Alonso",       "value": 46, "years": "2023" },
+      { "rank": 3,  "name": "Juan Soto",         "value": 43, "years": "2025" },
+      { "rank": 4,  "name": "Carlos Beltran",    "value": 41, "years": "2006" },
+      { "rank": 5,  "name": "Todd Hundley",      "value": 41, "years": "1996" },
+      { "rank": 6,  "name": "Pete Alonso",       "value": 40, "years": "2022" },
+      { "rank": 7,  "name": "Mike Piazza",       "value": 40, "years": "1999" },
+      { "rank": 8,  "name": "Darryl Strawberry", "value": 39, "years": "1988" },
+      { "rank": 9,  "name": "Darryl Strawberry", "value": 39, "years": "1987" },
+      { "rank": 10, "name": "Pete Alonso",       "value": 38, "years": "2025" }
+    ]
+  },
+  "season_hits": {
+    "label": "Single-Season Hits as a Met",
+    "shortLabel": "Season Hits",
+    "statLabel": "H",
+    "leaders": [
+      { "rank": 1,  "name": "Lance Johnson",   "value": 227, "years": "1996" },
+      { "rank": 2,  "name": "Jose Reyes",      "value": 204, "years": "2008" },
+      { "rank": 3,  "name": "John Olerud",     "value": 197, "years": "1998" },
+      { "rank": 4,  "name": "David Wright",    "value": 196, "years": "2007" },
+      { "rank": 5,  "name": "Jose Reyes",      "value": 194, "years": "2006" },
+      { "rank": 6,  "name": "Edgardo Alfonzo", "value": 191, "years": "1999" },
+      { "rank": 7,  "name": "Felix Millan",    "value": 191, "years": "1975" },
+      { "rank": 8,  "name": "Jose Reyes",      "value": 191, "years": "2007" },
+      { "rank": 9,  "name": "Jose Reyes",      "value": 190, "years": "2005" },
+      { "rank": 10, "name": "David Wright",    "value": 189, "years": "2008" }
+    ]
+  },
+  "season_rbi": {
+    "label": "Single-Season RBI as a Met",
+    "shortLabel": "Season RBI",
+    "statLabel": "RBI",
+    "leaders": [
+      { "rank": 1,  "name": "Pete Alonso",    "value": 131, "years": "2022" },
+      { "rank": 2,  "name": "Pete Alonso",    "value": 126, "years": "2025" },
+      { "rank": 3,  "name": "Mike Piazza",    "value": 124, "years": "1999" },
+      { "rank": 4,  "name": "David Wright",   "value": 124, "years": "2008" },
+      { "rank": 5,  "name": "Pete Alonso",    "value": 120, "years": "2019" },
+      { "rank": 6,  "name": "Robin Ventura",  "value": 120, "years": "1999" },
+      { "rank": 7,  "name": "Pete Alonso",    "value": 118, "years": "2023" },
+      { "rank": 8,  "name": "Bernard Gilkey", "value": 117, "years": "1996" },
+      { "rank": 9,  "name": "Howard Johnson", "value": 117, "years": "1991" },
+      { "rank": 10, "name": "Carlos Beltran", "value": 116, "years": "2006" }
+    ]
+  },
+  "season_wins": {
+    "label": "Single-Season Pitching Wins as a Met",
+    "shortLabel": "Season Wins",
+    "statLabel": "W",
+    "leaders": [
+      { "rank": 1,  "name": "Tom Seaver",    "value": 25, "years": "1969" },
+      { "rank": 2,  "name": "Dwight Gooden", "value": 24, "years": "1985" },
+      { "rank": 3,  "name": "Tom Seaver",    "value": 22, "years": "1975" },
+      { "rank": 4,  "name": "Jerry Koosman", "value": 21, "years": "1976" },
+      { "rank": 5,  "name": "Tom Seaver",    "value": 21, "years": "1972" },
+      { "rank": 6,  "name": "David Cone",    "value": 20, "years": "1988" },
+      { "rank": 7,  "name": "R.A. Dickey",   "value": 20, "years": "2012" },
+      { "rank": 8,  "name": "Tom Seaver",    "value": 20, "years": "1971" },
+      { "rank": 9,  "name": "Frank Viola",   "value": 20, "years": "1990" },
+      { "rank": 10, "name": "Dwight Gooden", "value": 19, "years": "1990" }
+    ]
+  },
+  "season_strikeouts": {
+    "label": "Single-Season Pitching Strikeouts as a Met",
+    "shortLabel": "Season K",
+    "statLabel": "K",
+    "leaders": [
+      { "rank": 1,  "name": "Tom Seaver",    "value": 289, "years": "1971" },
+      { "rank": 2,  "name": "Tom Seaver",    "value": 283, "years": "1970" },
+      { "rank": 3,  "name": "Dwight Gooden", "value": 276, "years": "1984" },
+      { "rank": 4,  "name": "Jacob deGrom",  "value": 269, "years": "2018" },
+      { "rank": 5,  "name": "Dwight Gooden", "value": 268, "years": "1985" },
+      { "rank": 6,  "name": "Jacob deGrom",  "value": 255, "years": "2019" },
+      { "rank": 7,  "name": "Tom Seaver",    "value": 251, "years": "1973" },
+      { "rank": 8,  "name": "Tom Seaver",    "value": 249, "years": "1972" },
+      { "rank": 9,  "name": "Tom Seaver",    "value": 243, "years": "1975" },
+      { "rank": 10, "name": "David Cone",    "value": 241, "years": "1991" }
+    ]
   }
 }

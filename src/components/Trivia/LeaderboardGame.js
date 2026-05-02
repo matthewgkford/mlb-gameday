@@ -36,15 +36,21 @@ export default function LeaderboardGame({ category }) {
       return;
     }
 
-    const match = category.leaders.find(l => l.name.toLowerCase() === normInput);
+    const matches = category.leaders.filter(l => l.name.toLowerCase() === normInput);
 
-    if (match) {
+    if (matches.length > 0) {
+      const unrevealed = matches.filter(m => !found.has(m.rank));
       const newFound = new Set(found);
-      newFound.add(match.rank);
+      matches.forEach(m => newFound.add(m.rank));
       const newGuessed = new Set(guessed);
       newGuessed.add(playerName);
       setFound(newFound);
       setGuessed(newGuessed);
+      if (unrevealed.length === 0) {
+        showToast('Already found all their entries!');
+      } else if (matches.length > 1) {
+        showToast(`+${unrevealed.length} entries for ${matches[0].name}`);
+      }
       if (newFound.size === category.leaders.length) {
         setStatus('complete');
       }
