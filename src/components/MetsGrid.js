@@ -7,10 +7,18 @@ import {
 
 const TOTAL_GUESSES = 9;
 
-// Local headshot overrides — used when MLB's CDN has no photo for a player.
-// Drop images into public/headshots/ and add an entry here.
+// Local headshot overrides — wins over MLB's CDN when an entry exists.
+// Drop images into public/headshots/ and add a line here. Missing names
+// fall through to the MLB CDN (which serves the player's most recent team).
 const LOCAL_HEADSHOTS = {
-  'Mookie Wilson': '/headshots/mookie-wilson.jpg',
+  'Mookie Wilson':     '/headshots/mookie-wilson.jpg',
+  'Tom Seaver':        '/headshots/tom-seaver.jpg',
+  'Keith Hernandez':   '/headshots/keith-hernandez.jpg',
+  'Gary Carter':       '/headshots/gary-carter.jpg',
+  'Dwight Gooden':     '/headshots/dwight-gooden.jpg',
+  'Darryl Strawberry': '/headshots/darryl-strawberry.jpg',
+  'Mike Piazza':       '/headshots/mike-piazza.jpg',
+  'Carlos Beltran':    '/headshots/carlos-beltran.jpg',
 };
 const METS_BLUE   = '#002D72';
 const METS_ORANGE = '#FF5910';
