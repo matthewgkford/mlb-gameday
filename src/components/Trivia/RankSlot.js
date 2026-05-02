@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function RankSlot({ rank, leader, revealed }) {
+export default function RankSlot({ rank, leader, revealed, statLabel = 'HR' }) {
   const filled = !!leader;
 
   let bg, border, textOpacity;
@@ -56,7 +56,7 @@ export default function RankSlot({ rank, leader, revealed }) {
               {leader.name}
             </div>
             <div style={{ fontSize: 11, color: `rgba(255,255,255,${textOpacity * 0.5})` }}>
-              {leader.value} HR · {leader.years}
+              {leader.value} {statLabel} · {leader.years}
             </div>
           </>
         ) : (

@@ -1,18 +1,87 @@
 {
   "career_hr": {
     "label": "Career Home Runs as a Met",
+    "shortLabel": "Home Runs",
     "statLabel": "HR",
     "leaders": [
-      { "rank": 1, "name": "Darryl Strawberry", "value": 252, "years": "1983–1990" },
-      { "rank": 2, "name": "David Wright",      "value": 242, "years": "2004–2018" },
-      { "rank": 3, "name": "Mike Piazza",        "value": 220, "years": "1998–2005" },
-      { "rank": 4, "name": "Howard Johnson",     "value": 192, "years": "1985–1993" },
-      { "rank": 5, "name": "Pete Alonso",        "value": 226, "years": "2019–present" },
-      { "rank": 6, "name": "Carlos Beltran",     "value": 149, "years": "2005–2011" },
-      { "rank": 7, "name": "Ed Kranepool",       "value": 118, "years": "1962–1979" },
-      { "rank": 8, "name": "Lucas Duda",         "value": 125, "years": "2010–2017" },
-      { "rank": 9, "name": "Kevin McReynolds",   "value": 122, "years": "1987–1994" },
-      { "rank": 10, "name": "Cleon Jones",       "value": 93,  "years": "1963–1975" }
+      { "rank": 1,  "name": "Pete Alonso",       "value": 264, "years": "2019–present" },
+      { "rank": 2,  "name": "Darryl Strawberry", "value": 252, "years": "1983–1990" },
+      { "rank": 3,  "name": "David Wright",      "value": 242, "years": "2004–2018" },
+      { "rank": 4,  "name": "Mike Piazza",       "value": 220, "years": "1998–2005" },
+      { "rank": 5,  "name": "Howard Johnson",    "value": 192, "years": "1985–1993" },
+      { "rank": 6,  "name": "Dave Kingman",      "value": 154, "years": "1975–1977, 1981–1983" },
+      { "rank": 7,  "name": "Carlos Beltran",    "value": 149, "years": "2005–2011" },
+      { "rank": 8,  "name": "Francisco Lindor",  "value": 143, "years": "2021–present" },
+      { "rank": 9,  "name": "Brandon Nimmo",     "value": 135, "years": "2016–present" },
+      { "rank": 10, "name": "Michael Conforto",  "value": 132, "years": "2015–2021" }
+    ]
+  },
+  "career_hits": {
+    "label": "Career Hits as a Met",
+    "shortLabel": "Hits",
+    "statLabel": "H",
+    "leaders": [
+      { "rank": 1,  "name": "David Wright",      "value": 1777, "years": "2004–2018" },
+      { "rank": 2,  "name": "Jose Reyes",        "value": 1534, "years": "2003–2011, 2016–2018" },
+      { "rank": 3,  "name": "Ed Kranepool",      "value": 1418, "years": "1962–1979" },
+      { "rank": 4,  "name": "Cleon Jones",       "value": 1188, "years": "1963, 1965–1975" },
+      { "rank": 5,  "name": "Edgardo Alfonzo",   "value": 1136, "years": "1995–2002" },
+      { "rank": 6,  "name": "Mookie Wilson",     "value": 1112, "years": "1980–1989" },
+      { "rank": 7,  "name": "Bud Harrelson",     "value": 1029, "years": "1965–1977" },
+      { "rank": 8,  "name": "Mike Piazza",       "value": 1028, "years": "1998–2005" },
+      { "rank": 9,  "name": "Darryl Strawberry", "value": 1025, "years": "1983–1990" },
+      { "rank": 10, "name": "Howard Johnson",    "value": 997,  "years": "1985–1993" }
+    ]
+  },
+  "career_rbi": {
+    "label": "Career RBI as a Met",
+    "shortLabel": "RBI",
+    "statLabel": "RBI",
+    "leaders": [
+      { "rank": 1,  "name": "David Wright",      "value": 970, "years": "2004–2018" },
+      { "rank": 2,  "name": "Darryl Strawberry", "value": 733, "years": "1983–1990" },
+      { "rank": 3,  "name": "Pete Alonso",       "value": 712, "years": "2019–present" },
+      { "rank": 4,  "name": "Mike Piazza",       "value": 655, "years": "1998–2005" },
+      { "rank": 5,  "name": "Howard Johnson",    "value": 629, "years": "1985–1993" },
+      { "rank": 6,  "name": "Ed Kranepool",      "value": 614, "years": "1962–1979" },
+      { "rank": 7,  "name": "Carlos Beltran",    "value": 559, "years": "2005–2011" },
+      { "rank": 8,  "name": "Edgardo Alfonzo",   "value": 538, "years": "1995–2002" },
+      { "rank": 9,  "name": "Cleon Jones",       "value": 521, "years": "1963, 1965–1975" },
+      { "rank": 10, "name": "Jose Reyes",        "value": 521, "years": "2003–2011, 2016–2018" }
+    ]
+  },
+  "career_wins": {
+    "label": "Career Pitching Wins as a Met",
+    "shortLabel": "Wins",
+    "statLabel": "W",
+    "leaders": [
+      { "rank": 1,  "name": "Tom Seaver",      "value": 198, "years": "1967–1977, 1983" },
+      { "rank": 2,  "name": "Dwight Gooden",   "value": 157, "years": "1984–1994" },
+      { "rank": 3,  "name": "Jerry Koosman",   "value": 140, "years": "1967–1978" },
+      { "rank": 4,  "name": "Ron Darling",     "value": 99,  "years": "1983–1991" },
+      { "rank": 5,  "name": "Sid Fernandez",   "value": 98,  "years": "1984–1993" },
+      { "rank": 6,  "name": "Al Leiter",       "value": 95,  "years": "1998–2004" },
+      { "rank": 7,  "name": "Jon Matlack",     "value": 82,  "years": "1971–1977" },
+      { "rank": 8,  "name": "Jacob deGrom",    "value": 82,  "years": "2014–2022" },
+      { "rank": 9,  "name": "David Cone",      "value": 81,  "years": "1987–1992, 2003" },
+      { "rank": 10, "name": "Bobby Jones",     "value": 74,  "years": "1993–2000" }
+    ]
+  },
+  "career_strikeouts": {
+    "label": "Career Pitching Strikeouts as a Met",
+    "shortLabel": "Strikeouts",
+    "statLabel": "K",
+    "leaders": [
+      { "rank": 1,  "name": "Tom Seaver",       "value": 2541, "years": "1967–1977, 1983" },
+      { "rank": 2,  "name": "Dwight Gooden",    "value": 1875, "years": "1984–1994" },
+      { "rank": 3,  "name": "Jerry Koosman",    "value": 1799, "years": "1967–1978" },
+      { "rank": 4,  "name": "Jacob deGrom",     "value": 1607, "years": "2014–2022" },
+      { "rank": 5,  "name": "Sid Fernandez",    "value": 1449, "years": "1984–1993" },
+      { "rank": 6,  "name": "David Cone",       "value": 1172, "years": "1987–1992, 2003" },
+      { "rank": 7,  "name": "Ron Darling",      "value": 1148, "years": "1983–1991" },
+      { "rank": 8,  "name": "Al Leiter",        "value": 1106, "years": "1998–2004" },
+      { "rank": 9,  "name": "Jon Matlack",      "value": 1023, "years": "1971–1977" },
+      { "rank": 10, "name": "Jonathon Niese",   "value": 838,  "years": "2008–2016" }
     ]
   }
 }

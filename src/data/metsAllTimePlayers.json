@@ -9,6 +9,7 @@
   { "name": "Lucas Duda",         "nicknames": [] },
   { "name": "Kevin McReynolds",   "nicknames": [] },
   { "name": "Cleon Jones",        "nicknames": [] },
+  { "name": "Dave Kingman",       "nicknames": ["Kong", "Sky King"] },
 
   { "name": "Tom Seaver",         "nicknames": ["Tom Terrific", "The Franchise"] },
   { "name": "Dwight Gooden",      "nicknames": ["Doc", "Dr K"] },
@@ -26,6 +27,8 @@
   { "name": "Ron Darling",        "nicknames": [] },
   { "name": "Sid Fernandez",      "nicknames": ["El Sid"] },
   { "name": "Bobby Ojeda",        "nicknames": [] },
+  { "name": "Bobby Jones",        "nicknames": [] },
+  { "name": "Jonathon Niese",     "nicknames": ["Jon Niese", "Niese"] },
 
   { "name": "Gary Carter",        "nicknames": ["The Kid", "Kid"] },
   { "name": "Todd Hundley",       "nicknames": [] },
@@ -60,6 +63,7 @@
   { "name": "Carlos Delgado",     "nicknames": [] },
 
   { "name": "Brandon Nimmo",      "nicknames": ["Nimmo"] },
+  { "name": "Michael Conforto",   "nicknames": ["Conforto", "Scooter"] },
   { "name": "Jeff McNeil",        "nicknames": ["The Squirrel"] },
   { "name": "Edwin Diaz",         "nicknames": ["Sugar", "Trumpet Man"] },
   { "name": "Starling Marte",     "nicknames": [] },

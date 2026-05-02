@@ -11,6 +11,13 @@ export default function LeaderboardGame({ category }) {
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
 
+  useEffect(() => {
+    setFound(new Set());
+    setGuessed(new Set());
+    setStatus('playing');
+    setToast(null);
+  }, [category]);
+
   function showToast(msg) {
     clearTimeout(toastTimer.current);
     toastCounter += 1;
@@ -101,6 +108,7 @@ export default function LeaderboardGame({ category }) {
             rank={leader.rank}
             leader={found.has(leader.rank) || isGaveUp ? leader : null}
             revealed={isGaveUp && !found.has(leader.rank)}
+            statLabel={category.statLabel}
           />
         ))}
       </div>
