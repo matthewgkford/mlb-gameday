@@ -111,6 +111,26 @@ export default function LeaderboardGame({ category }) {
         <PlayerSearch onGuess={handleGuess} disabled={false} />
       )}
 
+      {/* Toast (inline, sits under the search input — visible on mobile even with the keyboard up) */}
+      {toast && (
+        <div
+          key={toast.id}
+          className="fade-in"
+          style={{
+            marginTop: 10,
+            background: '#1e293b',
+            border: '0.5px solid rgba(255,255,255,0.2)',
+            borderRadius: 10,
+            padding: '9px 14px',
+            fontSize: 13,
+            color: 'rgba(255,255,255,0.85)',
+            textAlign: 'center',
+          }}
+        >
+          {toast.msg}
+        </div>
+      )}
+
       {/* Action buttons */}
       <div style={{ display: 'flex', gap: 10, marginTop: 14, marginBottom: 14 }}>
         {isPlaying && (
@@ -163,29 +183,6 @@ export default function LeaderboardGame({ category }) {
         ))}
       </div>
 
-      {/* Toast */}
-      {toast && (
-        <div
-          key={toast.id}
-          style={{
-            position: 'fixed',
-            bottom: 80,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: '#1e293b',
-            border: '0.5px solid rgba(255,255,255,0.2)',
-            borderRadius: 20,
-            padding: '9px 18px',
-            fontSize: 13,
-            color: 'rgba(255,255,255,0.85)',
-            zIndex: 9999,
-            whiteSpace: 'nowrap',
-            pointerEvents: 'none',
-          }}
-        >
-          {toast.msg}
-        </div>
-      )}
     </div>
   );
 }
