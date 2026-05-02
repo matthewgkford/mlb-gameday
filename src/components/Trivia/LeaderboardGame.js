@@ -100,26 +100,13 @@ export default function LeaderboardGame({ category }) {
         </div>
       )}
 
-      {/* Slots */}
-      <div style={{ marginBottom: 14 }}>
-        {category.leaders.map(leader => (
-          <RankSlot
-            key={leader.rank}
-            rank={leader.rank}
-            leader={found.has(leader.rank) || isGaveUp ? leader : null}
-            revealed={isGaveUp && !found.has(leader.rank)}
-            statLabel={category.statLabel}
-          />
-        ))}
-      </div>
-
       {/* Search */}
       {isPlaying && (
         <PlayerSearch onGuess={handleGuess} disabled={false} />
       )}
 
       {/* Action buttons */}
-      <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+      <div style={{ display: 'flex', gap: 10, marginTop: 14, marginBottom: 14 }}>
         {isPlaying && (
           <button
             onClick={giveUp}
@@ -155,6 +142,19 @@ export default function LeaderboardGame({ category }) {
             Play Again
           </button>
         )}
+      </div>
+
+      {/* Slots */}
+      <div>
+        {category.leaders.map(leader => (
+          <RankSlot
+            key={leader.rank}
+            rank={leader.rank}
+            leader={found.has(leader.rank) || isGaveUp ? leader : null}
+            revealed={isGaveUp && !found.has(leader.rank)}
+            statLabel={category.statLabel}
+          />
+        ))}
       </div>
 
       {/* Toast */}
